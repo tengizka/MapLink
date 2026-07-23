@@ -25,10 +25,23 @@
     --muted:#8C7A73;
     --card:#FFFDFB;
   }
+  html.theme-dark{
+    --cream:#2B2422;
+    --blush:#4A3B37;
+    --rose:#D08D96;
+    --rose-deep:#E3A3AC;
+    --sage:#8FA283;
+    --sage-deep:#728764;
+    --gold:#D8B876;
+    --ink:#F3E9E4;
+    --muted:#B39F97;
+    --card:#362E2B;
+  }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html{
     color-scheme: only light;
     background:#FBF3EE;
+    transition:background .3s ease;
   }
   html,body{
     margin:0; padding:0; height:100%;
@@ -36,6 +49,7 @@
     font-family:'Quicksand',sans-serif;
     color:var(--ink);
     overflow:hidden;
+    transition:background .3s ease, color .3s ease;
   }
   #app-root{
     position:fixed; inset:0;
@@ -154,6 +168,113 @@
   .navitem.active{ color:var(--rose-deep); }
   .navitem svg{ width:22px; height:22px; }
   .navitem .nlabel{ font-size:9.5px; font-weight:600; letter-spacing:.02em; }
+
+  /* ---------------- SETTINGS GEAR ---------------- */
+  .gear-btn{
+    position:absolute; top:0; right:0;
+    width:34px; height:34px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--card); border:none; color:var(--muted);
+    box-shadow:0 4px 10px -6px rgba(58,46,43,.2);
+  }
+  .gear-btn svg{ width:18px; height:18px; }
+  #screen-profile{ position:relative; padding-top:16px; }
+
+  .settings-row{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--card);
+    padding:14px 16px;
+    border-radius:16px;
+    margin-bottom:12px;
+    font-size:13.5px;
+    box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+  }
+  .settings-row.danger{ color:#B65B5B; }
+  .switch{
+    width:42px; height:24px; border-radius:20px;
+    background:#E4D2C8; position:relative; flex-shrink:0; border:none;
+  }
+  html.theme-dark .switch{ background:#4A3B37; }
+  .switch::after{
+    content:''; position:absolute; top:2px; left:2px;
+    width:20px; height:20px; border-radius:50%;
+    background:#fff; transition:transform .2s ease;
+  }
+  .switch.on{ background:var(--rose); }
+  .switch.on::after{ transform:translateX(18px); }
+  .back-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:13px; color:var(--muted); margin-bottom:14px;
+  }
+  .back-row svg{ width:16px; height:16px; }
+
+  /* ---------------- FRIENDS ---------------- */
+  .search-box{
+    width:100%; padding:12px 14px; border-radius:16px;
+    border:1px solid #EEDDD3; background:var(--card);
+    font-family:inherit; font-size:13.5px; color:var(--ink);
+    margin:14px 0 16px;
+  }
+  .search-box::placeholder{ color:var(--muted); }
+  .friend-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); padding:10px 12px; border-radius:14px;
+    margin-bottom:10px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+  }
+  .friend-row .fav{
+    width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; flex-shrink:0;
+  }
+  .friend-row .fname{ font-size:13px; font-weight:600; }
+  .friend-row .fstat{ font-size:11px; color:var(--muted); }
+  .mini-btn{
+    margin-left:auto; font-size:11.5px; font-weight:700;
+    padding:6px 12px; border-radius:14px; border:none;
+    background:var(--rose); color:#fff; flex-shrink:0;
+  }
+  .mini-btn.ghost{ background:var(--blush); color:var(--rose-deep); }
+  .section-cap{
+    font-size:11px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--muted); margin:18px 0 10px;
+  }
+  .invite-card{
+    background:linear-gradient(135deg, var(--blush), var(--cream));
+    border-radius:18px; padding:16px; text-align:center; margin-top:6px;
+  }
+  .invite-card p{ font-size:12.5px; color:var(--muted); margin:4px 0 12px; }
+  .invite-btn{
+    display:inline-block; background:var(--rose); color:#fff;
+    padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; border:none;
+  }
+
+  /* ---------------- TUTORIAL ---------------- */
+  #tutorial{
+    position:fixed; inset:0; z-index:90;
+    background:rgba(58,46,43,.55);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
+  }
+  #tutorial.hide{ display:none; }
+  .tut-card{
+    background:var(--card); border-radius:24px; padding:28px 22px;
+    max-width:300px; text-align:center;
+    box-shadow:0 20px 40px -12px rgba(0,0,0,.4);
+  }
+  .tut-emoji{ font-size:40px; margin-bottom:14px; }
+  .tut-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin-bottom:8px;
+  }
+  .tut-text{ font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
+  .tut-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:18px; }
+  .tut-dots span{ width:6px; height:6px; border-radius:50%; background:#E4D2C8; }
+  .tut-dots span.on{ background:var(--rose); }
+  .tut-next{
+    background:var(--rose); color:#fff; border:none; padding:11px 26px;
+    border-radius:20px; font-size:13.5px; font-weight:700; font-family:inherit;
+  }
+  .tut-skip{
+    display:block; margin:12px auto 0; background:none; border:none;
+    color:var(--muted); font-size:12px; font-family:inherit;
+  }
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -183,19 +304,70 @@
 
   <!-- FRIENDS -->
   <div class="screen" id="screen-friends">
-    <div class="placeholder-box">
-      <b>Друзья и рейтинг</b>
-      Пока пусто — соберём после базовой карты
+    <input class="search-box" id="friendSearch" placeholder="Найти по имени в MapLink…">
+    <div id="searchResults"></div>
+
+    <div id="requestsBlock" style="display:none;">
+      <div class="section-cap">заявки в друзья</div>
+      <div id="requestsList"></div>
     </div>
+
+    <div class="section-cap">мои друзья</div>
+    <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
+
+    <div class="section-cap">пригласить</div>
+    <div class="invite-card">
+      <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
+      <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
+    </div>
+    <div style="height:20px;"></div>
   </div>
 
   <!-- PROFILE -->
   <div class="screen" id="screen-profile">
+    <button class="gear-btn" id="gearBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>
+    </button>
     <div class="profile-head">
       <div class="big-avatar" id="profileAvatar"></div>
       <div class="uname" id="profileName">—</div>
       <div class="handle" id="profileHandle">—</div>
       <div class="status-pill" id="connStatus">проверяю подключение…</div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="screen" id="screen-settings">
+    <div class="back-row" id="settingsBack">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Назад в профиль
+    </div>
+
+    <div class="settings-row">
+      <span>Тёмная пастельная тема</span>
+      <button class="switch" id="themeSwitch"></button>
+    </div>
+
+    <div class="settings-row" id="replayTutorialBtn">
+      <span>Пройти туториал заново</span>
+      <span>›</span>
+    </div>
+
+    <div class="settings-row danger" id="deleteDataBtn">
+      <span>Удалить мои данные</span>
+      <span>›</span>
+    </div>
+  </div>
+
+  <!-- TUTORIAL -->
+  <div id="tutorial" class="hide">
+    <div class="tut-card">
+      <div class="tut-emoji" id="tutEmoji">🌍</div>
+      <div class="tut-title" id="tutTitle">Привет!</div>
+      <div class="tut-text" id="tutText">MapLink — твоя личная планета путешествий.</div>
+      <div class="tut-dots" id="tutDots"></div>
+      <button class="tut-next" id="tutNext">Дальше</button>
+      <button class="tut-skip" id="tutSkip">Пропустить</button>
     </div>
   </div>
 
@@ -238,22 +410,26 @@
   }, 2200);
 
   // ---------- tab switching ----------
+  function showScreen(name){
+    document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    const navBtn = document.querySelector('.navitem[data-screen="'+name+'"]');
+    if(navBtn) navBtn.classList.add('active');
+    document.getElementById('screen-'+name).classList.add('active');
+  }
   document.querySelectorAll('.navitem').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
-      document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('screen-'+btn.dataset.screen).classList.add('active');
-    });
+    btn.addEventListener('click', ()=> showScreen(btn.dataset.screen));
   });
 
   // ---------- Telegram WebApp ----------
   const tg = window.Telegram ? window.Telegram.WebApp : null;
   let tgUser = null;
+  let startParam = null;
   if(tg){
     tg.ready();
     tg.expand();
     tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
+    startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param ? tg.initDataUnsafe.start_param : null;
   }
   // fallback for testing outside Telegram
   if(!tgUser){
@@ -267,27 +443,223 @@
     document.getElementById('topAvatar').style.backgroundImage = `url(${tgUser.photo_url})`;
   }
 
+  // ---------- tiny CloudStorage helpers (with in-memory fallback outside Telegram) ----------
+  const memoryStore = {};
+  function csGet(key){
+    return new Promise(resolve=>{
+      if(tg && tg.CloudStorage){
+        tg.CloudStorage.getItem(key, (err, val)=> resolve(err ? null : val));
+      } else {
+        resolve(memoryStore[key] || null);
+      }
+    });
+  }
+  function csSet(key, val){
+    if(tg && tg.CloudStorage){ tg.CloudStorage.setItem(key, val, ()=>{}); }
+    else { memoryStore[key] = val; }
+  }
+
+  // ---------- theme ----------
+  function applyTheme(isDark){
+    document.documentElement.classList.toggle('theme-dark', isDark);
+    const bg = isDark ? '#2B2422' : '#FBF3EE';
+    document.documentElement.style.background = bg;
+    document.body.style.background = bg;
+    document.getElementById('app-root').style.background = bg;
+    document.getElementById('themeSwitch').classList.toggle('on', isDark);
+  }
+  csGet('theme_dark').then(v=> applyTheme(v === '1'));
+  document.getElementById('themeSwitch').addEventListener('click', ()=>{
+    const isDark = !document.documentElement.classList.contains('theme-dark');
+    applyTheme(isDark);
+    csSet('theme_dark', isDark ? '1' : '0');
+  });
+
+  // ---------- settings navigation ----------
+  document.getElementById('gearBtn').addEventListener('click', ()=>{
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-settings').classList.add('active');
+  });
+  document.getElementById('settingsBack').addEventListener('click', ()=> showScreen('profile'));
+  document.getElementById('deleteDataBtn').addEventListener('click', ()=>{
+    if(!confirm('Удалить все твои места, фото и достижения? Это нельзя отменить.')) return;
+    if(!myUserId) return;
+    supabase.from('places').delete().eq('user_id', myUserId).then(()=>{
+      supabase.from('achievements').delete().eq('user_id', myUserId).then(()=>{
+        (tg ? tg.showAlert('Данные удалены') : alert('Данные удалены'));
+      });
+    });
+  });
+
+  // ---------- tutorial ----------
+  const tutSteps = [
+    {emoji:'🌍', title:'Привет!', text:'MapLink — твоя личная планета путешествий, специально для тебя.'},
+    {emoji:'📍', title:'Отмечай места', text:'Крути глобус и жми "+" чтобы добавить страну или город, где ты была.'},
+    {emoji:'🤍', title:'Список мечты', text:'Места, куда только хочешь попасть, тоже можно сохранить — они появятся бледным пунктиром.'},
+    {emoji:'👯', title:'Зови друзей', text:'Добавляй друзей по ссылке или поиску и сравнивайте, кто где побывал.'}
+  ];
+  let tutIndex = 0;
+  function renderTutStep(){
+    const s = tutSteps[tutIndex];
+    document.getElementById('tutEmoji').textContent = s.emoji;
+    document.getElementById('tutTitle').textContent = s.title;
+    document.getElementById('tutText').textContent = s.text;
+    document.getElementById('tutNext').textContent = tutIndex === tutSteps.length-1 ? 'Начать' : 'Дальше';
+    document.getElementById('tutDots').innerHTML = tutSteps.map((_,i)=>`<span class="${i===tutIndex?'on':''}"></span>`).join('');
+  }
+  function openTutorial(){
+    tutIndex = 0;
+    renderTutStep();
+    document.getElementById('tutorial').classList.remove('hide');
+  }
+  function closeTutorial(){
+    document.getElementById('tutorial').classList.add('hide');
+    csSet('tutorial_seen', '1');
+  }
+  document.getElementById('tutNext').addEventListener('click', ()=>{
+    if(tutIndex === tutSteps.length-1){ closeTutorial(); return; }
+    tutIndex++; renderTutStep();
+  });
+  document.getElementById('tutSkip').addEventListener('click', closeTutorial);
+  document.getElementById('replayTutorialBtn').addEventListener('click', openTutorial);
+
+  csGet('tutorial_seen').then(seen=>{
+    if(seen !== '1'){
+      setTimeout(openTutorial, 2400); // после сплэша
+    }
+  });
+
   // ---------- Supabase ----------
   const SUPABASE_URL = 'https://wfepsxuvvgfloatrfqba.supabase.co';
   const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndmZXBzeHV2dmdmbG9hdHJmcWJhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3OTU4MDMsImV4cCI6MjEwMDM3MTgwM30.y774GJ5oDxEzCL_z6gJxSHBR8P3wGfE0qSB4LswiUpk';
 
   const statusEl = document.getElementById('connStatus');
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let myUserId = null;
+  let myInviteCode = null;
 
-  if(SUPABASE_ANON_KEY === 'PASTE_ANON_KEY_HERE'){
-    statusEl.textContent = 'ключ ещё не подключён';
-  } else {
+  function randomCode(){
+    return Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 5);
+  }
+
+  async function initUser(){
     try{
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-      supabase.from('users').upsert({
+      const { data, error } = await supabase.from('users').upsert({
         telegram_id: String(tgUser.id),
         username: tgUser.username || tgUser.first_name || 'user',
         avatar_url: tgUser.photo_url || null
-      }, { onConflict: 'telegram_id' }).then(({error})=>{
-        statusEl.textContent = error ? ('ошибка: '+error.message) : 'подключено к базе ✓';
-      });
+      }, { onConflict: 'telegram_id' }).select().single();
+
+      if(error){ statusEl.textContent = 'ошибка: '+error.message; return; }
+      statusEl.textContent = 'подключено к базе ✓';
+      myUserId = data.id;
+      myInviteCode = data.invite_code;
+
+      if(!myInviteCode){
+        myInviteCode = randomCode();
+        await supabase.from('users').update({ invite_code: myInviteCode }).eq('id', myUserId);
+      }
+
+      // handle invite link open (?startapp=CODE)
+      if(startParam && startParam !== myInviteCode){
+        const { data: other } = await supabase.from('users').select('id').eq('invite_code', startParam).single();
+        if(other && other.id){
+          await supabase.from('friendships').upsert({
+            requester_id: other.id, addressee_id: myUserId, status: 'accepted'
+          }, { onConflict: 'requester_id,addressee_id' });
+        }
+      }
+
+      loadFriends();
     }catch(e){
       statusEl.textContent = 'ошибка подключения';
     }
+  }
+  initUser();
+
+  // ---------- invite button ----------
+  document.getElementById('inviteBtn').addEventListener('click', ()=>{
+    if(!myInviteCode){ return; }
+    const link = 'https://t.me/MapLinkAppbot/MapLink?startapp=' + myInviteCode;
+    const shareUrl = 'https://t.me/share/url?url=' + encodeURIComponent(link) + '&text=' + encodeURIComponent('Добавь меня в MapLink 🌍');
+    if(tg && tg.openTelegramLink){ tg.openTelegramLink(shareUrl); }
+    else { navigator.clipboard && navigator.clipboard.writeText(link); alert('Ссылка скопирована: '+link); }
+  });
+
+  // ---------- friends search ----------
+  let searchTimer = null;
+  document.getElementById('friendSearch').addEventListener('input', (e)=>{
+    clearTimeout(searchTimer);
+    const q = e.target.value.trim();
+    const box = document.getElementById('searchResults');
+    if(q.length < 2){ box.innerHTML = ''; return; }
+    searchTimer = setTimeout(async ()=>{
+      const { data } = await supabase.from('users').select('id, username, avatar_url')
+        .ilike('username', '%'+q+'%').neq('id', myUserId).limit(8);
+      box.innerHTML = (data||[]).map(u=>`
+        <div class="friend-row">
+          <div class="fav" style="${u.avatar_url ? `background-image:url(${u.avatar_url})` : ''}"></div>
+          <div><div class="fname">${u.username}</div></div>
+          <button class="mini-btn" onclick="window.__sendReq('${u.id}')">Добавить</button>
+        </div>`).join('') || '<div class="placeholder-box" style="margin-top:0;">никого не нашлось</div>';
+    }, 350);
+  });
+
+  window.__sendReq = async function(targetId){
+    await supabase.from('friendships').upsert({
+      requester_id: myUserId, addressee_id: targetId, status: 'pending'
+    }, { onConflict: 'requester_id,addressee_id' });
+    document.getElementById('searchResults').innerHTML = '<div class="placeholder-box" style="margin-top:0;">заявка отправлена ✓</div>';
+  };
+
+  window.__respondReq = async function(rowId, accept){
+    if(accept){ await supabase.from('friendships').update({status:'accepted'}).eq('id', rowId); }
+    else { await supabase.from('friendships').delete().eq('id', rowId); }
+    loadFriends();
+  };
+
+  async function loadFriends(){
+    if(!myUserId) return;
+
+    // incoming pending requests
+    const { data: incoming } = await supabase.from('friendships')
+      .select('id, requester:requester_id(username, avatar_url)')
+      .eq('addressee_id', myUserId).eq('status', 'pending');
+
+    const reqBlock = document.getElementById('requestsBlock');
+    const reqList = document.getElementById('requestsList');
+    if(incoming && incoming.length){
+      reqBlock.style.display = '';
+      reqList.innerHTML = incoming.map(r=>`
+        <div class="friend-row">
+          <div class="fav" style="${r.requester.avatar_url ? `background-image:url(${r.requester.avatar_url})` : ''}"></div>
+          <div><div class="fname">${r.requester.username}</div></div>
+          <button class="mini-btn" onclick="window.__respondReq('${r.id}', true)">Принять</button>
+          <button class="mini-btn ghost" onclick="window.__respondReq('${r.id}', false)">Скрыть</button>
+        </div>`).join('');
+    } else {
+      reqBlock.style.display = 'none';
+    }
+
+    // accepted friends, both directions
+    const { data: asReq } = await supabase.from('friendships')
+      .select('addressee:addressee_id(username, avatar_url)')
+      .eq('requester_id', myUserId).eq('status', 'accepted');
+    const { data: asAdd } = await supabase.from('friendships')
+      .select('requester:requester_id(username, avatar_url)')
+      .eq('addressee_id', myUserId).eq('status', 'accepted');
+
+    const friends = [
+      ...(asReq||[]).map(r=>r.addressee),
+      ...(asAdd||[]).map(r=>r.requester)
+    ];
+
+    const list = document.getElementById('friendsList');
+    list.innerHTML = friends.length ? friends.map(f=>`
+      <div class="friend-row">
+        <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''}"></div>
+        <div><div class="fname">${f.username}</div></div>
+      </div>`).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
   }
 })();
 </script>
