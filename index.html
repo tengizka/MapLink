@@ -8,6 +8,8 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -275,6 +277,83 @@
     display:block; margin:12px auto 0; background:none; border:none;
     color:var(--muted); font-size:12px; font-family:inherit;
   }
+
+  /* ---------------- GLOBE ---------------- */
+  #screen-home{ padding:0; display:flex; flex-direction:column; overflow:hidden; }
+  .home-topstats{
+    display:flex; justify-content:center; gap:22px;
+    padding:8px 0 4px; flex-shrink:0;
+  }
+  .home-topstats .stat{ text-align:center; }
+  .home-topstats .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
+  .home-topstats .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  #globeBox{ position:relative; flex:1; }
+  #globeMap{ position:absolute; inset:0; }
+  .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo{ display:none !important; }
+
+  .pin-dot{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--rose); border:2px solid #fff;
+    box-shadow:0 0 0 3px rgba(197,123,133,.3);
+  }
+  .pin-dot.wishlist{
+    background:transparent; border:2px dashed var(--muted);
+    box-shadow:none;
+  }
+
+  .fab{
+    position:absolute; right:16px; bottom:16px;
+    width:52px; height:52px; border-radius:50%;
+    background:var(--rose); color:#fff; border:none;
+    display:flex; align-items:center; justify-content:center;
+    font-size:26px; box-shadow:0 10px 24px -8px rgba(58,46,43,.5);
+    z-index:5;
+  }
+
+  .map-popup{
+    background:var(--card); border-radius:16px; padding:12px 14px;
+    min-width:150px; box-shadow:0 10px 24px -8px rgba(58,46,43,.3);
+  }
+  .map-popup .mp-title{ font-family:'Fraunces',serif; font-style:italic; font-size:15px; margin-bottom:2px; }
+  .map-popup .mp-note{ font-size:12px; color:var(--muted); margin-bottom:8px; }
+  .map-popup .mp-btn{
+    font-size:11.5px; font-weight:700; color:#fff; background:var(--rose);
+    padding:6px 12px; border-radius:14px; border:none; display:inline-block;
+  }
+  .maplibregl-popup-content{ background:transparent !important; box-shadow:none !important; padding:0 !important; }
+  .maplibregl-popup-tip{ display:none !important; }
+
+  /* ---------------- ADD PLACE MODAL ---------------- */
+  #addModal{
+    position:fixed; inset:0; z-index:80;
+    background:rgba(58,46,43,.5);
+    display:flex; align-items:flex-end;
+  }
+  #addModal.hide{ display:none; }
+  .add-sheet{
+    background:var(--card); width:100%;
+    border-radius:24px 24px 0 0; padding:22px 20px max(22px, env(safe-area-inset-bottom));
+  }
+  .add-sheet h3{
+    font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin:0 0 16px;
+  }
+  .add-field{
+    width:100%; padding:12px 14px; border-radius:14px;
+    border:1px solid #EEDDD3; background:var(--cream);
+    font-family:inherit; font-size:13.5px; color:var(--ink);
+    margin-bottom:10px;
+  }
+  .add-toggle{
+    display:flex; align-items:center; gap:8px; margin:6px 0 16px; font-size:13px; color:var(--muted);
+  }
+  .add-save{
+    width:100%; background:var(--rose); color:#fff; border:none;
+    padding:13px; border-radius:20px; font-size:14px; font-weight:700; font-family:inherit;
+  }
+  .add-cancel{
+    width:100%; background:none; border:none; color:var(--muted);
+    padding:10px; font-size:13px; font-family:inherit;
+  }
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -294,11 +373,31 @@
     <div class="avatar" id="topAvatar"></div>
   </div>
 
-  <!-- HOME (globe comes next step) -->
+  <!-- HOME -->
   <div class="screen active" id="screen-home">
-    <div class="placeholder-box">
-      <b>Здесь будет планета 🌍</b>
-      Интерактивный глобус на MapLibre — следующий шаг
+    <div class="home-topstats">
+      <div class="stat"><div class="num" id="statCountries">0</div><div class="cap">стран</div></div>
+      <div class="stat"><div class="num" id="statCities">0</div><div class="cap">городов</div></div>
+    </div>
+    <div id="globeBox">
+      <div id="globeMap"></div>
+      <button class="fab" id="fabAdd">+</button>
+    </div>
+  </div>
+
+  <!-- ADD PLACE MODAL -->
+  <div id="addModal" class="hide">
+    <div class="add-sheet">
+      <h3>Новое место</h3>
+      <input class="add-field" id="addCountry" placeholder="Страна">
+      <input class="add-field" id="addCity" placeholder="Город">
+      <input class="add-field" id="addDate" type="date">
+      <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
+      <label class="add-toggle">
+        <input type="checkbox" id="addWishlist"> Это место мечты (ещё не была)
+      </label>
+      <button class="add-save" id="addSaveBtn">Сохранить</button>
+      <button class="add-cancel" id="addCancelBtn">Отмена</button>
     </div>
   </div>
 
@@ -571,6 +670,7 @@
       }
 
       loadFriends();
+      loadPlaces();
     }catch(e){
       statusEl.textContent = 'ошибка подключения';
     }
@@ -660,6 +760,117 @@
         <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''}"></div>
         <div><div class="fname">${f.username}</div></div>
       </div>`).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
+  }
+
+  // ---------------- GLOBE ----------------
+  const map = new maplibregl.Map({
+    container: 'globeMap',
+    style: 'https://demotiles.maplibre.org/style.json',
+    center: [0, 20],
+    zoom: 1.1,
+    projection: 'globe',
+    attributionControl: false,
+    dragRotate: true,
+    touchZoomRotate: true
+  });
+  map.touchZoomRotate.enableRotation();
+
+  map.on('load', ()=>{
+    // repaint the demo style into our pastel palette, generically by layer type
+    (map.getStyle().layers || []).forEach(l=>{
+      try{
+        if(l.type === 'background') map.setPaintProperty(l.id, 'background-color', '#EADFD3');
+        if(l.type === 'fill') map.setPaintProperty(l.id, 'fill-color', '#A9B79A');
+        if(l.type === 'fill-extrusion') map.setPaintProperty(l.id, 'fill-extrusion-color', '#A9B79A');
+        if(l.type === 'line') map.setPaintProperty(l.id, 'line-color', '#7E9270');
+        if(l.type === 'symbol'){
+          map.setPaintProperty(l.id, 'text-color', '#3A2E2B');
+          map.setPaintProperty(l.id, 'text-halo-color', '#FFFDFB');
+          map.setPaintProperty(l.id, 'text-halo-width', 1.2);
+        }
+      }catch(e){ /* layer doesn't support this paint prop, skip */ }
+    });
+    try{ map.setSky({ 'sky-color':'#EADFD3', 'horizon-color':'#F4DCD6', 'fog-color':'#F4DCD6' }); }catch(e){}
+  });
+
+  let pendingLatLng = null;
+  let placeMarkers = [];
+
+  function openAddModal(){
+    document.getElementById('addCountry').value = '';
+    document.getElementById('addCity').value = '';
+    document.getElementById('addNote').value = '';
+    document.getElementById('addWishlist').checked = false;
+    document.getElementById('addDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('addModal').classList.remove('hide');
+  }
+  function closeAddModal(){ document.getElementById('addModal').classList.add('hide'); }
+
+  map.on('click', (e)=>{
+    pendingLatLng = e.lngLat;
+    openAddModal();
+  });
+  document.getElementById('fabAdd').addEventListener('click', ()=>{
+    if(!pendingLatLng) pendingLatLng = map.getCenter();
+    openAddModal();
+  });
+  document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
+
+  document.getElementById('addSaveBtn').addEventListener('click', async ()=>{
+    if(!myUserId || !pendingLatLng) return;
+    const country = document.getElementById('addCountry').value.trim();
+    const city = document.getElementById('addCity').value.trim();
+    if(!country || !city){ alert('Укажи страну и город'); return; }
+
+    await supabase.from('places').insert({
+      user_id: myUserId,
+      country, city,
+      visit_date: document.getElementById('addDate').value || null,
+      note: document.getElementById('addNote').value.trim() || null,
+      is_wishlist: document.getElementById('addWishlist').checked,
+      lat: pendingLatLng.lat,
+      lon: pendingLatLng.lng
+    });
+
+    closeAddModal();
+    loadPlaces();
+  });
+
+  window.__deletePlace = async function(id){
+    await supabase.from('places').delete().eq('id', id);
+    loadPlaces();
+  };
+
+  async function loadPlaces(){
+    if(!myUserId) return;
+    const { data } = await supabase.from('places').select('*').eq('user_id', myUserId);
+    const places = data || [];
+
+    placeMarkers.forEach(m=>m.remove());
+    placeMarkers = [];
+
+    places.forEach(p=>{
+      if(p.lat == null || p.lon == null) return;
+      const el = document.createElement('div');
+      el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
+      const marker = new maplibregl.Marker({element: el})
+        .setLngLat([p.lon, p.lat])
+        .addTo(map);
+
+      const popupHtml = `
+        <div class="map-popup">
+          <div class="mp-title">${p.city}, ${p.country}</div>
+          <div class="mp-note">${p.note ? p.note : (p.is_wishlist ? 'место мечты' : (p.visit_date || ''))}</div>
+          <button class="mp-btn" onclick="window.__deletePlace('${p.id}')">Удалить</button>
+        </div>`;
+      const popup = new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml);
+      marker.setPopup(popup);
+      placeMarkers.push(marker);
+    });
+
+    const visited = places.filter(p=>!p.is_wishlist);
+    document.getElementById('statCountries').textContent = new Set(visited.map(p=>p.country)).size;
+    document.getElementById('statCities').textContent = visited.length;
   }
 })();
 </script>
