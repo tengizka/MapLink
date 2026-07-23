@@ -8,8 +8,8 @@
 
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
-<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -765,31 +765,50 @@
   // ---------------- GLOBE ----------------
   const map = new maplibregl.Map({
     container: 'globeMap',
-    style: 'https://demotiles.maplibre.org/style.json',
+    style: 'https://tiles.openfreemap.org/styles/positron',
     center: [0, 20],
-    zoom: 1.1,
-    projection: 'globe',
-    attributionControl: false,
-    dragRotate: true,
-    touchZoomRotate: true
+    zoom: 1.1
   });
-  map.touchZoomRotate.enableRotation();
 
   map.on('load', ()=>{
-    // repaint the demo style into our pastel palette, generically by layer type
+    // true 3D globe (needs MapLibre GL JS v5+)
+    map.setProjection({ type: 'globe' });
+
+    // repaint into our pastel palette, targeted by source-layer (so land/water/borders stay distinct)
     (map.getStyle().layers || []).forEach(l=>{
+      const sl = l['source-layer'];
       try{
-        if(l.type === 'background') map.setPaintProperty(l.id, 'background-color', '#EADFD3');
-        if(l.type === 'fill') map.setPaintProperty(l.id, 'fill-color', '#A9B79A');
-        if(l.type === 'fill-extrusion') map.setPaintProperty(l.id, 'fill-extrusion-color', '#A9B79A');
-        if(l.type === 'line') map.setPaintProperty(l.id, 'line-color', '#7E9270');
+        if(l.type === 'background'){
+          map.setPaintProperty(l.id, 'background-color', '#E7DCC9'); // ocean
+        }
+        if(l.type === 'fill' && sl === 'water'){
+          map.setPaintProperty(l.id, 'fill-color', '#E7DCC9');
+        }
+        if(l.type === 'fill' && (sl === 'landcover' || sl === 'landuse')){
+          map.setPaintProperty(l.id, 'fill-color', '#B9C7AA');
+        }
+        if(l.type === 'fill' && sl === 'building'){
+          map.setLayoutProperty(l.id, 'visibility', 'none');
+        }
+        if(l.type === 'line' && sl === 'boundary'){
+          map.setPaintProperty(l.id, 'line-color', '#B98C93');
+        }
+        if(l.type === 'line' && sl === 'water'){
+          map.setPaintProperty(l.id, 'line-color', '#E7DCC9');
+        }
         if(l.type === 'symbol'){
+          // prefer Russian names, fall back to local/default name
+          const layout = map.getLayoutProperty(l.id, 'text-field');
+          if(layout){
+            map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
+          }
           map.setPaintProperty(l.id, 'text-color', '#3A2E2B');
           map.setPaintProperty(l.id, 'text-halo-color', '#FFFDFB');
           map.setPaintProperty(l.id, 'text-halo-width', 1.2);
         }
-      }catch(e){ /* layer doesn't support this paint prop, skip */ }
+      }catch(e){ /* some layers don't support a given paint prop, skip */ }
     });
+
     try{ map.setSky({ 'sky-color':'#EADFD3', 'horizon-color':'#F4DCD6', 'fog-color':'#F4DCD6' }); }catch(e){}
   });
 
