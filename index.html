@@ -354,6 +354,20 @@
     width:100%; background:none; border:none; color:var(--muted);
     padding:10px; font-size:13px; font-family:inherit;
   }
+  .field-wrap{ position:relative; }
+  .field-wrap[data-disabled="1"] .add-field{ opacity:.5; }
+  .suggest-list{
+    position:absolute; left:0; right:0; top:calc(100% + 2px);
+    background:var(--card); border-radius:14px;
+    box-shadow:0 10px 24px -8px rgba(58,46,43,.3);
+    z-index:10; max-height:180px; overflow-y:auto;
+  }
+  .suggest-item{
+    padding:10px 14px; font-size:13px; color:var(--ink);
+    border-bottom:1px solid #F0E4DC;
+  }
+  .suggest-item:last-child{ border-bottom:none; }
+  .suggest-item small{ display:block; color:var(--muted); font-size:11px; }
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -389,8 +403,14 @@
   <div id="addModal" class="hide">
     <div class="add-sheet">
       <h3>Новое место</h3>
-      <input class="add-field" id="addCountry" placeholder="Страна">
-      <input class="add-field" id="addCity" placeholder="Город">
+      <div class="field-wrap">
+        <input class="add-field" id="addCountry" placeholder="Страна" autocomplete="off">
+        <div class="suggest-list" id="countrySuggest" style="display:none;"></div>
+      </div>
+      <div class="field-wrap" id="cityWrap" data-disabled="1">
+        <input class="add-field" id="addCity" placeholder="Сначала выбери страну" autocomplete="off" disabled>
+        <div class="suggest-list" id="citySuggest" style="display:none;"></div>
+      </div>
       <input class="add-field" id="addDate" type="date">
       <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
       <label class="add-toggle">
@@ -775,9 +795,16 @@
     map.setProjection({ type: 'globe' });
 
     // repaint into our pastel palette, targeted by source-layer (so land/water/borders stay distinct)
+    const keepLayers = ['water','landcover','landuse','boundary','place'];
     (map.getStyle().layers || []).forEach(l=>{
       const sl = l['source-layer'];
       try{
+        // performance + cleanliness: hide everything except the layers we actually need
+        if(sl && !keepLayers.includes(sl)){
+          map.setLayoutProperty(l.id, 'visibility', 'none');
+          return;
+        }
+
         if(l.type === 'background'){
           map.setPaintProperty(l.id, 'background-color', '#E7DCC9'); // ocean
         }
@@ -787,16 +814,17 @@
         if(l.type === 'fill' && (sl === 'landcover' || sl === 'landuse')){
           map.setPaintProperty(l.id, 'fill-color', '#B9C7AA');
         }
-        if(l.type === 'fill' && sl === 'building'){
-          map.setLayoutProperty(l.id, 'visibility', 'none');
-        }
         if(l.type === 'line' && sl === 'boundary'){
           map.setPaintProperty(l.id, 'line-color', '#B98C93');
+          map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // borders visible from the start
         }
         if(l.type === 'line' && sl === 'water'){
           map.setPaintProperty(l.id, 'line-color', '#E7DCC9');
         }
         if(l.type === 'symbol'){
+          if(sl === 'place'){
+            map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // labels visible from the start
+          }
           // prefer Russian names, fall back to local/default name
           const layout = map.getLayoutProperty(l.id, 'text-field');
           if(layout){
@@ -814,6 +842,8 @@
 
   let pendingLatLng = null;
   let placeMarkers = [];
+  let selectedCountry = null; // {name, code}
+  let selectedCity = null;    // {name, lat, lon}
 
   function openAddModal(){
     document.getElementById('addCountry').value = '';
@@ -821,6 +851,14 @@
     document.getElementById('addNote').value = '';
     document.getElementById('addWishlist').checked = false;
     document.getElementById('addDate').value = new Date().toISOString().slice(0,10);
+    selectedCountry = null;
+    selectedCity = null;
+    const cityInput = document.getElementById('addCity');
+    cityInput.disabled = true;
+    cityInput.placeholder = 'Сначала выбери страну';
+    document.getElementById('cityWrap').dataset.disabled = '1';
+    document.getElementById('countrySuggest').style.display = 'none';
+    document.getElementById('citySuggest').style.display = 'none';
     document.getElementById('addModal').classList.remove('hide');
   }
   function closeAddModal(){ document.getElementById('addModal').classList.add('hide'); }
@@ -835,20 +873,92 @@
   });
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
 
+  // ---------- Nominatim autocomplete ----------
+  async function nominatimSearch(query, extraParams){
+    const params = new URLSearchParams({
+      format: 'jsonv2', q: query, 'accept-language': 'ru', limit: '7', ...extraParams
+    });
+    try{
+      const res = await fetch('https://nominatim.openstreetmap.org/search?'+params.toString());
+      return await res.json();
+    }catch(e){ return []; }
+  }
+
+  let countryTimer = null;
+  document.getElementById('addCountry').addEventListener('input', (e)=>{
+    selectedCountry = null;
+    document.getElementById('addCity').disabled = true;
+    document.getElementById('cityWrap').dataset.disabled = '1';
+    clearTimeout(countryTimer);
+    const q = e.target.value.trim();
+    const box = document.getElementById('countrySuggest');
+    if(q.length < 2){ box.style.display = 'none'; return; }
+    countryTimer = setTimeout(async ()=>{
+      const results = await nominatimSearch(q, { featuretype: 'country' });
+      if(!results.length){ box.style.display = 'none'; return; }
+      box.innerHTML = results.map((r,i)=>`<div class="suggest-item" data-i="${i}">${r.display_name.split(',')[0]}</div>`).join('');
+      box.style.display = '';
+      box.querySelectorAll('.suggest-item').forEach(item=>{
+        item.addEventListener('click', ()=>{
+          const r = results[item.dataset.i];
+          const name = r.display_name.split(',')[0];
+          selectedCountry = { name, code: (r.address && r.address.country_code) || '' };
+          document.getElementById('addCountry').value = name;
+          box.style.display = 'none';
+          const cityInput = document.getElementById('addCity');
+          cityInput.disabled = false;
+          cityInput.placeholder = 'Город';
+          cityInput.value = '';
+          document.getElementById('cityWrap').dataset.disabled = '0';
+          selectedCity = null;
+        });
+      });
+    }, 350);
+  });
+
+  let cityTimer = null;
+  document.getElementById('addCity').addEventListener('input', (e)=>{
+    selectedCity = null;
+    clearTimeout(cityTimer);
+    const q = e.target.value.trim();
+    const box = document.getElementById('citySuggest');
+    if(q.length < 2 || !selectedCountry){ box.style.display = 'none'; return; }
+    cityTimer = setTimeout(async ()=>{
+      const results = await nominatimSearch(q, {
+        featuretype: 'settlement',
+        countrycodes: selectedCountry.code
+      });
+      if(!results.length){ box.style.display = 'none'; return; }
+      box.innerHTML = results.map((r,i)=>`<div class="suggest-item" data-i="${i}">${r.display_name.split(',')[0]}<small>${r.display_name}</small></div>`).join('');
+      box.style.display = '';
+      box.querySelectorAll('.suggest-item').forEach(item=>{
+        item.addEventListener('click', ()=>{
+          const r = results[item.dataset.i];
+          const name = r.display_name.split(',')[0];
+          selectedCity = { name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
+          document.getElementById('addCity').value = name;
+          box.style.display = 'none';
+        });
+      });
+    }, 350);
+  });
+
   document.getElementById('addSaveBtn').addEventListener('click', async ()=>{
-    if(!myUserId || !pendingLatLng) return;
-    const country = document.getElementById('addCountry').value.trim();
-    const city = document.getElementById('addCity').value.trim();
-    if(!country || !city){ alert('Укажи страну и город'); return; }
+    if(!myUserId) return;
+    if(!selectedCountry || !selectedCity){
+      alert('Выбери страну и город из списка подсказок');
+      return;
+    }
 
     await supabase.from('places').insert({
       user_id: myUserId,
-      country, city,
+      country: selectedCountry.name,
+      city: selectedCity.name,
       visit_date: document.getElementById('addDate').value || null,
       note: document.getElementById('addNote').value.trim() || null,
       is_wishlist: document.getElementById('addWishlist').checked,
-      lat: pendingLatLng.lat,
-      lon: pendingLatLng.lng
+      lat: selectedCity.lat,
+      lon: selectedCity.lon
     });
 
     closeAddModal();
