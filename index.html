@@ -306,6 +306,10 @@
     position:fixed; z-index:92; width:260px;
     pointer-events:auto;
   }
+  #coachTip.centered{
+    left:50% !important; top:50% !important;
+    transform:translate(-50%,-50%);
+  }
   .coach-card{
     background:var(--card); border-radius:20px; padding:18px 18px 14px;
     box-shadow:0 16px 32px -10px rgba(0,0,0,.4);
@@ -424,6 +428,22 @@
   .add-toggle{
     display:flex; align-items:center; gap:8px; margin:6px 0 16px; font-size:13px; color:var(--muted);
   }
+  .date-toggle{
+    display:flex; align-items:center; gap:7px; width:100%;
+    background:var(--cream); border:1px dashed #D8C2B6; border-radius:14px;
+    padding:12px; font-size:13px; color:var(--muted); font-family:inherit;
+    margin-bottom:10px; transition:opacity .2s ease;
+  }
+  #dateWrap.open .date-toggle{ display:none; }
+  #datePickerBox{
+    max-height:0; opacity:0; overflow:hidden;
+    transition:max-height .32s cubic-bezier(.34,1.1,.64,1), opacity .25s ease;
+  }
+  #dateWrap.open #datePickerBox{ max-height:140px; opacity:1; }
+  .date-clear{
+    width:100%; background:none; border:none; color:var(--rose-deep);
+    font-size:12px; font-family:inherit; padding:6px 0 10px; text-align:center;
+  }
   .add-save{
     width:100%; background:var(--rose); color:#fff; border:none;
     padding:13px; border-radius:20px; font-size:14px; font-weight:700; font-family:inherit;
@@ -530,7 +550,16 @@
         <input class="add-field" id="addCity" placeholder="Город (необязательно)" autocomplete="off">
         <div class="suggest-list" id="citySuggest" style="display:none;"></div>
       </div>
-      <input class="add-field" id="addDate" type="date">
+      <div id="dateWrap">
+        <button type="button" class="date-toggle" id="dateToggleBtn">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+          <span id="dateToggleText">Добавить дату</span>
+        </button>
+        <div id="datePickerBox">
+          <input class="add-field" id="addDate" type="date">
+          <button type="button" class="date-clear" id="dateClearBtn">Убрать дату</button>
+        </div>
+      </div>
       <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
       <label class="add-toggle">
         <input type="checkbox" id="addWishlist"> Это место мечты (ещё не была)
@@ -690,10 +719,15 @@
   // ---------- tab switching ----------
   function showScreen(name){
     document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.screen').forEach(s=>{
+      s.classList.remove('active');
+      s.style.display = 'none';
+    });
     const navBtn = document.querySelector('.navitem[data-screen="'+name+'"]');
     if(navBtn) navBtn.classList.add('active');
-    document.getElementById('screen-'+name).classList.add('active');
+    const target = document.getElementById('screen-'+name);
+    target.classList.add('active');
+    target.style.display = '';
   }
   document.querySelectorAll('.navitem').forEach(btn=>{
     btn.addEventListener('click', ()=> showScreen(btn.dataset.screen));
@@ -772,8 +806,10 @@
 
   // ---------- settings navigation ----------
   document.getElementById('gearBtn').addEventListener('click', ()=>{
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    document.getElementById('screen-settings').classList.add('active');
+    document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display = 'none'; });
+    document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
+    const t = document.getElementById('screen-settings');
+    t.classList.add('active'); t.style.display = '';
   });
   document.getElementById('settingsBack').addEventListener('click', ()=> showScreen('profile'));
   document.getElementById('deleteDataBtn').addEventListener('click', ()=>{
@@ -788,6 +824,7 @@
 
   // ---------- tutorial: real spotlight tour across actual screens ----------
   const coachSteps = [
+    { welcome:true, screen:'home', title:'Привет!', text:'Это MapLink — твоя личная планета путешествий. Быстро пробежимся, что где находится.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Твоя планета', text:'Крути пальцем в любую сторону и щипком приближай — появятся страны и города.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Тапни по названию', text:'Нажми прямо на подпись страны или города — выскочит пузырёк с кнопкой "Добавить".' },
     { screen:'home', target:'#fabAdd', place:'above', title:'Или жми на плюсик', text:'Впиши страну (город необязателен) — этого хватит, чтобы сохранить место.' },
@@ -802,19 +839,39 @@
 
   function placeCoachTip(rect, place){
     const tip = document.getElementById('coachTip');
+    tip.classList.remove('centered');
     const tipW = 260;
     const vw = window.innerWidth, vh = window.innerHeight;
     let left = rect.left + rect.width/2 - tipW/2;
     left = Math.max(14, Math.min(left, vw - tipW - 14));
     tip.style.left = left + 'px';
+    tip.style.bottom = '';
+    tip.style.top = '';
 
-    if(place === 'above'){
-      tip.style.top = '';
-      tip.style.bottom = (vh - rect.top + 14) + 'px';
-    } else {
-      tip.style.bottom = '';
-      tip.style.top = (rect.bottom + 14) + 'px';
+    // estimate tip height (render invisibly-positioned first, then measure)
+    tip.style.visibility = 'hidden';
+    tip.style.top = '0px';
+    const tipH = tip.getBoundingClientRect().height;
+    tip.style.visibility = '';
+
+    let wantsAbove = (place === 'above');
+    let top;
+    if(wantsAbove){
+      top = rect.top - 14 - tipH;
+      if(top < 12){ wantsAbove = false; } // not enough room above, flip below
     }
+    if(!wantsAbove){
+      top = rect.bottom + 14;
+      if(top + tipH > vh - 12){ top = vh - 12 - tipH; } // clamp so it never runs off the bottom
+      if(top < 12){ top = 12; }
+    }
+    tip.style.top = top + 'px';
+  }
+
+  function centerCoachTip(){
+    const tip = document.getElementById('coachTip');
+    tip.classList.add('centered');
+    tip.style.left = ''; tip.style.top = ''; tip.style.bottom = '';
   }
 
   async function showCoachStep(i){
@@ -822,24 +879,33 @@
     showScreen(s.screen);
     await new Promise(r=>setTimeout(r, 340)); // wait for tab fade-in
 
-    let target = document.querySelector(s.target);
-    if((!target || target.offsetParent === null) && s.fallbackTarget){
-      target = document.querySelector(s.fallbackTarget);
-    }
-    if(!target){ // nothing to highlight, skip to next
-      if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
-      else closeTutorial();
-      return;
-    }
-
-    const rect = target.getBoundingClientRect();
     const hi = document.getElementById('coachHighlight');
-    hi.style.left = (rect.left - 8) + 'px';
-    hi.style.top = (rect.top - 8) + 'px';
-    hi.style.width = (rect.width + 16) + 'px';
-    hi.style.height = (rect.height + 16) + 'px';
 
-    placeCoachTip(rect, s.place);
+    if(s.welcome){
+      hi.style.width = '0px';
+      hi.style.height = '0px';
+      hi.style.left = '-9999px';
+      hi.style.boxShadow = '0 0 0 2000px rgba(42,34,31,.68)';
+      centerCoachTip();
+    } else {
+      let target = document.querySelector(s.target);
+      if((!target || target.offsetParent === null) && s.fallbackTarget){
+        target = document.querySelector(s.fallbackTarget);
+      }
+      if(!target){ // nothing to highlight, skip to next
+        if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
+        else closeTutorial();
+        return;
+      }
+
+      const rect = target.getBoundingClientRect();
+      hi.style.left = (rect.left - 8) + 'px';
+      hi.style.top = (rect.top - 8) + 'px';
+      hi.style.width = (rect.width + 16) + 'px';
+      hi.style.height = (rect.height + 16) + 'px';
+
+      placeCoachTip(rect, s.place);
+    }
 
     document.getElementById('coachStepLabel').textContent = (i+1) + ' / ' + coachSteps.length;
     document.getElementById('coachTitle').textContent = s.title;
@@ -1012,8 +1078,10 @@
 
   // ---------------- FRIEND PROFILE VIEW ----------------
   window.__openFriend = async function(friendId, username, avatarUrl){
-    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
-    document.getElementById('screen-friend-view').classList.add('active');
+    document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display = 'none'; });
+    document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
+    const t = document.getElementById('screen-friend-view');
+    t.classList.add('active'); t.style.display = '';
 
     document.getElementById('fvName').textContent = username || 'Пользователь';
     document.getElementById('fvAvatar').style.backgroundImage = avatarUrl ? `url(${avatarUrl})` : '';
@@ -1069,10 +1137,10 @@
         }
 
         if(l.type === 'background'){
-          map.setPaintProperty(l.id, 'background-color', '#AFD3D6'); // deep ocean at world view
+          map.setPaintProperty(l.id, 'background-color', '#B9C7AA'); // land base
         }
         if(l.type === 'fill' && sl === 'water'){
-          map.setPaintProperty(l.id, 'fill-color', '#AFD3D6'); // sea/ocean, distinct pastel teal-blue
+          map.setPaintProperty(l.id, 'fill-color', '#8FC1D4'); // sea/ocean, distinct pastel blue
         }
         if(l.type === 'fill' && (sl === 'landcover' || sl === 'landuse')){
           map.setPaintProperty(l.id, 'fill-color', '#B9C7AA'); // land
@@ -1082,15 +1150,19 @@
           map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // borders visible from the start
         }
         if(l.type === 'line' && sl === 'water'){
-          map.setPaintProperty(l.id, 'line-color', '#8FBABF');
+          map.setPaintProperty(l.id, 'line-color', '#6FAFC4');
         }
         if(l.type === 'symbol'){
           if(sl === 'place'){
-            map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // country/city labels visible from the start
             placeLabelLayers.push(l.id);
+            // only force country-level names to show at world view; leave city/town labels
+            // at the style's own natural zoom thresholds so the globe doesn't get cluttered
+            if(l.id.toLowerCase().includes('country') || l.id.toLowerCase().includes('continent')){
+              map.setLayerZoomRange(l.id, 0, l.maxzoom || 24);
+            }
           }
           if(sl === 'water_name'){
-            map.setPaintProperty(l.id, 'text-color', '#4C7A80');
+            map.setPaintProperty(l.id, 'text-color', '#3E6E78');
           }
           // prefer Russian names, fall back to local/default name
           const layout = map.getLayoutProperty(l.id, 'text-field');
@@ -1118,7 +1190,8 @@
     document.getElementById('addCity').value = (prefill && prefill.city) || '';
     document.getElementById('addNote').value = '';
     document.getElementById('addWishlist').checked = false;
-    document.getElementById('addDate').value = new Date().toISOString().slice(0,10);
+    document.getElementById('addDate').value = '';
+    document.getElementById('dateWrap').classList.remove('open');
     selectedCountry = (prefill && prefill.selectedCountry) || null;
     selectedCity = (prefill && prefill.selectedCity) || null;
     document.getElementById('countrySuggest').style.display = 'none';
@@ -1129,6 +1202,16 @@
 
   document.getElementById('fabAdd').addEventListener('click', ()=> openAddModal());
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
+
+  document.getElementById('dateToggleBtn').addEventListener('click', ()=>{
+    document.getElementById('dateWrap').classList.add('open');
+    document.getElementById('addDate').value = document.getElementById('addDate').value || new Date().toISOString().slice(0,10);
+    document.getElementById('addDate').focus();
+  });
+  document.getElementById('dateClearBtn').addEventListener('click', ()=>{
+    document.getElementById('addDate').value = '';
+    document.getElementById('dateWrap').classList.remove('open');
+  });
 
   // ---------- Plague-Inc style tap bubble on country/city labels ----------
   const bubbleEl = document.getElementById('countryBubble');
