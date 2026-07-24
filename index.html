@@ -786,47 +786,88 @@
     });
   });
 
-  // ---------- tutorial ----------
-  const tutSteps = [
-    {emoji:'🌍', title:'Привет!', text:'MapLink — твоя личная планета путешествий, специально для тебя.', anim:'anim-bounce'},
-    {emoji:'🤏', title:'Крути и приближай', text:'Води пальцем, чтобы вращать планету, и щипком приближай — появятся названия стран и городов.', anim:'anim-wiggle'},
-    {emoji:'💬', title:'Тапни по названию', text:'Нажми прямо на подпись страны или города на карте — выскочит пузырёк с кнопкой "Добавить".', anim:'anim-pop'},
-    {emoji:'➕', title:'Или жми на плюсик', text:'Круглая кнопка внизу карты открывает форму — впиши страну (город необязателен).', anim:'anim-pulse'},
-    {emoji:'📷', title:'Добавляй фото', text:'К любому месту можно прикрепить фотографию — она появится в карточке и на карте.', anim:'anim-float'},
-    {emoji:'🤍', title:'Список мечты', text:'Место, где ещё не была, но очень хочешь — отметь галочкой "место мечты". Оно ляжет в отдельный вишлист.', anim:'anim-heartbeat'},
-    {emoji:'👯', title:'Зови друзей', text:'Ищи друзей по имени или скидывай личную ссылку-приглашение — она добавит вас друг к другу автоматически.', anim:'anim-wiggle'},
-    {emoji:'🔔', title:'Заявки в друзья', text:'Если кто-то добавил тебя через поиск — заявка появится в разделе "Друзья", прими её оттуда.', anim:'anim-bounce'},
-    {emoji:'🗺️', title:'Профили друзей', text:'Тапни на друга в списке — увидишь его страны, города и вишлист.', anim:'anim-pop'},
-    {emoji:'⚙️', title:'Настройки', text:'Шестерёнка в профиле: тёмная пастельная тема, повтор этого туториала и удаление данных.', anim:'anim-float'}
+  // ---------- tutorial: real spotlight tour across actual screens ----------
+  const coachSteps = [
+    { screen:'home', target:'#globeBox', place:'below', title:'Твоя планета', text:'Крути пальцем в любую сторону и щипком приближай — появятся страны и города.' },
+    { screen:'home', target:'#globeBox', place:'below', title:'Тапни по названию', text:'Нажми прямо на подпись страны или города — выскочит пузырёк с кнопкой "Добавить".' },
+    { screen:'home', target:'#fabAdd', place:'above', title:'Или жми на плюсик', text:'Впиши страну (город необязателен) — этого хватит, чтобы сохранить место.' },
+    { screen:'friends', target:'#friendSearch', place:'below', title:'Ищи друзей', text:'Введи имя — покажем совпадения среди пользователей MapLink.' },
+    { screen:'friends', target:'#inviteBtn', place:'above', title:'Или зови по ссылке', text:'Поделись личной ссылкой — тот, кто тапнет по ней, сразу станет твоим другом.' },
+    { screen:'friends', target:'#requestsBlock', place:'below', title:'Заявки в друзья', text:'Если кто-то нашёл тебя через поиск — заявка появится прямо здесь.', fallbackTarget:'#friendSearch' },
+    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная пастельная тема, повтор этого тура и удаление данных — всё здесь.' },
+    { screen:'profile', target:'#myPlacesList', place:'above', title:'Твои места', text:'Список всех посещённых стран — с датами, заметками и фото.' },
+    { screen:'profile', target:'#myWishlistList', place:'above', title:'Вишлист', text:'А тут откладываются места мечты, куда только хочешь попасть.' }
   ];
-  let tutIndex = 0;
-  function renderTutStep(){
-    const s = tutSteps[tutIndex];
-    const card = document.querySelector('.tut-card');
-    card.classList.remove('tut-slide'); void card.offsetWidth; card.classList.add('tut-slide');
-    const emojiEl = document.getElementById('tutEmoji');
-    emojiEl.textContent = s.emoji;
-    emojiEl.className = 'tut-emoji ' + s.anim;
-    document.getElementById('tutTitle').textContent = s.title;
-    document.getElementById('tutText').textContent = s.text;
-    document.getElementById('tutNext').textContent = tutIndex === tutSteps.length-1 ? 'Начать' : 'Дальше';
-    document.getElementById('tutDots').innerHTML = tutSteps.map((_,i)=>`<span class="${i===tutIndex?'on':''}"></span>`).join('');
+  let coachIndex = 0;
+
+  function placeCoachTip(rect, place){
+    const tip = document.getElementById('coachTip');
+    const tipW = 260;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let left = rect.left + rect.width/2 - tipW/2;
+    left = Math.max(14, Math.min(left, vw - tipW - 14));
+    tip.style.left = left + 'px';
+
+    if(place === 'above'){
+      tip.style.top = '';
+      tip.style.bottom = (vh - rect.top + 14) + 'px';
+    } else {
+      tip.style.bottom = '';
+      tip.style.top = (rect.bottom + 14) + 'px';
+    }
   }
+
+  async function showCoachStep(i){
+    const s = coachSteps[i];
+    showScreen(s.screen);
+    await new Promise(r=>setTimeout(r, 340)); // wait for tab fade-in
+
+    let target = document.querySelector(s.target);
+    if((!target || target.offsetParent === null) && s.fallbackTarget){
+      target = document.querySelector(s.fallbackTarget);
+    }
+    if(!target){ // nothing to highlight, skip to next
+      if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
+      else closeTutorial();
+      return;
+    }
+
+    const rect = target.getBoundingClientRect();
+    const hi = document.getElementById('coachHighlight');
+    hi.style.left = (rect.left - 8) + 'px';
+    hi.style.top = (rect.top - 8) + 'px';
+    hi.style.width = (rect.width + 16) + 'px';
+    hi.style.height = (rect.height + 16) + 'px';
+
+    placeCoachTip(rect, s.place);
+
+    document.getElementById('coachStepLabel').textContent = (i+1) + ' / ' + coachSteps.length;
+    document.getElementById('coachTitle').textContent = s.title;
+    document.getElementById('coachText').textContent = s.text;
+    document.getElementById('tutNext').textContent = i === coachSteps.length-1 ? 'Готово' : 'Дальше';
+
+    const card = document.querySelector('.coach-card');
+    card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+  }
+
   function openTutorial(){
-    tutIndex = 0;
-    renderTutStep();
+    coachIndex = 0;
     document.getElementById('tutorial').classList.remove('hide');
+    showCoachStep(coachIndex);
   }
   function closeTutorial(){
     document.getElementById('tutorial').classList.add('hide');
     csSet('tutorial_seen', '1');
   }
   document.getElementById('tutNext').addEventListener('click', ()=>{
-    if(tutIndex === tutSteps.length-1){ closeTutorial(); return; }
-    tutIndex++; renderTutStep();
+    if(coachIndex === coachSteps.length-1){ closeTutorial(); return; }
+    coachIndex++; showCoachStep(coachIndex);
   });
   document.getElementById('tutSkip').addEventListener('click', closeTutorial);
   document.getElementById('replayTutorialBtn').addEventListener('click', openTutorial);
+  window.addEventListener('resize', ()=>{
+    if(!document.getElementById('tutorial').classList.contains('hide')) showCoachStep(coachIndex);
+  });
 
   csGet('tutorial_seen').then(seen=>{
     if(seen !== '1'){
