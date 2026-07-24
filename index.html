@@ -2,7 +2,7 @@
 <html lang="ru" style="background:#FBF3EE;">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="light">
 <title>MapLink</title>
 
@@ -52,6 +52,7 @@
     color:var(--ink);
     overflow:hidden;
     transition:background .3s ease, color .3s ease;
+    touch-action: manipulation;
   }
   #app-root{
     position:fixed; inset:0;
@@ -124,7 +125,11 @@
     flex:1; overflow-y:auto; padding:10px 20px 0;
     display:none;
   }
-  .screen.active{ display:block; }
+  .screen.active{ display:block; animation:screenIn .28s ease; }
+  @keyframes screenIn{
+    0%{ opacity:0; transform:translateY(8px); }
+    100%{ opacity:1; transform:translateY(0); }
+  }
   .placeholder-box{
     margin-top:40px;
     background:var(--card);
@@ -168,7 +173,8 @@
     color:#C9B8AF; background:none; border:none; font-family:inherit;
   }
   .navitem.active{ color:var(--rose-deep); }
-  .navitem svg{ width:22px; height:22px; }
+  .navitem svg{ width:22px; height:22px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
+  .navitem.active svg{ transform:scale(1.18); }
   .navitem .nlabel{ font-size:9.5px; font-weight:600; letter-spacing:.02em; }
 
   /* ---------------- SETTINGS GEAR ---------------- */
@@ -222,6 +228,7 @@
     display:flex; align-items:center; gap:10px;
     background:var(--card); padding:10px 12px; border-radius:14px;
     margin-bottom:10px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+    animation:cardIn .35s ease both;
   }
   .friend-row .fav{
     width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; flex-shrink:0;
@@ -238,6 +245,30 @@
     font-size:11px; text-transform:uppercase; letter-spacing:.08em;
     color:var(--muted); margin:18px 0 10px;
   }
+  .place-card{
+    display:flex; gap:12px; background:var(--card);
+    border-radius:16px; padding:12px; margin-bottom:10px;
+    box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+    animation:cardIn .35s ease both;
+  }
+  @keyframes cardIn{
+    0%{ opacity:0; transform:translateY(10px); }
+    100%{ opacity:1; transform:translateY(0); }
+  }
+  .place-card .thumb{
+    width:52px; height:52px; border-radius:12px; flex-shrink:0;
+    background:var(--blush) center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px;
+  }
+  .place-card .pc-body{ flex:1; min-width:0; }
+  .place-card .pc-title{ font-family:'Fraunces',serif; font-style:italic; font-size:15px; }
+  .place-card .pc-date{ font-size:11px; color:var(--muted); margin-bottom:3px; }
+  .place-card .pc-note{ font-size:12.5px; color:#5a4b45; line-height:1.4; }
+  .place-card .pc-wishlist-tag{
+    display:inline-block; font-size:10px; color:var(--rose-deep);
+    background:var(--blush); padding:2px 8px; border-radius:10px; margin-top:4px;
+  }
   .invite-card{
     background:linear-gradient(135deg, var(--blush), var(--cream));
     border-radius:18px; padding:16px; text-align:center; margin-top:6px;
@@ -248,46 +279,73 @@
     padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; border:none;
   }
 
-  /* ---------------- TUTORIAL ---------------- */
+  /* ---------------- TUTORIAL: spotlight coachmarks ---------------- */
   #tutorial{
     position:fixed; inset:0; z-index:90;
-    background:rgba(58,46,43,.55);
-    display:flex; align-items:center; justify-content:center;
-    padding:24px;
+    pointer-events:none;
   }
   #tutorial.hide{ display:none; }
-  .tut-card{
-    background:var(--card); border-radius:24px; padding:28px 22px;
-    max-width:300px; text-align:center;
-    box-shadow:0 20px 40px -12px rgba(0,0,0,.4);
+  #coachHighlight{
+    position:fixed; z-index:91;
+    box-shadow:0 0 0 2000px rgba(42,34,31,.68);
+    border:2px solid var(--rose);
+    border-radius:16px;
+    transition:all .4s cubic-bezier(.34,1.2,.64,1);
+    pointer-events:none;
   }
-  .tut-emoji{ font-size:40px; margin-bottom:14px; }
-  .tut-title{
-    font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin-bottom:8px;
+  #coachHighlight::after{
+    content:''; position:absolute; inset:-6px; border-radius:inherit;
+    border:2px solid rgba(197,123,133,.5);
+    animation:coachRing 1.6s ease-out infinite;
   }
-  .tut-text{ font-size:13.5px; color:var(--muted); line-height:1.5; margin-bottom:20px; }
-  .tut-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:18px; }
-  .tut-dots span{ width:6px; height:6px; border-radius:50%; background:#E4D2C8; }
-  .tut-dots span.on{ background:var(--rose); }
+  @keyframes coachRing{
+    0%{ transform:scale(1); opacity:.9; }
+    100%{ transform:scale(1.25); opacity:0; }
+  }
+  #coachTip{
+    position:fixed; z-index:92; width:260px;
+    pointer-events:auto;
+  }
+  .coach-card{
+    background:var(--card); border-radius:20px; padding:18px 18px 14px;
+    box-shadow:0 16px 32px -10px rgba(0,0,0,.4);
+    animation:tutSlide .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes tutSlide{
+    0%{ transform:translateY(10px) scale(.96); opacity:0; }
+    100%{ transform:translateY(0) scale(1); opacity:1; }
+  }
+  .coach-step-label{
+    font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;
+  }
+  .coach-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px; margin-bottom:6px;
+  }
+  .coach-text{ font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:14px; }
+  .coach-actions{ display:flex; align-items:center; justify-content:space-between; }
   .tut-next{
-    background:var(--rose); color:#fff; border:none; padding:11px 26px;
-    border-radius:20px; font-size:13.5px; font-weight:700; font-family:inherit;
+    background:var(--rose); color:#fff; border:none; padding:9px 20px;
+    border-radius:18px; font-size:13px; font-weight:700; font-family:inherit;
   }
   .tut-skip{
-    display:block; margin:12px auto 0; background:none; border:none;
-    color:var(--muted); font-size:12px; font-family:inherit;
+    background:none; border:none; color:var(--muted); font-size:12px; font-family:inherit;
   }
 
   /* ---------------- GLOBE ---------------- */
   #screen-home{ padding:0; }
   #screen-home.active{ display:flex; flex-direction:column; overflow:hidden; }
   .home-topstats{
-    display:flex; justify-content:center; gap:22px;
+    display:flex; flex-direction:column; align-items:center; gap:2px;
     padding:8px 0 4px; flex-shrink:0;
   }
-  .home-topstats .stat{ text-align:center; }
-  .home-topstats .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
-  .home-topstats .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .world-pct{
+    font-family:'Fraunces',serif; font-style:italic; font-size:15px; color:var(--muted);
+  }
+  .world-pct b{ color:var(--rose-deep); font-style:normal; }
+  .sub-stats{ display:flex; gap:22px; margin-top:4px; }
+  .stat{ text-align:center; }
+  .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
+  .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
   #globeMap{ position:absolute; inset:0; }
   .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo{ display:none !important; }
@@ -296,10 +354,16 @@
     width:16px; height:16px; border-radius:50%;
     background:var(--rose); border:2px solid #fff;
     box-shadow:0 0 0 3px rgba(197,123,133,.3);
+    animation:pinDrop .45s cubic-bezier(.34,1.56,.64,1);
   }
   .pin-dot.wishlist{
     background:transparent; border:2px dashed var(--muted);
     box-shadow:none;
+  }
+  @keyframes pinDrop{
+    0%{ transform:scale(0) translateY(-16px); opacity:0; }
+    60%{ transform:scale(1.25) translateY(0); opacity:1; }
+    100%{ transform:scale(1) translateY(0); }
   }
 
   .fab{
@@ -309,6 +373,13 @@
     display:flex; align-items:center; justify-content:center;
     font-size:26px; box-shadow:0 10px 24px -8px rgba(58,46,43,.5);
     z-index:5;
+    animation:fabPulse 2.6s ease-in-out infinite;
+    transition:transform .15s ease;
+  }
+  .fab:active{ transform:scale(.9); }
+  @keyframes fabPulse{
+    0%,100%{ box-shadow:0 10px 24px -8px rgba(58,46,43,.5); }
+    50%{ box-shadow:0 10px 26px -4px rgba(197,123,133,.65); }
   }
 
   .map-popup{
@@ -328,12 +399,18 @@
   #addModal{
     position:fixed; inset:0; z-index:80;
     background:rgba(58,46,43,.5);
-    display:flex; align-items:flex-end;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
   }
   #addModal.hide{ display:none; }
   .add-sheet{
-    background:var(--card); width:100%;
-    border-radius:24px 24px 0 0; padding:22px 20px max(22px, env(safe-area-inset-bottom));
+    background:var(--card); width:100%; max-width:320px;
+    border-radius:24px; padding:22px 20px;
+    animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn{
+    0%{ transform:scale(.85); opacity:0; }
+    100%{ transform:scale(1); opacity:1; }
   }
   .add-sheet h3{
     font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin:0 0 16px;
@@ -350,6 +427,11 @@
   .add-save{
     width:100%; background:var(--rose); color:#fff; border:none;
     padding:13px; border-radius:20px; font-size:14px; font-weight:700; font-family:inherit;
+  }
+  .add-photo-label{
+    display:block; text-align:center; background:var(--cream);
+    border:1px dashed #D8C2B6; border-radius:14px; padding:12px;
+    font-size:13px; color:var(--muted); margin-bottom:14px;
   }
   .add-cancel{
     width:100%; background:none; border:none; color:var(--muted);
@@ -369,6 +451,33 @@
   }
   .suggest-item:last-child{ border-bottom:none; }
   .suggest-item small{ display:block; color:var(--muted); font-size:11px; }
+
+  /* ---------------- COUNTRY/CITY TAP BUBBLE ---------------- */
+  #countryBubble{
+    position:absolute; z-index:20;
+    transform:translate(-50%,-100%);
+    display:none;
+  }
+  #countryBubble.show{ display:block; animation:bubbleIn .35s cubic-bezier(.34,1.56,.64,1); }
+  @keyframes bubbleIn{
+    0%{ transform:translate(-50%,-90%) scale(.5); opacity:0; }
+    70%{ transform:translate(-50%,-105%) scale(1.05); opacity:1; }
+    100%{ transform:translate(-50%,-100%) scale(1); opacity:1; }
+  }
+  .bubble-card{
+    background:var(--card); border-radius:18px; padding:14px 16px;
+    box-shadow:0 14px 28px -10px rgba(58,46,43,.4);
+    text-align:center; min-width:140px; position:relative;
+  }
+  .bubble-card::after{
+    content:''; position:absolute; bottom:-7px; left:50%; transform:translateX(-50%) rotate(45deg);
+    width:14px; height:14px; background:var(--card);
+  }
+  .bubble-title{ font-family:'Fraunces',serif; font-style:italic; font-size:16px; margin-bottom:8px; }
+  .bubble-add{
+    background:var(--rose); color:#fff; border:none; font-weight:700;
+    font-size:12.5px; padding:7px 16px; border-radius:16px; font-family:inherit;
+  }
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -391,11 +500,20 @@
   <!-- HOME -->
   <div class="screen active" id="screen-home">
     <div class="home-topstats">
-      <div class="stat"><div class="num" id="statCountries">0</div><div class="cap">стран</div></div>
-      <div class="stat"><div class="num" id="statCities">0</div><div class="cap">городов</div></div>
+      <div class="world-pct">Открыто <b id="statWorldPct">0%</b> мира</div>
+      <div class="sub-stats">
+        <div class="stat"><div class="num" id="statCountries">0</div><div class="cap">стран</div></div>
+        <div class="stat"><div class="num" id="statCities">0</div><div class="cap">городов</div></div>
+      </div>
     </div>
     <div id="globeBox">
       <div id="globeMap"></div>
+      <div id="countryBubble">
+        <div class="bubble-card">
+          <div class="bubble-title" id="bubbleTitle">—</div>
+          <button class="bubble-add" id="bubbleAddBtn">Добавить</button>
+        </div>
+      </div>
       <button class="fab" id="fabAdd">+</button>
     </div>
   </div>
@@ -408,8 +526,8 @@
         <input class="add-field" id="addCountry" placeholder="Страна" autocomplete="off">
         <div class="suggest-list" id="countrySuggest" style="display:none;"></div>
       </div>
-      <div class="field-wrap" id="cityWrap" data-disabled="1">
-        <input class="add-field" id="addCity" placeholder="Сначала выбери страну" autocomplete="off" disabled>
+      <div class="field-wrap" id="cityWrap">
+        <input class="add-field" id="addCity" placeholder="Город (необязательно)" autocomplete="off">
         <div class="suggest-list" id="citySuggest" style="display:none;"></div>
       </div>
       <input class="add-field" id="addDate" type="date">
@@ -417,6 +535,13 @@
       <label class="add-toggle">
         <input type="checkbox" id="addWishlist"> Это место мечты (ещё не была)
       </label>
+      <label class="add-photo-label" for="addPhoto">
+        <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          <span>Добавить фото</span>
+        </span>
+      </label>
+      <input type="file" accept="image/*" id="addPhoto" style="display:none;">
       <button class="add-save" id="addSaveBtn">Сохранить</button>
       <button class="add-cancel" id="addCancelBtn">Отмена</button>
     </div>
@@ -454,6 +579,35 @@
       <div class="handle" id="profileHandle">—</div>
       <div class="status-pill" id="connStatus">проверяю подключение…</div>
     </div>
+
+    <div class="section-cap">мои места</div>
+    <div id="myPlacesList"></div>
+
+    <div class="section-cap" style="display:flex; align-items:center; gap:5px;">вишлист <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg></div>
+    <div id="myWishlistList"></div>
+    <div style="height:24px;"></div>
+  </div>
+
+  <!-- FRIEND VIEW -->
+  <div class="screen" id="screen-friend-view">
+    <div class="back-row" id="friendViewBack">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      Назад к друзьям
+    </div>
+    <div class="profile-head">
+      <div class="big-avatar" id="fvAvatar"></div>
+      <div class="uname" id="fvName">—</div>
+      <div class="world-pct" style="margin-top:8px;">Открыто <b id="fvWorldPct">0%</b> мира</div>
+      <div class="sub-stats" style="justify-content:center; display:flex; gap:22px; margin-top:6px;">
+        <div class="stat"><div class="num" id="fvCountries">0</div><div class="cap">стран</div></div>
+        <div class="stat"><div class="num" id="fvCities">0</div><div class="cap">городов</div></div>
+      </div>
+    </div>
+    <div class="section-cap">места</div>
+    <div id="fvPlacesList"></div>
+    <div class="section-cap" style="display:flex; align-items:center; gap:5px;">вишлист <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg></div>
+    <div id="fvWishlistList"></div>
+    <div style="height:24px;"></div>
   </div>
 
   <!-- SETTINGS -->
@@ -479,15 +633,19 @@
     </div>
   </div>
 
-  <!-- TUTORIAL -->
+  <!-- TUTORIAL (spotlight coachmarks over real screens) -->
   <div id="tutorial" class="hide">
-    <div class="tut-card">
-      <div class="tut-emoji" id="tutEmoji">🌍</div>
-      <div class="tut-title" id="tutTitle">Привет!</div>
-      <div class="tut-text" id="tutText">MapLink — твоя личная планета путешествий.</div>
-      <div class="tut-dots" id="tutDots"></div>
-      <button class="tut-next" id="tutNext">Дальше</button>
-      <button class="tut-skip" id="tutSkip">Пропустить</button>
+    <div id="coachHighlight"></div>
+    <div id="coachTip">
+      <div class="coach-card">
+        <div class="coach-step-label" id="coachStepLabel">1 / 8</div>
+        <div class="coach-title" id="coachTitle">Привет!</div>
+        <div class="coach-text" id="coachText">MapLink — твоя личная планета путешествий.</div>
+        <div class="coach-actions">
+          <button class="tut-skip" id="tutSkip">Пропустить</button>
+          <button class="tut-next" id="tutNext">Дальше</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -542,6 +700,23 @@
   });
 
   // ---------- Telegram WebApp ----------
+  // ---------- animated number count-up ----------
+  function animateNumber(el, target, suffix){
+    suffix = suffix || '';
+    const start = parseInt(el.textContent) || 0;
+    if(start === target){ el.textContent = target + suffix; return; }
+    const duration = 500;
+    const t0 = performance.now();
+    function tick(now){
+      const p = Math.min((now - t0) / duration, 1);
+      const eased = 1 - Math.pow(1-p, 3);
+      const val = Math.round(start + (target - start) * eased);
+      el.textContent = val + suffix;
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
   const tg = window.Telegram ? window.Telegram.WebApp : null;
   let tgUser = null;
   let startParam = null;
@@ -613,15 +788,25 @@
 
   // ---------- tutorial ----------
   const tutSteps = [
-    {emoji:'🌍', title:'Привет!', text:'MapLink — твоя личная планета путешествий, специально для тебя.'},
-    {emoji:'📍', title:'Отмечай места', text:'Крути глобус и жми "+" чтобы добавить страну или город, где ты была.'},
-    {emoji:'🤍', title:'Список мечты', text:'Места, куда только хочешь попасть, тоже можно сохранить — они появятся бледным пунктиром.'},
-    {emoji:'👯', title:'Зови друзей', text:'Добавляй друзей по ссылке или поиску и сравнивайте, кто где побывал.'}
+    {emoji:'🌍', title:'Привет!', text:'MapLink — твоя личная планета путешествий, специально для тебя.', anim:'anim-bounce'},
+    {emoji:'🤏', title:'Крути и приближай', text:'Води пальцем, чтобы вращать планету, и щипком приближай — появятся названия стран и городов.', anim:'anim-wiggle'},
+    {emoji:'💬', title:'Тапни по названию', text:'Нажми прямо на подпись страны или города на карте — выскочит пузырёк с кнопкой "Добавить".', anim:'anim-pop'},
+    {emoji:'➕', title:'Или жми на плюсик', text:'Круглая кнопка внизу карты открывает форму — впиши страну (город необязателен).', anim:'anim-pulse'},
+    {emoji:'📷', title:'Добавляй фото', text:'К любому месту можно прикрепить фотографию — она появится в карточке и на карте.', anim:'anim-float'},
+    {emoji:'🤍', title:'Список мечты', text:'Место, где ещё не была, но очень хочешь — отметь галочкой "место мечты". Оно ляжет в отдельный вишлист.', anim:'anim-heartbeat'},
+    {emoji:'👯', title:'Зови друзей', text:'Ищи друзей по имени или скидывай личную ссылку-приглашение — она добавит вас друг к другу автоматически.', anim:'anim-wiggle'},
+    {emoji:'🔔', title:'Заявки в друзья', text:'Если кто-то добавил тебя через поиск — заявка появится в разделе "Друзья", прими её оттуда.', anim:'anim-bounce'},
+    {emoji:'🗺️', title:'Профили друзей', text:'Тапни на друга в списке — увидишь его страны, города и вишлист.', anim:'anim-pop'},
+    {emoji:'⚙️', title:'Настройки', text:'Шестерёнка в профиле: тёмная пастельная тема, повтор этого туториала и удаление данных.', anim:'anim-float'}
   ];
   let tutIndex = 0;
   function renderTutStep(){
     const s = tutSteps[tutIndex];
-    document.getElementById('tutEmoji').textContent = s.emoji;
+    const card = document.querySelector('.tut-card');
+    card.classList.remove('tut-slide'); void card.offsetWidth; card.classList.add('tut-slide');
+    const emojiEl = document.getElementById('tutEmoji');
+    emojiEl.textContent = s.emoji;
+    emojiEl.className = 'tut-emoji ' + s.anim;
     document.getElementById('tutTitle').textContent = s.title;
     document.getElementById('tutText').textContent = s.text;
     document.getElementById('tutNext').textContent = tutIndex === tutSteps.length-1 ? 'Начать' : 'Дальше';
@@ -751,8 +936,8 @@
     const reqList = document.getElementById('requestsList');
     if(incoming && incoming.length){
       reqBlock.style.display = '';
-      reqList.innerHTML = incoming.map(r=>`
-        <div class="friend-row">
+      reqList.innerHTML = incoming.map((r,i)=>`
+        <div class="friend-row" style="animation-delay:${Math.min(i*0.05,0.3)}s">
           <div class="fav" style="${r.requester.avatar_url ? `background-image:url(${r.requester.avatar_url})` : ''}"></div>
           <div><div class="fname">${r.requester.username}</div></div>
           <button class="mini-btn" onclick="window.__respondReq('${r.id}', true)">Принять</button>
@@ -764,10 +949,10 @@
 
     // accepted friends, both directions
     const { data: asReq } = await supabase.from('friendships')
-      .select('addressee:addressee_id(username, avatar_url)')
+      .select('addressee:addressee_id(id, username, avatar_url)')
       .eq('requester_id', myUserId).eq('status', 'accepted');
     const { data: asAdd } = await supabase.from('friendships')
-      .select('requester:requester_id(username, avatar_url)')
+      .select('requester:requester_id(id, username, avatar_url)')
       .eq('addressee_id', myUserId).eq('status', 'accepted');
 
     const friends = [
@@ -776,12 +961,46 @@
     ];
 
     const list = document.getElementById('friendsList');
-    list.innerHTML = friends.length ? friends.map(f=>`
-      <div class="friend-row">
+    list.innerHTML = friends.length ? friends.map((f,i)=>`
+      <div class="friend-row" style="cursor:pointer; animation-delay:${Math.min(i*0.05,0.3)}s" onclick="window.__openFriend('${f.id}','${(f.username||'').replace(/'/g,"\\'")}','${f.avatar_url||''}')">
         <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''}"></div>
         <div><div class="fname">${f.username}</div></div>
+        <span style="margin-left:auto; color:var(--muted);">›</span>
       </div>`).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
   }
+
+  // ---------------- FRIEND PROFILE VIEW ----------------
+  window.__openFriend = async function(friendId, username, avatarUrl){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById('screen-friend-view').classList.add('active');
+
+    document.getElementById('fvName').textContent = username || 'Пользователь';
+    document.getElementById('fvAvatar').style.backgroundImage = avatarUrl ? `url(${avatarUrl})` : '';
+
+    const { data } = await supabase.from('places').select('*').eq('user_id', friendId).order('visit_date', {ascending:false});
+    const places = data || [];
+    const ids = places.map(p=>p.id);
+    let photosByPlace = {};
+    if(ids.length){
+      const { data: photoRows } = await supabase.from('photos').select('place_id,url').in('place_id', ids);
+      (photoRows||[]).forEach(ph=>{
+        if(!photosByPlace[ph.place_id]) photosByPlace[ph.place_id] = [];
+        photosByPlace[ph.place_id].push(ph.url);
+      });
+    }
+
+    const visited = places.filter(p=>!p.is_wishlist);
+    const wishlist = places.filter(p=>p.is_wishlist);
+    const countryCount = new Set(visited.map(p=>p.country)).size;
+    animateNumber(document.getElementById('fvCountries'), countryCount);
+    animateNumber(document.getElementById('fvCities'), visited.length);
+    animateNumber(document.getElementById('fvWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
+
+    document.getElementById('fvPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто');
+    document.getElementById('fvWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пусто');
+  };
+
+  document.getElementById('friendViewBack').addEventListener('click', ()=> showScreen('friends'));
 
   // ---------------- GLOBE ----------------
   const map = new maplibregl.Map({
@@ -791,12 +1010,14 @@
     zoom: 1.1
   });
 
+  let placeLabelLayers = [];
+
   map.on('load', ()=>{
     // true 3D globe (needs MapLibre GL JS v5+)
     map.setProjection({ type: 'globe' });
 
     // repaint into our pastel palette, targeted by source-layer (so land/water/borders stay distinct)
-    const keepLayers = ['water','landcover','landuse','boundary','place'];
+    const keepLayers = ['water','landcover','landuse','boundary','place','water_name'];
     (map.getStyle().layers || []).forEach(l=>{
       const sl = l['source-layer'];
       try{
@@ -807,33 +1028,39 @@
         }
 
         if(l.type === 'background'){
-          map.setPaintProperty(l.id, 'background-color', '#E7DCC9'); // ocean
+          map.setPaintProperty(l.id, 'background-color', '#AFD3D6'); // deep ocean at world view
         }
         if(l.type === 'fill' && sl === 'water'){
-          map.setPaintProperty(l.id, 'fill-color', '#E7DCC9');
+          map.setPaintProperty(l.id, 'fill-color', '#AFD3D6'); // sea/ocean, distinct pastel teal-blue
         }
         if(l.type === 'fill' && (sl === 'landcover' || sl === 'landuse')){
-          map.setPaintProperty(l.id, 'fill-color', '#B9C7AA');
+          map.setPaintProperty(l.id, 'fill-color', '#B9C7AA'); // land
         }
         if(l.type === 'line' && sl === 'boundary'){
           map.setPaintProperty(l.id, 'line-color', '#B98C93');
           map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // borders visible from the start
         }
         if(l.type === 'line' && sl === 'water'){
-          map.setPaintProperty(l.id, 'line-color', '#E7DCC9');
+          map.setPaintProperty(l.id, 'line-color', '#8FBABF');
         }
         if(l.type === 'symbol'){
           if(sl === 'place'){
-            map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // labels visible from the start
+            map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); // country/city labels visible from the start
+            placeLabelLayers.push(l.id);
+          }
+          if(sl === 'water_name'){
+            map.setPaintProperty(l.id, 'text-color', '#4C7A80');
           }
           // prefer Russian names, fall back to local/default name
           const layout = map.getLayoutProperty(l.id, 'text-field');
           if(layout){
             map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
           }
-          map.setPaintProperty(l.id, 'text-color', '#3A2E2B');
           map.setPaintProperty(l.id, 'text-halo-color', '#FFFDFB');
           map.setPaintProperty(l.id, 'text-halo-width', 1.2);
+          if(sl === 'place'){
+            map.setPaintProperty(l.id, 'text-color', '#3A2E2B');
+          }
         }
       }catch(e){ /* some layers don't support a given paint prop, skip */ }
     });
@@ -841,38 +1068,66 @@
     try{ map.setSky({ 'sky-color':'#EADFD3', 'horizon-color':'#F4DCD6', 'fog-color':'#F4DCD6' }); }catch(e){}
   });
 
-  let pendingLatLng = null;
   let placeMarkers = [];
-  let selectedCountry = null; // {name, code}
+  let selectedCountry = null; // {name, code, lat, lon}
   let selectedCity = null;    // {name, lat, lon}
 
-  function openAddModal(){
-    document.getElementById('addCountry').value = '';
-    document.getElementById('addCity').value = '';
+  function openAddModal(prefill){
+    document.getElementById('addCountry').value = (prefill && prefill.country) || '';
+    document.getElementById('addCity').value = (prefill && prefill.city) || '';
     document.getElementById('addNote').value = '';
     document.getElementById('addWishlist').checked = false;
     document.getElementById('addDate').value = new Date().toISOString().slice(0,10);
-    selectedCountry = null;
-    selectedCity = null;
-    const cityInput = document.getElementById('addCity');
-    cityInput.disabled = true;
-    cityInput.placeholder = 'Сначала выбери страну';
-    document.getElementById('cityWrap').dataset.disabled = '1';
+    selectedCountry = (prefill && prefill.selectedCountry) || null;
+    selectedCity = (prefill && prefill.selectedCity) || null;
     document.getElementById('countrySuggest').style.display = 'none';
     document.getElementById('citySuggest').style.display = 'none';
     document.getElementById('addModal').classList.remove('hide');
   }
   function closeAddModal(){ document.getElementById('addModal').classList.add('hide'); }
 
-  map.on('click', (e)=>{
-    pendingLatLng = e.lngLat;
-    openAddModal();
-  });
-  document.getElementById('fabAdd').addEventListener('click', ()=>{
-    if(!pendingLatLng) pendingLatLng = map.getCenter();
-    openAddModal();
-  });
+  document.getElementById('fabAdd').addEventListener('click', ()=> openAddModal());
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
+
+  // ---------- Plague-Inc style tap bubble on country/city labels ----------
+  const bubbleEl = document.getElementById('countryBubble');
+  let bubbleFeature = null;
+
+  map.on('click', (e)=>{
+    const features = map.queryRenderedFeatures(e.point, { layers: placeLabelLayers });
+    if(!features.length){ bubbleEl.classList.remove('show'); return; }
+    const f = features[0];
+    bubbleFeature = f;
+    const displayName = (f.properties['name:ru'] || f.properties.name || '');
+    document.getElementById('bubbleTitle').textContent = displayName;
+    bubbleEl.style.left = e.point.x + 'px';
+    bubbleEl.style.top = e.point.y + 'px';
+    bubbleEl.classList.remove('show');
+    void bubbleEl.offsetWidth; // restart animation
+    bubbleEl.classList.add('show');
+  });
+
+  document.getElementById('bubbleAddBtn').addEventListener('click', ()=>{
+    if(!bubbleFeature) return;
+    const f = bubbleFeature;
+    const displayName = (f.properties['name:ru'] || f.properties.name || '');
+    const isCountry = f.properties.class === 'country';
+    const coords = f.geometry && f.geometry.coordinates ? f.geometry.coordinates : [0,0];
+
+    bubbleEl.classList.remove('show');
+
+    if(isCountry){
+      openAddModal({
+        country: displayName,
+        selectedCountry: { name: displayName, code: (f.properties.iso_a2||'').toLowerCase(), lat: coords[1], lon: coords[0] }
+      });
+    } else {
+      openAddModal({
+        city: displayName,
+        selectedCity: { name: displayName, lat: coords[1], lon: coords[0] }
+      });
+    }
+  });
 
   // ---------- Nominatim autocomplete ----------
   async function nominatimSearch(query, extraParams){
@@ -888,8 +1143,6 @@
   let countryTimer = null;
   document.getElementById('addCountry').addEventListener('input', (e)=>{
     selectedCountry = null;
-    document.getElementById('addCity').disabled = true;
-    document.getElementById('cityWrap').dataset.disabled = '1';
     clearTimeout(countryTimer);
     const q = e.target.value.trim();
     const box = document.getElementById('countrySuggest');
@@ -903,15 +1156,9 @@
         item.addEventListener('click', ()=>{
           const r = results[item.dataset.i];
           const name = r.display_name.split(',')[0];
-          selectedCountry = { name, code: (r.address && r.address.country_code) || '' };
+          selectedCountry = { name, code: (r.address && r.address.country_code) || '', lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
           document.getElementById('addCountry').value = name;
           box.style.display = 'none';
-          const cityInput = document.getElementById('addCity');
-          cityInput.disabled = false;
-          cityInput.placeholder = 'Город';
-          cityInput.value = '';
-          document.getElementById('cityWrap').dataset.disabled = '0';
-          selectedCity = null;
         });
       });
     }, 350);
@@ -923,12 +1170,11 @@
     clearTimeout(cityTimer);
     const q = e.target.value.trim();
     const box = document.getElementById('citySuggest');
-    if(q.length < 2 || !selectedCountry){ box.style.display = 'none'; return; }
+    if(q.length < 2){ box.style.display = 'none'; return; }
     cityTimer = setTimeout(async ()=>{
-      const results = await nominatimSearch(q, {
-        featuretype: 'settlement',
-        countrycodes: selectedCountry.code
-      });
+      const extra = { featuretype: 'settlement' };
+      if(selectedCountry && selectedCountry.code) extra.countrycodes = selectedCountry.code;
+      const results = await nominatimSearch(q, extra);
       if(!results.length){ box.style.display = 'none'; return; }
       box.innerHTML = results.map((r,i)=>`<div class="suggest-item" data-i="${i}">${r.display_name.split(',')[0]}<small>${r.display_name}</small></div>`).join('');
       box.style.display = '';
@@ -944,23 +1190,41 @@
     }, 350);
   });
 
+  document.getElementById('addPhoto').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    document.getElementById('addPhotoText').querySelector('span:last-child').textContent = f ? f.name : 'Добавить фото';
+  });
+
   document.getElementById('addSaveBtn').addEventListener('click', async ()=>{
     if(!myUserId) return;
-    if(!selectedCountry || !selectedCity){
-      alert('Выбери страну и город из списка подсказок');
+    if(!selectedCountry){
+      alert('Выбери страну из списка подсказок');
       return;
     }
 
-    await supabase.from('places').insert({
+    const place = {
       user_id: myUserId,
       country: selectedCountry.name,
-      city: selectedCity.name,
+      city: selectedCity ? selectedCity.name : null,
       visit_date: document.getElementById('addDate').value || null,
       note: document.getElementById('addNote').value.trim() || null,
       is_wishlist: document.getElementById('addWishlist').checked,
-      lat: selectedCity.lat,
-      lon: selectedCity.lon
-    });
+      lat: selectedCity ? selectedCity.lat : selectedCountry.lat,
+      lon: selectedCity ? selectedCity.lon : selectedCountry.lon
+    };
+
+    const { data: newPlace, error } = await supabase.from('places').insert(place).select().single();
+
+    const photoFile = document.getElementById('addPhoto').files[0];
+    if(!error && newPlace && photoFile){
+      const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${myUserId}/${newPlace.id}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
+      if(!upErr){
+        const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
+        await supabase.from('photos').insert({ place_id: newPlace.id, url: pub.publicUrl });
+      }
+    }
 
     closeAddModal();
     loadPlaces();
@@ -971,10 +1235,23 @@
     loadPlaces();
   };
 
+  const WORLD_COUNTRIES_TOTAL = 195;
+
   async function loadPlaces(){
     if(!myUserId) return;
-    const { data } = await supabase.from('places').select('*').eq('user_id', myUserId);
+    const { data } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
     const places = data || [];
+
+    // fetch photos for all these places in one batch
+    const ids = places.map(p=>p.id);
+    let photosByPlace = {};
+    if(ids.length){
+      const { data: photoRows } = await supabase.from('photos').select('place_id,url').in('place_id', ids);
+      (photoRows||[]).forEach(ph=>{
+        if(!photosByPlace[ph.place_id]) photosByPlace[ph.place_id] = [];
+        photosByPlace[ph.place_id].push(ph.url);
+      });
+    }
 
     placeMarkers.forEach(m=>m.remove());
     placeMarkers = [];
@@ -987,9 +1264,13 @@
         .setLngLat([p.lon, p.lat])
         .addTo(map);
 
+      const photos = photosByPlace[p.id] || [];
+      const photoHtml = photos.length ? `<img src="${photos[0]}" style="width:100%;height:90px;object-fit:cover;border-radius:10px;margin-bottom:8px;">` : '';
+
       const popupHtml = `
         <div class="map-popup">
-          <div class="mp-title">${p.city}, ${p.country}</div>
+          ${photoHtml}
+          <div class="mp-title">${p.city ? p.city+', '+p.country : p.country}</div>
           <div class="mp-note">${p.note ? p.note : (p.is_wishlist ? 'место мечты' : (p.visit_date || ''))}</div>
           <button class="mp-btn" onclick="window.__deletePlace('${p.id}')">Удалить</button>
         </div>`;
@@ -999,8 +1280,39 @@
     });
 
     const visited = places.filter(p=>!p.is_wishlist);
-    document.getElementById('statCountries').textContent = new Set(visited.map(p=>p.country)).size;
-    document.getElementById('statCities').textContent = visited.length;
+    const wishlist = places.filter(p=>p.is_wishlist);
+    const countryCount = new Set(visited.map(p=>p.country)).size;
+    animateNumber(document.getElementById('statCountries'), countryCount);
+    animateNumber(document.getElementById('statCities'), visited.length);
+    animateNumber(document.getElementById('statWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
+
+    document.getElementById('myPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто — добавь первое место на планете');
+    document.getElementById('myWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пока пусто — отметь место мечты на планете');
+  }
+
+  function renderPlaceCards(list, photosByPlace, emptyText){
+    if(!list.length){
+      return `<div class="placeholder-box" style="margin-top:0;">${emptyText}</div>`;
+    }
+    return list.map((p,i)=>{
+      const photos = photosByPlace[p.id] || [];
+      const thumb = photos.length
+        ? `<div class="thumb" style="background-image:url(${photos[0]})"></div>`
+        : `<div class="thumb">${p.is_wishlist
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
+          }</div>`;
+      return `
+        <div class="place-card" style="animation-delay:${Math.min(i*0.05,0.4)}s">
+          ${thumb}
+          <div class="pc-body">
+            <div class="pc-title">${p.city ? p.city+', '+p.country : p.country}</div>
+            <div class="pc-date">${p.visit_date || ''}</div>
+            ${p.note ? `<div class="pc-note">${p.note}</div>` : ''}
+            ${p.is_wishlist ? '<span class="pc-wishlist-tag">место мечты</span>' : ''}
+          </div>
+        </div>`;
+    }).join('');
   }
 })();
 </script>
