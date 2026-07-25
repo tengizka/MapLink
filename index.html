@@ -79,36 +79,46 @@
   .wobble-line{
     font-family:'Caveat',cursive;
     font-weight:700;
-    font-size:46px;
-    line-height:1.5;
+    font-size:42px;
+    line-height:1.35;
     color:var(--rose-deep);
-    max-width:280px;
-    padding:10px 0;
-    opacity:0; /* hide until Caveat is ready — no fallback flash */
-    transition:opacity .25s ease;
+    max-width:300px;
+    padding:10px 12px;
+    opacity:0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: geometricPrecision;
+    letter-spacing: 0.01em;
   }
-  .wobble-line.fonts-ready{ opacity:1; }
-  .wobble-line span{
-    display:inline-block;
-    animation:wobble 2.6s ease-in-out infinite;
-    will-change:transform;
-    backface-visibility:hidden;
-    -webkit-backface-visibility:hidden;
-    transform:translateZ(0);
+  /* iPhone-safe: animate the WHOLE line (one layer) — glyphs stay sharp */
+  .wobble-line.fonts-ready{
+    opacity:1;
+    animation: lineFloat 1.35s ease-in-out infinite;
   }
-  @keyframes wobble{
-    0%{ transform:translateZ(0) translateY(0) rotate(0deg); }
-    25%{ transform:translateZ(0) translateY(-4px) rotate(-3deg); }
-    50%{ transform:translateZ(0) translateY(0px) rotate(0deg); }
-    75%{ transform:translateZ(0) translateY(3px) rotate(3deg); }
-    100%{ transform:translateZ(0) translateY(0) rotate(0deg); }
+  @keyframes lineFloat{
+    0%, 100%{ transform: translateY(0); }
+    50%{ transform: translateY(-6px); }
+  }
+  .wobble-line span{ display: inline; }
+  /* desktop: per-letter hop */
+  @media (hover: hover) and (pointer: fine){
+    .wobble-line.fonts-ready{ animation: none; }
+    .wobble-line span{
+      display: inline-block;
+      animation: wobble 1.35s ease-in-out infinite;
+    }
+    @keyframes wobble{
+      0%, 100%{ transform: translateY(0); }
+      50%{ transform: translateY(-3px); }
+    }
   }
   .sign{
     position:absolute; bottom:8%;
     font-family:'Caveat',cursive;
     font-size:22px; color:var(--muted);
     opacity:0;
-    transition:opacity .25s ease;
+    transition:opacity .3s ease;
+    -webkit-font-smoothing: antialiased;
   }
   .sign.fonts-ready{ opacity:1; }
 
@@ -372,12 +382,19 @@
   .feed-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .feed-head .fav{ width:36px; height:36px; border-radius:50%; background:var(--sage) center/cover no-repeat; }
   .feed-head .fname{ font-size:13px; font-weight:700; }
-  .feed-head .ftime{ font-size:11px; color:var(--muted); }
+  .feed-head .ftime,
+  .feed-card .ftime,
+  .feed-card-compact .ftime{
+    font-size:10px; color:var(--muted); font-weight:500; letter-spacing:.02em;
+  }
   .feed-photo{
     width:100%; aspect-ratio:4/3; border-radius:14px;
     background:var(--blush) center/cover no-repeat; margin-bottom:8px;
   }
-  .feed-title{ font-family:'Fraunces',serif; font-style:italic; font-size:16px; }
+  .feed-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px;
+    color:var(--rose-deep); line-height:1.25; margin-top:2px;
+  }
   .feed-note{ font-size:12.5px; color:var(--muted); margin:4px 0 8px; }
   .feed-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
   .react-btn{
@@ -400,13 +417,14 @@
   }
   .feed-card-compact .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; grid-row:1/3; }
   .fcc-body{ min-width:0; }
-  .fcc-line{ font-size:12px; color:var(--muted); }
+  .fcc-line{ font-size:11.5px; color:var(--muted); }
   .fcc-line b{ color:var(--ink); }
   .fcc-title{
-    display:flex; align-items:center; gap:5px;
-    font-family:'Fraunces',serif; font-style:italic; font-size:14px; margin-top:1px;
+    display:flex; align-items:center; gap:6px;
+    font-family:'Fraunces',serif; font-style:italic; font-size:16px;
+    color:var(--rose-deep); margin-top:3px; line-height:1.2;
   }
-  .fcc-title svg{ width:13px; height:13px; color:var(--rose-deep); flex-shrink:0; }
+  .fcc-title svg{ width:14px; height:14px; color:var(--rose-deep); flex-shrink:0; }
   .feed-card-compact .feed-actions{ grid-column:1/-1; margin-top:6px; }
   .rank-row{
     display:flex; align-items:center; gap:10px;
@@ -1070,19 +1088,23 @@
     delay++;
   });
 
-  // show splash text only after Caveat (and friends) are loaded — prevents font swap flash
+  // show splash text only after Caveat is fully ready (extra frame on iOS avoids soft glyphs)
   function revealSplashFonts(){
-    wobbleEl.classList.add('fonts-ready');
-    const sign = document.querySelector('#splash .sign');
-    if(sign) sign.classList.add('fonts-ready');
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{
+        wobbleEl.classList.add('fonts-ready');
+        const sign = document.querySelector('#splash .sign');
+        if(sign) sign.classList.add('fonts-ready');
+      });
+    });
   }
   if(document.fonts && document.fonts.load){
     Promise.all([
-      document.fonts.load('700 46px Caveat'),
-      document.fonts.load('600 22px Caveat')
+      document.fonts.load('700 42px Caveat'),
+      document.fonts.load('600 22px Caveat'),
+      document.fonts.ready
     ]).then(revealSplashFonts).catch(revealSplashFonts);
-    // safety timeout if fonts.googleapis blocked
-    setTimeout(revealSplashFonts, 1200);
+    setTimeout(revealSplashFonts, 1500);
   } else {
     revealSplashFonts();
   }
