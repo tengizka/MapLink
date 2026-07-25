@@ -28,6 +28,9 @@
     --ink:#3A2E2B;
     --muted:#8C7A73;
     --card:#FFFDFB;
+    --r-sm:12px;
+    --r-md:16px;
+    --r-lg:22px;
   }
   html.theme-dark{
     --cream:#2B2422;
@@ -98,7 +101,7 @@
     0%,100%{ color: var(--rose-deep); }
     50%{ color:#B9707C; }
   }
-  .wline{
+  .wobble-line .wline{
     display:inline-block;
     animation: lineFloat 1.9s ease-in-out infinite;
   }
@@ -202,6 +205,12 @@
     color:var(--muted);
     font-size:14px;
     box-shadow:0 6px 16px -8px rgba(58,46,43,.2);
+  }
+  .placeholder-box::before{
+    content:'';
+    display:block; width:46px; height:46px; margin:0 auto 12px;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238C7A73' stroke-width='1.5'><rect x='3' y='8' width='18' height='12' rx='2.2'/><path d='M9 8V6a3 3 0 013-3v0a3 3 0 013 3v2'/><path d='M3 13.2h18'/><circle cx='12' cy='13.2' r='1.3' fill='%238C7A73' stroke='none'/></svg>") center/contain no-repeat;
+    opacity:.5;
   }
   .placeholder-box b{
     display:block; color:var(--ink); font-family:'Fraunces',serif;
@@ -352,19 +361,36 @@
     position:relative; cursor:pointer;
     transition:transform .2s ease, box-shadow .2s ease;
   }
-  .ig-grid .ig-cell::before{
-    /* washi-tape accent, classic scrapbook/polaroid-wall touch */
-    content:''; position:absolute; top:-7px; left:50%;
-    width:38px; height:14px; margin-left:-19px;
-    background:rgba(197,123,133,.35);
+  .ig-grid .ig-cell.scatter-0{ animation-name: gridPop0; }
+  .ig-grid .ig-cell.scatter-1{ animation-name: gridPop1; }
+  .ig-grid .ig-cell.scatter-2{ animation-name: gridPop2; }
+  .ig-grid .ig-cell.scatter-3{ animation-name: gridPop3; }
+  .ig-grid .ig-cell.scatter-4{ animation-name: gridPop4; }
+  @keyframes gridPop0{ 0%{opacity:0;transform:scale(.92);} 100%{opacity:1;transform:scale(1) rotate(-3deg) translateY(2px);} }
+  @keyframes gridPop1{ 0%{opacity:0;transform:scale(.92);} 100%{opacity:1;transform:scale(1) rotate(2.5deg) translateY(-6px);} }
+  @keyframes gridPop2{ 0%{opacity:0;transform:scale(.92);} 100%{opacity:1;transform:scale(1) rotate(-1.5deg) translateY(10px);} }
+  @keyframes gridPop3{ 0%{opacity:0;transform:scale(.92);} 100%{opacity:1;transform:scale(1) rotate(4deg) translateY(-3px);} }
+  @keyframes gridPop4{ 0%{opacity:0;transform:scale(.92);} 100%{opacity:1;transform:scale(1) rotate(-4.5deg) translateY(6px);} }
+  .ig-grid .ig-cell:active{ animation-play-state:paused; transform:rotate(0deg) scale(.97) !important; }
+
+  .attach{ position:absolute; z-index:2; pointer-events:none; }
+  .attach-tape{
+    top:-8px; left:50%;
+    width:40px; height:15px;
     border:1px solid rgba(255,255,255,.5);
     box-shadow:0 2px 4px rgba(58,46,43,.15);
-    transform:rotate(-3deg);
   }
-  .ig-grid .ig-cell:nth-child(3n)::before{ transform:rotate(4deg); background:rgba(169,183,154,.4); }
-  .ig-grid .ig-cell:nth-child(odd){ transform:rotate(-1.2deg); }
-  .ig-grid .ig-cell:nth-child(even){ transform:rotate(1.4deg); }
-  .ig-grid .ig-cell:active{ transform:rotate(0deg) scale(.97); }
+  .attach-pin{
+    top:-13px; left:14px; width:22px; height:26px;
+    filter:drop-shadow(0 3px 3px rgba(58,46,43,.3));
+  }
+  .attach-pin svg{ width:100%; height:100%; }
+  .attach-clip{
+    top:-15px; right:16px; width:16px; height:32px;
+    transform:rotate(8deg);
+    filter:drop-shadow(0 2px 2px rgba(58,46,43,.25));
+  }
+  .attach-clip svg{ width:100%; height:100%; }
   .ig-grid .ig-cell .ig-photo{
     width:100%; aspect-ratio:1;
     border-radius:4px;
@@ -402,6 +428,12 @@
   .ig-empty{
     padding:36px 24px; text-align:center; color:var(--muted); font-size:13px;
     font-family:'Fraunces',serif; font-style:italic;
+  }
+  .ig-empty::before{
+    content:'';
+    display:block; width:44px; height:44px; margin:0 auto 10px;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238C7A73' stroke-width='1.4'><circle cx='12' cy='12' r='8.5'/><path d='M3.5 12h17M12 3.5c2.3 2.4 3.5 5.4 3.5 8.5s-1.2 6.1-3.5 8.5c-2.3-2.4-3.5-5.4-3.5-8.5s1.2-6.1 3.5-8.5z'/></svg>") center/contain no-repeat;
+    opacity:.45;
   }
   /* ticket-style list cards on friend profile */
   .journal-ticket{
@@ -804,6 +836,10 @@
     animation:btnSpin .7s linear infinite;
   }
   @keyframes btnSpin{ to{ transform:rotate(360deg); } }
+  @keyframes confettiPop{
+    0%{ transform:translate(0,0) rotate(0deg); opacity:1; }
+    100%{ transform:translate(var(--dx),calc(var(--dy) + 90px)) rotate(var(--rot)); opacity:0; }
+  }
 
   /* universal tap feedback */
   button, .navitem, .friend-row, .place-card, .mini-btn, .invite-btn, .bubble-add, .fab{
@@ -2012,8 +2048,9 @@
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
       const stamp = renderStamp(p);
-      return `<div class="ig-cell" onclick="window.__openIgPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s">
-        ${multi}${stamp}
+      const attach = renderAttachment(i);
+      return `<div class="ig-cell scatter-${i%5}" onclick="window.__openIgPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s">
+        ${attach}${multi}${stamp}
         <div class="ig-photo" data-place-id="${p.id}"></div>
         <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
@@ -2191,6 +2228,32 @@
     document.getElementById('citySuggest').style.display = 'none';
     document.getElementById('addModal').classList.remove('hide');
   }
+  // little celebratory burst — no library, just a handful of DOM particles
+  const confettiColors = ['var(--rose)','var(--rose-deep)','var(--sage)','var(--gold)','var(--blush)'];
+  function fireConfetti(x, y){
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;z-index:500;pointer-events:none;';
+    document.body.appendChild(box);
+    const n = 18;
+    for(let i=0;i<n;i++){
+      const p = document.createElement('div');
+      const angle = (Math.PI*2*i/n) + (Math.random()*0.6-0.3);
+      const dist = 60 + Math.random()*70;
+      const dx = Math.cos(angle)*dist;
+      const dy = Math.sin(angle)*dist - 30;
+      const rot = (Math.random()*360-180)+'deg';
+      const size = 5 + Math.random()*5;
+      const isCircle = Math.random() > 0.5;
+      p.style.cssText = `position:fixed; left:${x}px; top:${y}px; width:${size}px; height:${size}px;
+        background:${confettiColors[i % confettiColors.length]};
+        border-radius:${isCircle ? '50%' : '2px'};
+        --dx:${dx}px; --dy:${dy}px; --rot:${rot};
+        animation:confettiPop .9s cubic-bezier(.2,.8,.3,1) forwards;`;
+      box.appendChild(p);
+    }
+    setTimeout(()=> box.remove(), 1000);
+  }
+
   function closeAddModal(){ document.getElementById('addModal').classList.add('hide'); }
 
   document.getElementById('fabAdd').addEventListener('click', ()=> openAddModal());
@@ -2438,6 +2501,11 @@
         }
       }
 
+      const fab = document.getElementById('fabAdd');
+      if(fab){
+        const r = fab.getBoundingClientRect();
+        fireConfetti(r.left + r.width/2, r.top + r.height/2);
+      }
       closeAddModal();
       loadPlaces();
     } finally {
@@ -2539,9 +2607,10 @@
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
       const stamp = renderStamp(p);
+      const attach = renderAttachment(i);
       const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
-      return `<div class="ig-cell" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
-        ${multi}${stamp}
+      return `<div class="ig-cell scatter-${i%5}" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
+        ${attach}${multi}${stamp}
         <div class="ig-photo" data-place-id="${p.id}"></div>
         <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
@@ -2806,6 +2875,27 @@
   }
 
   // vintage postmark stamp: ring + dashed perforation + year, or a little heart for wishlist
+  // scrapbook-wall attachment, cycling through 3 different ways a memory gets "stuck up"
+  function renderAttachment(i){
+    const kind = i % 3;
+    if(kind === 0){
+      // washi tape
+      const tapeColor = (i % 6 < 3) ? 'rgba(197,123,133,.4)' : 'rgba(169,183,154,.45)';
+      const rot = (i % 2 === 0) ? -5 : 4;
+      return `<div class="attach attach-tape" style="transform:translateX(-50%) rotate(${rot}deg); background:${tapeColor};"></div>`;
+    }
+    if(kind === 1){
+      // pushpin
+      return `<div class="attach attach-pin">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="7.5" fill="var(--rose-deep)"/><circle cx="9.5" cy="7.5" r="2.2" fill="rgba(255,255,255,.55)"/><path d="M12 16.5l2 6-2 1.5-2-1.5z" fill="var(--rose-deep)"/></svg>
+      </div>`;
+    }
+    // paperclip
+    return `<div class="attach attach-clip">
+      <svg viewBox="0 0 24 34"><path d="M6 12V7a5 5 0 0110 0v15a3 3 0 01-6 0V9a1.3 1.3 0 012.6 0v13" fill="none" stroke="#9CA3AD" stroke-width="2.1" stroke-linecap="round"/></svg>
+    </div>`;
+  }
+
   function renderStamp(p){
     if(p.is_wishlist){
       return `<span class="ig-stamp">
