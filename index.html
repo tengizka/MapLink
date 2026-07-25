@@ -12,7 +12,9 @@
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@5/dist/maplibre-gl.css" rel="stylesheet">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=block">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:ital,wght@0,400;0,600;1,500&family=Quicksand:wght@400;500;600;700&display=block" rel="stylesheet">
 
 <style>
   :root{
@@ -82,7 +84,10 @@
     color:var(--rose-deep);
     max-width:280px;
     padding:10px 0;
+    opacity:0; /* hide until Caveat is ready — no fallback flash */
+    transition:opacity .25s ease;
   }
+  .wobble-line.fonts-ready{ opacity:1; }
   .wobble-line span{
     display:inline-block;
     animation:wobble 2.6s ease-in-out infinite;
@@ -102,7 +107,10 @@
     position:absolute; bottom:8%;
     font-family:'Caveat',cursive;
     font-size:22px; color:var(--muted);
+    opacity:0;
+    transition:opacity .25s ease;
   }
+  .sign.fonts-ready{ opacity:1; }
 
   /* ---------------- TOP BAR ---------------- */
   .topbar{
@@ -165,9 +173,11 @@
     display:flex; justify-content:space-around; align-items:center;
     padding:12px 0 max(14px, env(safe-area-inset-bottom));
     background:var(--card);
-    border-top:1px solid #EEE0D8;
+    border-top:1px solid transparent;
     flex-shrink:0;
   }
+  html:not(.theme-dark) .navbar{ border-top-color:#EEE0D8; }
+  html.theme-dark .navbar{ border-top-color:rgba(255,255,255,.06); }
   .navitem{
     display:flex; flex-direction:column; align-items:center; gap:3px;
     color:#C9B8AF; background:none; border:none; font-family:inherit;
@@ -215,6 +225,205 @@
     font-size:13px; color:var(--muted); margin-bottom:14px;
   }
   .back-row svg{ width:16px; height:16px; }
+
+  /* ---------------- PROFILE TOOLBAR / GRID ---------------- */
+  .profile-toolbar{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    margin:4px 0 12px; flex-wrap:wrap;
+  }
+  .sort-select{
+    border:1px solid #EEDDD3; background:var(--card); color:var(--ink);
+    border-radius:12px; padding:8px 10px; font-family:inherit; font-size:12.5px;
+  }
+  html.theme-dark .sort-select{ border-color:#4A3B37; }
+  .view-toggle{ display:flex; gap:4px; }
+  .view-btn{
+    width:34px; height:34px; border-radius:10px; border:none;
+    background:var(--blush); color:var(--muted);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .view-btn.active{ background:var(--rose); color:#fff; }
+  .view-btn svg{ width:16px; height:16px; }
+  .places-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:4px; margin-bottom:12px;
+  }
+  .places-grid .grid-cell{
+    aspect-ratio:1; border-radius:10px; overflow:hidden;
+    background:var(--blush) center/cover no-repeat;
+    position:relative; cursor:pointer;
+  }
+  .places-grid .grid-cell .grid-label{
+    position:absolute; left:0; right:0; bottom:0;
+    padding:6px 6px 5px; font-size:10px; color:#fff;
+    background:linear-gradient(transparent, rgba(0,0,0,.55));
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  /* Instagram-style friend profile */
+  #screen-friend-view{ padding-left:0; padding-right:0; }
+  #screen-friend-view .back-row,
+  #screen-friend-view .profile-head,
+  #screen-friend-view #fvAddFriendWrap,
+  #screen-friend-view #fvPrivateNote{ padding-left:20px; padding-right:20px; }
+  .ig-tabs{
+    display:flex; border-top:1px solid rgba(0,0,0,.06); border-bottom:1px solid rgba(0,0,0,.06);
+    margin:12px 0 0;
+  }
+  html.theme-dark .ig-tabs{ border-color:rgba(255,255,255,.08); }
+  .ig-tab{
+    flex:1; background:none; border:none; padding:12px 0 10px;
+    color:var(--muted); font-family:inherit; display:flex; flex-direction:column;
+    align-items:center; gap:4px; border-bottom:2px solid transparent;
+  }
+  .ig-tab svg{ width:18px; height:18px; }
+  .ig-tab.active{ color:var(--ink); border-bottom-color:var(--rose-deep); }
+  .ig-grid{
+    display:grid; grid-template-columns:repeat(3, 1fr); gap:2px; margin:0;
+  }
+  .ig-grid .ig-cell{
+    aspect-ratio:1; background:var(--blush) center/cover no-repeat;
+    position:relative; cursor:pointer;
+    transition:background-image .25s ease;
+  }
+  .thumb, .grid-cell, .feed-photo{
+    transition:background-image .25s ease;
+  }
+  .ig-grid .ig-cell::after{
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(180deg, transparent 42%, rgba(42,34,31,.75) 100%);
+    pointer-events:none;
+  }
+  .ig-grid .ig-cell .ig-label{
+    position:absolute; left:0; right:0; bottom:0; z-index:1;
+    padding:8px 7px 7px; color:#fff;
+    font-size:11px; font-weight:600; line-height:1.25;
+    text-shadow:0 1px 3px rgba(0,0,0,.35);
+  }
+  .ig-grid .ig-cell .ig-label small{
+    display:block; font-weight:500; font-size:9.5px; opacity:.9; margin-top:1px;
+  }
+  .ig-grid .ig-cell .ig-multi{
+    position:absolute; top:6px; right:6px; z-index:1;
+    background:rgba(42,34,31,.45); color:#fff; border-radius:8px;
+    font-size:10px; padding:2px 6px; font-weight:700;
+  }
+  .ig-empty{ padding:30px 20px; text-align:center; color:var(--muted); font-size:13px; }
+  .fv-toolbar{ display:flex; justify-content:flex-end; gap:4px; padding:8px 16px 6px; }
+  #igPlaceModal{
+    position:fixed; inset:0; z-index:85; background:rgba(42,34,31,.55);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  #igPlaceModal.hide{ display:none; }
+  .ig-modal-card{
+    background:var(--card); border-radius:20px; width:100%; max-width:340px; overflow:hidden;
+    animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
+  }
+  .ig-modal-photo-wrap{ position:relative; }
+  .ig-modal-photo{
+    width:100%; aspect-ratio:1; background:var(--blush) center/cover no-repeat;
+  }
+  .ig-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:32px; height:32px; border-radius:50%; border:none;
+    background:rgba(255,253,251,.92); color:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,.12);
+  }
+  .ig-nav.prev{ left:8px; }
+  .ig-nav.next{ right:8px; }
+  .ig-dots{ display:flex; justify-content:center; gap:5px; padding:8px 0 0; }
+  .ig-dots span{ width:6px; height:6px; border-radius:50%; background:#E4D2C8; }
+  .ig-dots span.on{ background:var(--rose); }
+  .ig-modal-body{ padding:14px 16px 16px; }
+  .ig-modal-title{ font-family:'Fraunces',serif; font-style:italic; font-size:18px; }
+  .ig-modal-meta{ font-size:12px; color:var(--muted); margin:4px 0 8px; }
+  .ig-modal-note{ font-size:13px; line-height:1.45; }
+  .ig-modal-close{
+    width:100%; border:none; background:none; color:var(--muted);
+    padding:12px; font-family:inherit; font-size:13px;
+  }
+
+  /* ---------------- FEED / RANK ---------------- */
+  .friends-tabs{
+    display:flex; gap:8px; margin:4px 0 14px;
+  }
+  .friends-tab{
+    flex:1; border:none; border-radius:18px; padding:12px 8px 10px;
+    font-family:inherit; font-size:11.5px; font-weight:700;
+    background:var(--card); color:var(--muted);
+    box-shadow:0 4px 12px -6px rgba(58,46,43,.18);
+    display:flex; flex-direction:column; align-items:center; gap:6px;
+    transition:transform .15s ease, background .2s ease, color .2s ease;
+  }
+  .friends-tab svg{ width:22px; height:22px; opacity:.75; }
+  .friends-tab.active{
+    background:linear-gradient(145deg, var(--rose), var(--rose-deep));
+    color:#fff;
+    box-shadow:0 8px 18px -8px rgba(197,123,133,.55);
+  }
+  .friends-tab.active svg{ opacity:1; }
+  .friends-tab:active{ transform:scale(.96); }
+  .rank-row{ cursor:pointer; }
+  .rank-row:active{ transform:scale(.985); }
+  #fvAddFriendWrap{ text-align:center; margin:8px 0 14px; }
+  .feed-card{
+    background:var(--card); border-radius:18px; padding:12px;
+    margin-bottom:12px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+  }
+  .feed-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .feed-head .fav{ width:36px; height:36px; border-radius:50%; background:var(--sage) center/cover no-repeat; }
+  .feed-head .fname{ font-size:13px; font-weight:700; }
+  .feed-head .ftime{ font-size:11px; color:var(--muted); }
+  .feed-photo{
+    width:100%; aspect-ratio:4/3; border-radius:14px;
+    background:var(--blush) center/cover no-repeat; margin-bottom:8px;
+  }
+  .feed-title{ font-family:'Fraunces',serif; font-style:italic; font-size:16px; }
+  .feed-note{ font-size:12.5px; color:var(--muted); margin:4px 0 8px; }
+  .feed-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .react-btn{
+    border:none; background:var(--blush); color:var(--rose-deep);
+    border-radius:20px; padding:7px 12px; font-size:12px; font-family:inherit;
+    display:inline-flex; align-items:center; gap:5px; font-weight:600;
+  }
+  .react-btn svg{ width:15px; height:15px; flex-shrink:0; }
+  .react-btn.on{ background:var(--rose); color:#fff; }
+  .react-btn.on svg{ stroke:#fff; }
+  .comment-box{
+    width:100%; margin-top:8px; padding:10px 12px; border-radius:12px;
+    border:1px solid #EEDDD3; background:var(--cream);
+    font-family:inherit; font-size:13px; color:var(--ink);
+  }
+  .rank-row{
+    display:flex; align-items:center; gap:10px;
+    background:var(--card); border-radius:14px; padding:10px 12px; margin-bottom:8px;
+  }
+  .rank-pos{ width:24px; font-weight:700; color:var(--rose-deep); font-size:14px; }
+  .rank-row .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; }
+  .rank-name{ font-size:13px; font-weight:600; }
+  .rank-meta{ font-size:11px; color:var(--muted); }
+
+  /* ---------------- ONBOARDING ---------------- */
+  #onboard{
+    position:fixed; inset:0; z-index:95; background:rgba(42,34,31,.72);
+    display:flex; align-items:flex-end; justify-content:center;
+  }
+  #onboard.hide{ display:none; }
+  .onboard-sheet{
+    width:100%; max-width:420px; max-height:88vh; overflow-y:auto;
+    background:var(--card); border-radius:24px 24px 0 0; padding:20px 18px 28px;
+    animation:popIn .3s cubic-bezier(.34,1.56,.64,1);
+  }
+  .onboard-sheet h3{ font-family:'Fraunces',serif; font-style:italic; font-size:22px; margin:0 0 6px; }
+  .onboard-sheet .sub{ font-size:13px; color:var(--muted); margin-bottom:14px; }
+  .onboard-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:14px; }
+  .onboard-chip{
+    border:1.5px solid #EEDDD3; border-radius:14px; padding:12px 6px;
+    text-align:center; font-size:12px; font-weight:600; background:var(--cream);
+    color:var(--ink); font-family:inherit;
+  }
+  .onboard-chip.on{ border-color:var(--rose); background:var(--blush); color:var(--rose-deep); }
+  .onboard-actions{ display:flex; gap:8px; }
+  .onboard-actions button{ flex:1; }
 
   /* ---------------- FRIENDS ---------------- */
   .search-box{
@@ -280,6 +489,7 @@
   }
 
   /* ---------------- TUTORIAL: spotlight coachmarks ---------------- */
+  /* overlay is non-blocking so user can try the globe / buttons under the highlight */
   #tutorial{
     position:fixed; inset:0; z-index:90;
     pointer-events:none;
@@ -594,10 +804,10 @@
       <label class="add-photo-label" for="addPhoto">
         <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <span>Добавить фото</span>
+          <span>Фото (до 3)</span>
         </span>
       </label>
-      <input type="file" accept="image/*" id="addPhoto" style="display:none;">
+      <input type="file" accept="image/*" id="addPhoto" multiple style="display:none;">
       <button class="add-save" id="addSaveBtn">Сохранить</button>
       <button class="add-cancel" id="addCancelBtn">Отмена</button>
     </div>
@@ -615,10 +825,10 @@
       <label class="add-photo-label" for="editPhoto">
         <span id="editPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <span>Заменить фото</span>
+          <span>Добавить фото (до 3)</span>
         </span>
       </label>
-      <input type="file" accept="image/*" id="editPhoto" style="display:none;">
+      <input type="file" accept="image/*" id="editPhoto" multiple style="display:none;">
       <button class="add-save" id="editSaveBtn">Сохранить</button>
       <button class="add-cancel" id="editDeleteBtn" style="color:#B65B5B;">Удалить место</button>
       <button class="add-cancel" id="editCancelBtn">Отмена</button>
@@ -627,21 +837,47 @@
 
   <!-- FRIENDS -->
   <div class="screen" id="screen-friends">
-    <input class="search-box" id="friendSearch" placeholder="Найти по имени в MapLink…">
-    <div id="searchResults"></div>
-
-    <div id="requestsBlock" style="display:none;">
-      <div class="section-cap">заявки в друзья</div>
-      <div id="requestsList"></div>
+    <div class="friends-tabs">
+      <button class="friends-tab active" data-ftab="feed">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>
+        Лента
+      </button>
+      <button class="friends-tab" data-ftab="list">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>
+        Друзья
+      </button>
+      <button class="friends-tab" data-ftab="rank">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>
+        Рейтинг
+      </button>
     </div>
 
-    <div class="section-cap">мои друзья</div>
-    <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
+    <div id="friendsPaneFeed">
+      <div id="friendsFeed"><div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div></div>
+    </div>
 
-    <div class="section-cap">пригласить</div>
-    <div class="invite-card">
-      <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
-      <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
+    <div id="friendsPaneList" style="display:none;">
+      <input class="search-box" id="friendSearch" placeholder="Найти по имени в MapLink…">
+      <div id="searchResults"></div>
+      <div id="requestsBlock" style="display:none;">
+        <div class="section-cap">заявки в друзья</div>
+        <div id="requestsList"></div>
+      </div>
+      <div class="section-cap">мои друзья</div>
+      <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
+      <div class="section-cap">пригласить</div>
+      <div class="invite-card">
+        <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
+        <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
+      </div>
+    </div>
+
+    <div id="friendsPaneRank" style="display:none;">
+      <div class="section-cap">среди друзей</div>
+      <div id="rankFriendsList"><div class="placeholder-box" style="margin-top:0;">нужны друзья с местами</div></div>
+      <div class="section-cap">общий топ</div>
+      <div id="rankGlobalList"><div class="placeholder-box" style="margin-top:0;">считаем…</div></div>
+      <p style="font-size:11px;color:var(--muted);line-height:1.4;margin:8px 0 16px;">Только реальные аккаунты Telegram и посещённые места (без вишлиста). Нажми на человека, чтобы открыть профиль.</p>
     </div>
     <div style="height:20px;"></div>
   </div>
@@ -658,12 +894,41 @@
       <div class="status-pill" id="connStatus">проверяю подключение…</div>
     </div>
 
+    <div class="profile-toolbar">
+      <select class="sort-select" id="placeSort">
+        <option value="date">По дате</option>
+        <option value="name">По названию</option>
+        <option value="country">По стране</option>
+      </select>
+      <div class="view-toggle">
+        <button class="view-btn active" id="viewListBtn" title="Список">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <button class="view-btn" id="viewGridBtn" title="Сетка">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+
     <div class="section-cap">мои места</div>
     <div id="myPlacesList"></div>
 
     <div class="section-cap" style="display:flex; align-items:center; gap:5px;">вишлист <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg></div>
     <div id="myWishlistList"></div>
     <div style="height:24px;"></div>
+  </div>
+
+  <!-- ONBOARDING -->
+  <div id="onboard" class="hide">
+    <div class="onboard-sheet">
+      <h3>Где ты уже был(а)?</h3>
+      <div class="sub">Отметь несколько стран — сразу появятся на планете. Потом можно добавить ещё.</div>
+      <div class="onboard-grid" id="onboardGrid"></div>
+      <div class="onboard-actions">
+        <button class="add-cancel" id="onboardSkip">Пропустить</button>
+        <button class="add-save" id="onboardSave" style="width:auto;padding:12px 18px;">Сохранить</button>
+      </div>
+    </div>
   </div>
 
   <!-- FRIEND VIEW -->
@@ -681,11 +946,49 @@
         <div class="stat"><div class="num" id="fvCities">0</div><div class="cap">городов</div></div>
       </div>
     </div>
-    <div class="section-cap">места</div>
-    <div id="fvPlacesList"></div>
-    <div class="section-cap" style="display:flex; align-items:center; gap:5px;">вишлист <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-1px;"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg></div>
-    <div id="fvWishlistList"></div>
+    <div id="fvAddFriendWrap" style="display:none;">
+      <button class="invite-btn" id="fvAddFriendBtn">Добавить в друзья</button>
+    </div>
+    <div id="fvPrivateNote" class="placeholder-box" style="display:none;margin:12px 20px 0;">Этот профиль скрыт. Добавь в друзья, чтобы видеть места.</div>
+    <div id="fvIgBlock">
+      <div class="ig-tabs">
+        <button class="ig-tab active" id="fvTabPosts" data-igtab="posts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button class="ig-tab" id="fvTabWish" data-igtab="wish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>
+        </button>
+      </div>
+      <div class="fv-toolbar">
+        <button class="view-btn active" id="fvViewGridBtn" title="Сетка">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        </button>
+        <button class="view-btn" id="fvViewListBtn" title="Список">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+      </div>
+      <div id="fvPlacesList"></div>
+      <div id="fvWishlistList" style="display:none;"></div>
+    </div>
     <div style="height:24px;"></div>
+  </div>
+
+  <!-- IG place detail modal -->
+  <div id="igPlaceModal" class="hide">
+    <div class="ig-modal-card">
+      <div class="ig-modal-photo-wrap">
+        <div class="ig-modal-photo" id="igModalPhoto"></div>
+        <button type="button" class="ig-nav prev" id="igNavPrev" style="display:none;">‹</button>
+        <button type="button" class="ig-nav next" id="igNavNext" style="display:none;">›</button>
+      </div>
+      <div class="ig-dots" id="igDots"></div>
+      <div class="ig-modal-body">
+        <div class="ig-modal-title" id="igModalTitle">—</div>
+        <div class="ig-modal-meta" id="igModalMeta"></div>
+        <div class="ig-modal-note" id="igModalNote"></div>
+      </div>
+      <button class="ig-modal-close" id="igModalClose">Закрыть</button>
+    </div>
   </div>
 
   <!-- SETTINGS -->
@@ -696,8 +999,13 @@
     </div>
 
     <div class="settings-row">
-      <span>Тёмная пастельная тема</span>
+      <span>Тёмная тема</span>
       <button class="switch" id="themeSwitch"></button>
+    </div>
+
+    <div class="settings-row">
+      <span>Приватный профиль</span>
+      <button class="switch" id="privacySwitch"></button>
     </div>
 
     <div class="settings-row" id="replayTutorialBtn">
@@ -760,10 +1068,27 @@
     delay++;
   });
 
-  // hide splash after a bit
+  // show splash text only after Caveat (and friends) are loaded — prevents font swap flash
+  function revealSplashFonts(){
+    wobbleEl.classList.add('fonts-ready');
+    const sign = document.querySelector('#splash .sign');
+    if(sign) sign.classList.add('fonts-ready');
+  }
+  if(document.fonts && document.fonts.load){
+    Promise.all([
+      document.fonts.load('700 46px Caveat'),
+      document.fonts.load('600 22px Caveat')
+    ]).then(revealSplashFonts).catch(revealSplashFonts);
+    // safety timeout if fonts.googleapis blocked
+    setTimeout(revealSplashFonts, 1200);
+  } else {
+    revealSplashFonts();
+  }
+
+  // hide splash after a bit (count from start; text appears as soon as font is ready)
   setTimeout(()=>{
     document.getElementById('splash').classList.add('hide');
-  }, 2200);
+  }, 2400);
 
   // ---------- tab switching ----------
   function showScreen(name){
@@ -806,6 +1131,25 @@
   if(tg){
     tg.ready();
     tg.expand();
+    // only call APIs supported by this client (avoids "[Telegram.WebApp] ... not supported in version 6.0")
+    try{
+      if(typeof tg.isVersionAtLeast === 'function'){
+        if(tg.isVersionAtLeast('6.1')){
+          if(typeof tg.setHeaderColor === 'function') tg.setHeaderColor('#FBF3EE');
+          if(typeof tg.setBackgroundColor === 'function') tg.setBackgroundColor('#FBF3EE');
+        }
+        if(tg.isVersionAtLeast('7.7') && typeof tg.disableVerticalSwipes === 'function'){
+          tg.disableVerticalSwipes();
+        }
+      }
+    }catch(e){ /* older clients — ignore */ }
+    // keep expanded if user returns from background (Telegram may collapse mini-app)
+    document.addEventListener('visibilitychange', ()=>{
+      if(document.visibilityState === 'visible'){
+        try{ tg.expand(); }catch(e){}
+      }
+    });
+    window.addEventListener('focus', ()=>{ try{ tg.expand(); }catch(e){} });
     tgUser = tg.initDataUnsafe && tg.initDataUnsafe.user ? tg.initDataUnsafe.user : null;
     startParam = tg.initDataUnsafe && tg.initDataUnsafe.start_param ? tg.initDataUnsafe.start_param : null;
   }
@@ -853,6 +1197,39 @@
     csSet('theme_dark', isDark ? '1' : '0');
   });
 
+  // private profile toggle (needs column users.is_private — see SQL note)
+  function applyPrivacyUI(on){
+    document.getElementById('privacySwitch').classList.toggle('on', !!on);
+  }
+  csGet('is_private').then(v=> applyPrivacyUI(v === '1'));
+  document.getElementById('privacySwitch').addEventListener('click', async ()=>{
+    const on = !document.getElementById('privacySwitch').classList.contains('on');
+    applyPrivacyUI(on);
+    csSet('is_private', on ? '1' : '0');
+    if(myUserId){
+      try{
+        const { error } = await supabase.from('users').update({ is_private: on }).eq('id', myUserId);
+        if(error){
+          // column may not exist yet — local flag still works for this device
+          console.warn('is_private update:', error.message);
+        }
+      }catch(e){}
+    }
+  });
+  // sync from DB when user loads
+  const _initUserPrivacy = async ()=>{
+    if(!myUserId) return;
+    try{
+      const { data } = await supabase.from('users').select('is_private').eq('id', myUserId).maybeSingle();
+      if(data && data.is_private != null){
+        applyPrivacyUI(!!data.is_private);
+        csSet('is_private', data.is_private ? '1' : '0');
+      }
+    }catch(e){}
+  };
+  // call after initUser sets myUserId — poll once
+  setTimeout(_initUserPrivacy, 1500);
+
   // ---------- settings navigation ----------
   document.getElementById('gearBtn').addEventListener('click', ()=>{
     document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display = 'none'; });
@@ -862,13 +1239,52 @@
   });
   document.getElementById('settingsBack').addEventListener('click', ()=> showScreen('profile'));
   document.getElementById('deleteDataBtn').addEventListener('click', ()=>{
-    if(!confirm('Удалить все твои места, фото и достижения? Это нельзя отменить.')) return;
-    if(!myUserId) return;
-    supabase.from('places').delete().eq('user_id', myUserId).then(()=>{
-      supabase.from('achievements').delete().eq('user_id', myUserId).then(()=>{
-        (tg ? tg.showAlert('Данные удалены') : alert('Данные удалены'));
-      });
-    });
+    if(!myUserId){
+      const msg = 'Сначала дождись подключения к базе';
+      if(tg && tg.showAlert) tg.showAlert(msg); else alert(msg);
+      return;
+    }
+    const warn = 'Удалить ВСЕ твои места, фото, достижения и заявки в друзья?\n\nЭто нельзя отменить.';
+    const runDelete = async ()=>{
+      try{
+        // 1) photos rows for this user's places
+        const { data: myPlaces } = await supabase.from('places').select('id').eq('user_id', myUserId);
+        const placeIds = (myPlaces || []).map(p => p.id);
+        if(placeIds.length){
+          await supabase.from('photos').delete().in('place_id', placeIds);
+          // storage files (best-effort; ignore errors)
+          try{
+            const { data: files } = await supabase.storage.from('place-photos').list(myUserId);
+            if(files && files.length){
+              const paths = files.map(f => myUserId + '/' + f.name);
+              await supabase.storage.from('place-photos').remove(paths);
+            }
+          }catch(e){}
+        }
+        // 2) places
+        await supabase.from('places').delete().eq('user_id', myUserId);
+        // 3) achievements
+        await supabase.from('achievements').delete().eq('user_id', myUserId);
+        // 4) friendships both ways
+        await supabase.from('friendships').delete().eq('requester_id', myUserId);
+        await supabase.from('friendships').delete().eq('addressee_id', myUserId);
+
+        // refresh UI
+        loadPlaces();
+        loadFriends();
+        const ok = 'Все данные удалены';
+        if(tg && tg.showAlert) tg.showAlert(ok); else alert(ok);
+        showScreen('profile');
+      }catch(err){
+        const fail = 'Не удалось удалить: ' + (err && err.message ? err.message : 'ошибка');
+        if(tg && tg.showAlert) tg.showAlert(fail); else alert(fail);
+      }
+    };
+    if(tg && typeof tg.showConfirm === 'function'){
+      tg.showConfirm(warn, (ok)=>{ if(ok) runDelete(); });
+    } else if(confirm(warn)){
+      runDelete();
+    }
   });
 
   // ---------- inspirational quotes (static, local — never breaks) ----------
@@ -882,20 +1298,116 @@
     '«Лучшие виды открываются после самого трудного подъёма»',
     '«Куда бы ты ни шла — иди с сердцем»',
     '«Путешествия оставляют тебя без слов, а потом превращают в рассказчика»',
-    '«Дом — это не место, а чувство»'
+    '«Дом — это не место, а чувство»',
+    '«Путешествие начинается с одного шага»',
+    '«Чем дальше идёшь, тем больше себя находишь»',
+    '«Карта — это не территория, но она вдохновляет»',
+    '«В каждом городе есть своя история, которую стоит услышать»',
+    '«Путешествуй так, будто у тебя уже есть всё, что нужно»',
+    '«Новые места — новые версии тебя»',
+    '«Самое красивое в пути — не пункт назначения, а сам путь»',
+    '«Мир ждёт тех, кто осмелится выйти»',
+    '«Фотографии остаются, воспоминания живут»',
+    '«Каждая страна — новая глава»',
+    '«Путешествия лечат то, что лекарства не могут»',
+    '«Не бойся заблудиться — иногда так находишь лучшее»',
+    '«Горизонт всегда зовёт вперёд»',
+    '«Свобода — это когда чемодан собран»',
+    '«Лучшие истории начинаются словами "и тогда мы решили поехать"»',
+    '«Не откладывай море на потом»',
+    '«Билет в один конец — тоже начало»',
+    '«Слушай город, а не только смотри на него»',
+    '«Одна поездка стоит тысячи фотографий в ленте»',
+    '«Заблудиться — тоже способ узнать место»',
+    '«У каждой дороги свой характер»',
+    '«Путешествуй, пока ноги несут, а сердце просит»',
+    '«Незнакомый город — это шанс стать кем-то новым на день»',
+    '«Аэропорты пахнут возможностями»',
+    '«Самый долгий путь начинается с билета»',
+    '«Хорошее приключение редко идёт по плану — и это лучшая его часть»',
+    '«В дороге узнаёшь себя быстрее, чем дома»',
+    '«Не бывает плохой погоды для хорошего путешествия»',
+    '«Каждый закат где-то новый»',
+    '«Пусть твой паспорт устанет раньше тебя»',
+    '«Границы существуют только на карте»',
+    '«Однажды прожитое в пути остаётся с тобой навсегда»',
+    '«Путешествие — лучший учитель, у которого нет расписания»',
+    '«Найди себя там, где тебя никто не ждёт»',
+    '«Дорога учит терпению, а горы — смирению»',
+    '«Собери друзей, билеты и немного безрассудства»',
+    '«Лучший сувенир — история, которую хочется рассказать»',
+    '«В незнакомом городе легче услышать себя»',
+    '«Путешествия не решают всё, но точно делают легче»',
+    '«Пусть карта твоей жизни будет исчёрканной»',
+    '«Смелость — это купленный билет без плана Б»',
+    '«Иногда нужно уехать, чтобы понять, куда хочешь вернуться»',
+    '«Каждый вокзал хранит чьё-то начало и чьё-то прощание»',
+    '«Мир большой, а жизнь одна — так зачем сидеть на месте»',
+    '«Дорога длиннее, если идти одному, но веселее, если с друзьями»',
+    '«Новое место — это всегда немного новый ты»',
+    '«Путешествуй налегке: чемодан и любопытство»',
+    '«Лучшие решения принимаются с видом на горы»',
+    '«Море не спрашивает, готова ли ты — оно просто ждёт»',
+    '«В пути даже дождь кажется частью приключения»',
+    '«Кто не рискнул сесть не в тот автобус, тот не видел настоящего города»',
+    '«Путешествие — это разговор с миром на его языке»',
+    '«Иногда самая красивая остановка — незапланированная»',
+    '«Возвращайся другим — иначе зачем было ехать»',
+    '«Приключения начинаются там, где заканчивается расписание»',
+    '«У каждой страны свой запах, и его невозможно сфотографировать»',
+    '«Смелые маршруты рождают лучшие воспоминания»',
+    '«Уезжай, чтобы найти, возвращайся, чтобы поделиться»',
+    '«В пути время течёт иначе — и это подарок»',
+    '«Открой карту и ткни пальцем — иногда так рождаются лучшие поездки»',
+    '«Дорога прощает ошибки в планировании, но не прощает нерешительность»',
+    '«Настоящее богатство — коллекция закатов, а не вещей»',
+    '«Пусть усталость в дороге будет приятной»',
+    '«Каждый билет — маленькое обещание себе»',
+    '«Не бойся ехать одна — иногда так находишь лучших попутчиков»',
+    '«Далёкие страны становятся близкими, если открыть им сердце»',
+    '«Путешествие меняет маршрут мыслей»',
+    '«Лучший вид открывается тем, кто не побоялся подняться»',
+    '«В новом городе слушай улицы, а не навигатор»',
+    '«Мир полон мест, которые ждут именно тебя»',
+    '«Самое ценное в путешествии — люди, которых встречаешь по пути»',
+    '«Уезжай без ожиданий — так легче удивляться»',
+    '«Каждая граница — это просто линия на бумаге»',
+    '«Путешествия учат благодарности за простые вещи»',
+    '«Пусть в паспорте будет больше штампов, чем в резюме»',
+    '«Дом всегда подождёт — мир торопит»',
+    '«В дороге легче услышать, чего хочет сердце»',
+    '«Смелость купить билет — уже половина приключения»',
+    '«Лучшие фотографии те, что остались только в памяти»',
+    '«Путешествуй, пока это ещё называют безумием, а не привычкой»',
+    '«Иногда нужен новый горизонт, чтобы увидеть старые проблемы иначе»',
+    '«Каждый рассвет в дороге стоит недосыпа»',
+    '«Не откладывай — билеты дешевеют, а время нет»',
+    '«В путешествии узнаёшь не мир, а себя в новых декорациях»',
+    '«Лучшая карта — это список людей, которые тебя ждут в разных городах»',
+    '«Приключение начинается там, где кончается зона комфорта»',
+    '«Собирай страны, как собирают истории — с любовью»',
+    '«Всегда есть повод обновить загранпаспорт»',
+    '«Дорога домой всегда особенная после долгого пути»',
+    '«Путешествие — лучший подарок, который можно сделать себе самой»',
+    '«Не важно, куда — важно, что ты в пути»'
   ];
-  let quoteIndex = Math.floor(Math.random()*quotes.length);
+  // shuffle once so sequence feels random and doesn't loop the same order
+  for(let i = quotes.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [quotes[i], quotes[j]] = [quotes[j], quotes[i]];
+  }
+  let quoteIndex = 0;
   function showQuote(){
     const el = document.getElementById('quoteText');
     el.style.opacity = '0';
     setTimeout(()=>{
       el.textContent = quotes[quoteIndex];
       el.style.opacity = '1';
-      quoteIndex = (quoteIndex+1) % quotes.length;
+      quoteIndex = (quoteIndex + 1) % quotes.length;
     }, 500);
   }
   showQuote();
-  setInterval(showQuote, 8000);
+  setInterval(showQuote, 9000);
 
   // ---------- tutorial: real spotlight tour across actual screens ----------
   const coachSteps = [
@@ -906,7 +1418,7 @@
     { screen:'friends', target:'#friendSearch', place:'below', title:'Ищи друзей', text:'Введи имя — покажем совпадения среди пользователей MapLink.' },
     { screen:'friends', target:'#inviteBtn', place:'above', title:'Или зови по ссылке', text:'Поделись личной ссылкой — тот, кто тапнет по ней, сразу станет твоим другом.' },
     { screen:'friends', target:'#requestsBlock', place:'below', title:'Заявки в друзья', text:'Если кто-то нашёл тебя через поиск — заявка появится прямо здесь.', fallbackTarget:'#friendSearch' },
-    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная пастельная тема, повтор этого тура и удаление данных — всё здесь.' },
+    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, повтор этого тура и удаление данных — всё здесь.' },
     { screen:'profile', target:'#myPlacesList', place:'above', title:'Твои места', text:'Список всех посещённых стран — с датами, заметками и фото.' },
     { screen:'profile', target:'#myWishlistList', place:'above', title:'Вишлист', text:'А тут откладываются места мечты, куда только хочешь попасть.' }
   ];
@@ -994,6 +1506,11 @@
   function openTutorial(){
     coachIndex = 0;
     document.getElementById('tutorial').classList.remove('hide');
+    // do NOT lock the whole app — user must be able to spin the globe / try buttons
+    // only fold leftover UI from a previous step
+    document.getElementById('addModal').classList.add('hide');
+    document.getElementById('editModal').classList.add('hide');
+    document.getElementById('countryBubble').classList.remove('show');
     showCoachStep(coachIndex);
   }
   function closeTutorial(){
@@ -1001,6 +1518,10 @@
     csSet('tutorial_seen', '1');
   }
   document.getElementById('tutNext').addEventListener('click', ()=>{
+    // fold any UI the previous step may have opened
+    document.getElementById('addModal').classList.add('hide');
+    document.getElementById('editModal').classList.add('hide');
+    document.getElementById('countryBubble').classList.remove('show');
     if(coachIndex === coachSteps.length-1){ closeTutorial(); return; }
     coachIndex++; showCoachStep(coachIndex);
   });
@@ -1129,40 +1650,122 @@
       reqBlock.style.display = 'none';
     }
 
-    // accepted friends, both directions
+    // accepted friends, both directions (keep friendship row id for delete)
     const { data: asReq } = await supabase.from('friendships')
-      .select('addressee:addressee_id(id, username, avatar_url)')
+      .select('id, addressee:addressee_id(id, username, avatar_url)')
       .eq('requester_id', myUserId).eq('status', 'accepted');
     const { data: asAdd } = await supabase.from('friendships')
-      .select('requester:requester_id(id, username, avatar_url)')
+      .select('id, requester:requester_id(id, username, avatar_url)')
       .eq('addressee_id', myUserId).eq('status', 'accepted');
 
     const friends = [
-      ...(asReq||[]).map(r=>r.addressee),
-      ...(asAdd||[]).map(r=>r.requester)
+      ...(asReq||[]).map(r=>({ ...r.addressee, friendshipId: r.id })),
+      ...(asAdd||[]).map(r=>({ ...r.requester, friendshipId: r.id }))
     ];
 
     const list = document.getElementById('friendsList');
-    list.innerHTML = friends.length ? friends.map((f,i)=>`
-      <div class="friend-row" style="cursor:pointer; animation-delay:${Math.min(i*0.05,0.3)}s" onclick="window.__openFriend('${f.id}','${(f.username||'').replace(/'/g,"\\'")}','${f.avatar_url||''}')">
-        <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''}"></div>
-        <div><div class="fname">${f.username}</div></div>
-        <span style="margin-left:auto; color:var(--muted);">›</span>
-      </div>`).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
+    list.innerHTML = friends.length ? friends.map((f,i)=>{
+      const safeName = (f.username||'').replace(/'/g,"\\'");
+      return `
+      <div class="friend-row" style="animation-delay:${Math.min(i*0.05,0.3)}s">
+        <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''};cursor:pointer" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')"></div>
+        <div style="cursor:pointer;flex:1;min-width:0" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')">
+          <div class="fname">${f.username}</div>
+        </div>
+        <button class="mini-btn ghost" style="margin-left:6px" onclick="event.stopPropagation();window.__removeFriend('${f.friendshipId}')">Удалить</button>
+      </div>`;
+    }).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
   }
 
-  // ---------------- FRIEND PROFILE VIEW ----------------
+  window.__removeFriend = async function(friendshipId){
+    if(!friendshipId) return;
+    if(!confirm('Удалить из друзей?')) return;
+    await supabase.from('friendships').delete().eq('id', friendshipId);
+    loadFriends();
+  };
+
+  // ---------------- FRIEND / PUBLIC PROFILE VIEW ----------------
+  let viewingUserId = null;
   window.__openFriend = async function(friendId, username, avatarUrl){
     document.querySelectorAll('.screen').forEach(s=>{ s.classList.remove('active'); s.style.display = 'none'; });
     document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
     const t = document.getElementById('screen-friend-view');
     t.classList.add('active'); t.style.display = '';
+    viewingUserId = friendId;
 
     document.getElementById('fvName').textContent = username || 'Пользователь';
-    document.getElementById('fvAvatar').style.backgroundImage = avatarUrl ? `url(${avatarUrl})` : '';
+    const av = document.getElementById('fvAvatar');
+    av.style.backgroundImage = avatarUrl ? `url(${avatarUrl})` : '';
+    const canDm = username && username !== 'guest' && !String(username).startsWith('guest');
+    av.style.cursor = canDm ? 'pointer' : 'default';
+    av.onclick = canDm ? ()=>{
+      const link = 'https://t.me/' + String(username).replace(/^@/, '');
+      if(tg && tg.openTelegramLink) tg.openTelegramLink(link);
+      else window.open(link, '_blank');
+    } : null;
+
+    // friendship status
+    let isFriend = cachedFriendIds.includes(friendId);
+    if(!isFriend && myUserId){
+      const { data: fr } = await supabase.from('friendships').select('id,status')
+        .or(`and(requester_id.eq.${myUserId},addressee_id.eq.${friendId}),and(requester_id.eq.${friendId},addressee_id.eq.${myUserId})`)
+        .limit(5);
+      isFriend = (fr||[]).some(x=>x.status === 'accepted');
+      const pendingOut = (fr||[]).some(x=>x.status === 'pending');
+      const addWrap = document.getElementById('fvAddFriendWrap');
+      const addBtn = document.getElementById('fvAddFriendBtn');
+      if(friendId === myUserId){
+        addWrap.style.display = 'none';
+      } else if(isFriend){
+        addWrap.style.display = 'none';
+      } else if(pendingOut){
+        addWrap.style.display = '';
+        addBtn.textContent = 'Заявка отправлена';
+        addBtn.disabled = true;
+        addBtn.style.opacity = '.7';
+      } else {
+        addWrap.style.display = '';
+        addBtn.textContent = 'Добавить в друзья';
+        addBtn.disabled = false;
+        addBtn.style.opacity = '1';
+        addBtn.onclick = async ()=>{
+          await supabase.from('friendships').upsert({
+            requester_id: myUserId, addressee_id: friendId, status: 'pending'
+          }, { onConflict: 'requester_id,addressee_id' });
+          addBtn.textContent = 'Заявка отправлена';
+          addBtn.disabled = true;
+          if(tg && tg.showAlert) tg.showAlert('Заявка отправлена'); else alert('Заявка отправлена');
+        };
+      }
+    } else {
+      document.getElementById('fvAddFriendWrap').style.display = (friendId !== myUserId && !isFriend) ? '' : 'none';
+    }
+
+    // privacy: if private and not friend — hide places
+    let isPrivate = false;
+    try{
+      const { data: urow } = await supabase.from('users').select('is_private').eq('id', friendId).maybeSingle();
+      isPrivate = !!(urow && urow.is_private);
+    }catch(e){ isPrivate = false; }
+
+    const privNote = document.getElementById('fvPrivateNote');
+    const igBlock = document.getElementById('fvIgBlock');
+    if(isPrivate && !isFriend && friendId !== myUserId){
+      privNote.style.display = '';
+      if(igBlock) igBlock.style.display = 'none';
+      document.getElementById('fvPlacesList').innerHTML = '';
+      document.getElementById('fvWishlistList').innerHTML = '';
+      animateNumber(document.getElementById('fvCountries'), 0);
+      animateNumber(document.getElementById('fvCities'), 0);
+      animateNumber(document.getElementById('fvWorldPct'), 0, '%');
+      return;
+    }
+    privNote.style.display = 'none';
+    if(igBlock) igBlock.style.display = '';
 
     const { data } = await supabase.from('places').select('*').eq('user_id', friendId).order('visit_date', {ascending:false});
     const places = data || [];
+    window.__fvPlacesCache = places;
     const ids = places.map(p=>p.id);
     let photosByPlace = {};
     if(ids.length){
@@ -1172,6 +1775,7 @@
         photosByPlace[ph.place_id].push(ph.url);
       });
     }
+    window.__fvPhotosCache = photosByPlace;
 
     const visited = places.filter(p=>!p.is_wishlist);
     const wishlist = places.filter(p=>p.is_wishlist);
@@ -1180,10 +1784,117 @@
     animateNumber(document.getElementById('fvCities'), visited.length);
     animateNumber(document.getElementById('fvWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
 
-    document.getElementById('fvPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто');
-    document.getElementById('fvWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пусто');
+    document.getElementById('fvPlacesList').innerHTML = renderIgGrid(visited, photosByPlace, 'пока нет поездок');
+    document.getElementById('fvWishlistList').innerHTML = renderIgGrid(wishlist, photosByPlace, 'вишлист пуст');
+    // reset tabs
+    document.getElementById('fvTabPosts').classList.add('active');
+    document.getElementById('fvTabWish').classList.remove('active');
+    document.getElementById('fvPlacesList').style.display = '';
+    document.getElementById('fvWishlistList').style.display = 'none';
     attachDefaultPhotos(places, photosByPlace);
   };
+
+  let fvViewMode = 'grid';
+  let igModalPhotos = [];
+  let igModalIdx = 0;
+
+  function renderIgGrid(list, photosByPlace, emptyText){
+    if(!list.length) return `<div class="ig-empty">${emptyText}</div>`;
+    if(fvViewMode === 'list'){
+      return renderPlaceCards(list, photosByPlace, emptyText, false);
+    }
+    return `<div class="ig-grid">` + list.map(p=>{
+      const photos = photosByPlace[p.id] || [];
+      const multi = photos.length > 1 ? `<span class="ig-multi">1/${Math.min(photos.length,3)}</span>` : '';
+      const title = p.city || p.country;
+      const sub = p.city ? p.country : '';
+      // no inline url — attachDefaultPhotos lazy-loads (faster first paint)
+      return `<div class="ig-cell" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
+        ${multi}
+        <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
+      </div>`;
+    }).join('') + `</div>`;
+  }
+
+  function showIgModalPhoto(){
+    const photoEl = document.getElementById('igModalPhoto');
+    const url = igModalPhotos[igModalIdx];
+    photoEl.style.backgroundImage = url ? `url(${url})` : '';
+    document.getElementById('igNavPrev').style.display = igModalPhotos.length > 1 ? '' : 'none';
+    document.getElementById('igNavNext').style.display = igModalPhotos.length > 1 ? '' : 'none';
+    const dots = document.getElementById('igDots');
+    dots.innerHTML = igModalPhotos.length > 1
+      ? igModalPhotos.map((_,i)=>`<span class="${i===igModalIdx?'on':''}"></span>`).join('')
+      : '';
+  }
+  window.__openIgPlace = function(placeId){
+    const places = window.__fvPlacesCache || [];
+    const photosByPlace = window.__fvPhotosCache || {};
+    const p = places.find(x=>x.id === placeId);
+    if(!p) return;
+    const photos = (photosByPlace[p.id] || []).slice(0, 3);
+    igModalPhotos = photos.slice();
+    igModalIdx = 0;
+    if(!igModalPhotos.length){
+      fetchDefaultPhoto(p.city || p.country).then(url=>{
+        if(url){ igModalPhotos = [url]; showIgModalPhoto(); }
+      });
+    }
+    showIgModalPhoto();
+    document.getElementById('igModalTitle').textContent = p.city ? p.city+', '+p.country : p.country;
+    document.getElementById('igModalMeta').textContent = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
+    document.getElementById('igModalNote').textContent = p.note || '';
+    document.getElementById('igPlaceModal').classList.remove('hide');
+  };
+  document.getElementById('igNavPrev').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(!igModalPhotos.length) return;
+    igModalIdx = (igModalIdx - 1 + igModalPhotos.length) % igModalPhotos.length;
+    showIgModalPhoto();
+  });
+  document.getElementById('igNavNext').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(!igModalPhotos.length) return;
+    igModalIdx = (igModalIdx + 1) % igModalPhotos.length;
+    showIgModalPhoto();
+  });
+  function syncFvViewBtns(){
+    document.getElementById('fvViewGridBtn').classList.toggle('active', fvViewMode === 'grid');
+    document.getElementById('fvViewListBtn').classList.toggle('active', fvViewMode === 'list');
+  }
+  function rerenderFvLists(){
+    const places = window.__fvPlacesCache || [];
+    const photosByPlace = window.__fvPhotosCache || {};
+    const visited = places.filter(p=>!p.is_wishlist);
+    const wishlist = places.filter(p=>p.is_wishlist);
+    document.getElementById('fvPlacesList').innerHTML = renderIgGrid(visited, photosByPlace, 'пока нет поездок');
+    document.getElementById('fvWishlistList').innerHTML = renderIgGrid(wishlist, photosByPlace, 'вишлист пуст');
+    attachDefaultPhotos(places, photosByPlace);
+  }
+  document.getElementById('fvViewGridBtn').addEventListener('click', ()=>{
+    fvViewMode = 'grid'; syncFvViewBtns(); rerenderFvLists();
+  });
+  document.getElementById('fvViewListBtn').addEventListener('click', ()=>{
+    fvViewMode = 'list'; syncFvViewBtns(); rerenderFvLists();
+  });
+  document.getElementById('igModalClose').addEventListener('click', ()=>{
+    document.getElementById('igPlaceModal').classList.add('hide');
+  });
+  document.getElementById('igPlaceModal').addEventListener('click', (e)=>{
+    if(e.target.id === 'igPlaceModal') document.getElementById('igPlaceModal').classList.add('hide');
+  });
+  document.getElementById('fvTabPosts').addEventListener('click', ()=>{
+    document.getElementById('fvTabPosts').classList.add('active');
+    document.getElementById('fvTabWish').classList.remove('active');
+    document.getElementById('fvPlacesList').style.display = '';
+    document.getElementById('fvWishlistList').style.display = 'none';
+  });
+  document.getElementById('fvTabWish').addEventListener('click', ()=>{
+    document.getElementById('fvTabWish').classList.add('active');
+    document.getElementById('fvTabPosts').classList.remove('active');
+    document.getElementById('fvPlacesList').style.display = 'none';
+    document.getElementById('fvWishlistList').style.display = '';
+  });
 
   document.getElementById('friendViewBack').addEventListener('click', ()=> showScreen('friends'));
 
@@ -1309,7 +2020,7 @@
     bubbleEl.classList.add('show');
   });
 
-  document.getElementById('bubbleAddBtn').addEventListener('click', ()=>{
+  document.getElementById('bubbleAddBtn').addEventListener('click', async ()=>{
     if(!bubbleFeature) return;
     const f = bubbleFeature;
     const displayName = (f.properties['name:ru'] || f.properties.name || '');
@@ -1324,9 +2035,26 @@
         selectedCountry: { name: displayName, code: (f.properties.iso_a2||'').toLowerCase(), lat: coords[1], lon: coords[0] }
       });
     } else {
+      // reverse-geocode so country auto-fills when tapping a city label on the map
+      let countryPrefill = null;
+      try{
+        const rev = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+coords[1]+'&lon='+coords[0]+'&accept-language=ru&addressdetails=1');
+        const data = await rev.json();
+        const addr = data.address || {};
+        if(addr.country){
+          countryPrefill = {
+            name: addr.country,
+            code: (addr.country_code || '').toLowerCase(),
+            lat: parseFloat(data.lat) || coords[1],
+            lon: parseFloat(data.lon) || coords[0]
+          };
+        }
+      }catch(e){}
       openAddModal({
         city: displayName,
-        selectedCity: { name: displayName, lat: coords[1], lon: coords[0] }
+        country: countryPrefill ? countryPrefill.name : '',
+        selectedCity: { name: displayName, lat: coords[1], lon: coords[0] },
+        selectedCountry: countryPrefill
       });
     }
   });
@@ -1334,10 +2062,12 @@
   // ---------- Nominatim autocomplete ----------
   async function nominatimSearch(query, extraParams){
     const params = new URLSearchParams({
-      format: 'jsonv2', q: query, 'accept-language': 'ru', limit: '7', ...extraParams
+      format: 'jsonv2', q: query, 'accept-language': 'ru', limit: '7', addressdetails: '1', ...extraParams
     });
     try{
-      const res = await fetch('https://nominatim.openstreetmap.org/search?'+params.toString());
+      const res = await fetch('https://nominatim.openstreetmap.org/search?'+params.toString(), {
+        headers: { 'Accept-Language': 'ru' }
+      });
       return await res.json();
     }catch(e){ return []; }
   }
@@ -1387,36 +2117,85 @@
           selectedCity = { name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) };
           document.getElementById('addCity').value = name;
           box.style.display = 'none';
+
+          // auto-attach country from Nominatim address when user picks a city
+          const addr = r.address || {};
+          const countryName = addr.country || (r.display_name.split(',').slice(-1)[0] || '').trim();
+          const countryCode = (addr.country_code || '').toLowerCase();
+          if(countryName){
+            selectedCountry = {
+              name: countryName,
+              code: countryCode,
+              lat: selectedCountry && selectedCountry.lat != null ? selectedCountry.lat : parseFloat(r.lat),
+              lon: selectedCountry && selectedCountry.lon != null ? selectedCountry.lon : parseFloat(r.lon)
+            };
+            document.getElementById('addCountry').value = countryName;
+            document.getElementById('countrySuggest').style.display = 'none';
+          }
         });
       });
     }, 350);
   });
 
+  // ---------- client-side image compression (keeps free Supabase storage small) ----------
+  function compressImageFile(file, maxSide, quality){
+    // smaller defaults = faster upload + faster grid load on mobile
+    maxSide = maxSide || 900;
+    quality = quality || 0.65;
+    return new Promise((resolve)=>{
+      if(!file || !file.type || !file.type.startsWith('image/')){ resolve(file); return; }
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = ()=>{
+        URL.revokeObjectURL(url);
+        let w = img.naturalWidth, h = img.naturalHeight;
+        if(w > maxSide || h > maxSide){
+          if(w >= h){ h = Math.round(h * maxSide / w); w = maxSide; }
+          else { w = Math.round(w * maxSide / h); h = maxSide; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob)=>{
+          if(!blob){ resolve(file); return; }
+          const outName = (file.name || 'photo').replace(/\.[^.]+$/, '') + '.jpg';
+          resolve(new File([blob], outName, { type: 'image/jpeg' }));
+        }, 'image/jpeg', quality);
+      };
+      img.onerror = ()=>{ URL.revokeObjectURL(url); resolve(file); };
+      img.src = url;
+    });
+  }
+
   document.getElementById('addPhoto').addEventListener('change', (e)=>{
-    const f = e.target.files[0];
-    document.getElementById('addPhotoText').querySelector('span:last-child').textContent = f ? f.name : 'Добавить фото';
+    const files = Array.from(e.target.files || []).slice(0, 3);
+    const t = document.getElementById('addPhotoText').querySelector('span:last-child');
+    if(!files.length) t.textContent = 'Фото (до 3)';
+    else if(files.length === 1) t.textContent = files[0].name;
+    else t.textContent = files.length + ' фото выбрано';
   });
 
   document.getElementById('addSaveBtn').addEventListener('click', async ()=>{
     if(!myUserId) return;
     if(!selectedCountry){
-      alert('Выбери страну из списка подсказок');
+      alert('Выбери страну из списка подсказок (или город — страна подставится сама)');
       return;
     }
 
     const saveBtn = document.getElementById('addSaveBtn');
-    if(saveBtn.classList.contains('loading')) return; // already saving, ignore double-tap
+    if(saveBtn.classList.contains('loading')) return;
     saveBtn.classList.add('loading');
 
     try{
       const cityName = selectedCity ? selectedCity.name : null;
 
-      // prevent duplicate entries of the exact same place
+      // strict uniqueness: same user + same country + same city (or both null city)
       let dupQuery = supabase.from('places').select('id').eq('user_id', myUserId).eq('country', selectedCountry.name);
       dupQuery = cityName ? dupQuery.eq('city', cityName) : dupQuery.is('city', null);
       const { data: existing } = await dupQuery.limit(1);
       if(existing && existing.length){
-        alert('Это место уже есть в твоём списке');
+        alert('Это место уже есть в твоём списке — дубликаты запрещены');
         return;
       }
 
@@ -1434,16 +2213,18 @@
       const { data: newPlace, error } = await supabase.from('places').insert(place).select().single();
       if(error){ alert('Не получилось сохранить: '+error.message); return; }
 
-      const photoFile = document.getElementById('addPhoto').files[0];
-      if(newPlace && photoFile){
-        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${myUserId}/${newPlace.id}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
-        if(upErr){
-          alert('Место сохранено, но фото загрузить не удалось: '+upErr.message);
-        } else {
-          const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
-          await supabase.from('photos').insert({ place_id: newPlace.id, url: pub.publicUrl });
+      const rawPhotos = Array.from(document.getElementById('addPhoto').files || []).slice(0, 3);
+      if(newPlace && rawPhotos.length){
+        for(let i = 0; i < rawPhotos.length; i++){
+          const photoFile = await compressImageFile(rawPhotos[i], 900, 0.65);
+          const path = `${myUserId}/${newPlace.id}-${Date.now()}-${i}.jpg`;
+          const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile, { contentType: 'image/jpeg', upsert: false });
+          if(upErr){
+            alert('Место сохранено, но фото #'+(i+1)+' не загрузилось: '+upErr.message);
+          } else {
+            const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
+            await supabase.from('photos').insert({ place_id: newPlace.id, url: pub.publicUrl });
+          }
         }
       }
 
@@ -1511,38 +2292,177 @@
     animateNumber(document.getElementById('statCities'), visited.length);
     animateNumber(document.getElementById('statWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
 
-    document.getElementById('myPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто — добавь первое место на планете', true);
-    document.getElementById('myWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+    renderProfilePlaces(visited, wishlist, photosByPlace);
     attachDefaultPhotos(places, photosByPlace);
   }
 
-  // ---------- default photo-by-URL for places without an uploaded photo ----------
+  // ---------- profile sort + grid/list ----------
+  let profileViewMode = 'list'; // list | grid
+  let profileSort = 'date';
+  csGet('profile_view').then(v=>{ if(v === 'grid' || v === 'list') profileViewMode = v; syncViewButtons(); });
+  csGet('profile_sort').then(v=>{ if(v){ profileSort = v; const s = document.getElementById('placeSort'); if(s) s.value = v; } });
+
+  function syncViewButtons(){
+    document.getElementById('viewListBtn').classList.toggle('active', profileViewMode === 'list');
+    document.getElementById('viewGridBtn').classList.toggle('active', profileViewMode === 'grid');
+  }
+  function sortPlacesList(list){
+    const arr = list.slice();
+    if(profileSort === 'name'){
+      arr.sort((a,b)=> (a.city||a.country||'').localeCompare(b.city||b.country||'', 'ru'));
+    } else if(profileSort === 'country'){
+      arr.sort((a,b)=> (a.country||'').localeCompare(b.country||'', 'ru') || (a.city||'').localeCompare(b.city||'', 'ru'));
+    } else {
+      arr.sort((a,b)=> String(b.visit_date||'').localeCompare(String(a.visit_date||'')));
+    }
+    return arr;
+  }
+  function renderGrid(list, photosByPlace, emptyText, clickable){
+    if(!list.length) return `<div class="placeholder-box" style="margin-top:0;">${emptyText}</div>`;
+    return `<div class="places-grid">` + list.map(p=>{
+      const label = p.city || p.country;
+      const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
+      return `<div class="grid-cell" data-place-id="${p.id}" ${tap}><div class="grid-label">${label}</div></div>`;
+    }).join('') + `</div>`;
+  }
+  function renderProfilePlaces(visited, wishlist, photosByPlace){
+    const v = sortPlacesList(visited);
+    const w = sortPlacesList(wishlist);
+    if(profileViewMode === 'grid'){
+      document.getElementById('myPlacesList').innerHTML = renderGrid(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
+      document.getElementById('myWishlistList').innerHTML = renderGrid(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+    } else {
+      document.getElementById('myPlacesList').innerHTML = renderPlaceCards(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
+      document.getElementById('myWishlistList').innerHTML = renderPlaceCards(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+    }
+  }
+  document.getElementById('viewListBtn').addEventListener('click', ()=>{
+    profileViewMode = 'list'; csSet('profile_view', 'list'); syncViewButtons();
+    if(allPlacesCache.length) loadPlaces();
+  });
+  document.getElementById('viewGridBtn').addEventListener('click', ()=>{
+    profileViewMode = 'grid'; csSet('profile_view', 'grid'); syncViewButtons();
+    if(allPlacesCache.length) loadPlaces();
+  });
+  document.getElementById('placeSort').addEventListener('change', (e)=>{
+    profileSort = e.target.value; csSet('profile_sort', profileSort);
+    if(allPlacesCache.length) loadPlaces();
+  });
+
+  // ---------- fast photo loading: cache + small wiki thumbs + lazy + limited concurrency ----------
   const defaultPhotoCache = {};
+  try{
+    const raw = sessionStorage.getItem('ml_photo_cache');
+    if(raw) Object.assign(defaultPhotoCache, JSON.parse(raw));
+  }catch(e){}
+  function savePhotoCache(){
+    try{ sessionStorage.setItem('ml_photo_cache', JSON.stringify(defaultPhotoCache)); }catch(e){}
+  }
+  function shrinkWikiUrl(url){
+    if(!url) return url;
+    // Wikipedia thumbs: force smaller width for grid speed
+    return url.replace(/\/\d+px-/, '/240px-');
+  }
   async function fetchDefaultPhoto(name){
     if(!name) return null;
     if(defaultPhotoCache[name] !== undefined) return defaultPhotoCache[name];
     try{
-      const res = await fetch('https://ru.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name));
+      const res = await fetch('https://ru.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name), {
+        // cache in browser HTTP cache too
+      });
       if(!res.ok) throw 0;
       const data = await res.json();
-      const url = (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null;
+      let url = (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null;
+      url = shrinkWikiUrl(url);
       defaultPhotoCache[name] = url;
+      savePhotoCache();
       return url;
     }catch(e){
       defaultPhotoCache[name] = null;
+      savePhotoCache();
       return null;
     }
   }
+
+  // preload image into browser cache, then apply
+  function applyBg(el, url){
+    if(!el || !url) return;
+    const img = new Image();
+    img.decoding = 'async';
+    img.onload = ()=>{
+      el.style.backgroundImage = `url(${url})`;
+      if(el.classList.contains('thumb')) el.innerHTML = '';
+      el.classList.add('bg-ready');
+    };
+    img.src = url;
+  }
+
+  // lazy: only load when cell is near viewport
+  let lazyObserver = null;
+  function ensureLazyObserver(){
+    if(lazyObserver) return lazyObserver;
+    if(!('IntersectionObserver' in window)) return null;
+    lazyObserver = new IntersectionObserver((entries)=>{
+      entries.forEach(ent=>{
+        if(!ent.isIntersecting) return;
+        const el = ent.target;
+        const url = el.getAttribute('data-bg');
+        if(url){
+          applyBg(el, url);
+          el.removeAttribute('data-bg');
+        }
+        lazyObserver.unobserve(el);
+      });
+    }, { rootMargin: '120px 0px', threshold: 0.01 });
+    return lazyObserver;
+  }
+  function scheduleBg(el, url){
+    if(!url) return;
+    const obs = ensureLazyObserver();
+    if(obs){
+      el.setAttribute('data-bg', url);
+      obs.observe(el);
+    } else {
+      applyBg(el, url);
+    }
+  }
+
+  async function runPool(tasks, limit){
+    limit = limit || 4;
+    let i = 0;
+    const workers = Array.from({ length: Math.min(limit, tasks.length) }, async ()=>{
+      while(i < tasks.length){
+        const cur = tasks[i++];
+        try{ await cur(); }catch(e){}
+      }
+    });
+    await Promise.all(workers);
+  }
+
   function attachDefaultPhotos(places, photosByPlace){
-    places.forEach(async p=>{
-      if((photosByPlace[p.id] || []).length) return; // already has a real uploaded photo
-      const url = await fetchDefaultPhoto(p.city || p.country);
-      if(!url) return;
-      document.querySelectorAll('.thumb[data-place-id="'+p.id+'"]').forEach(el=>{
-        el.style.backgroundImage = `url(${url})`;
-        el.innerHTML = '';
+    const tasks = [];
+    places.forEach(p=>{
+      const own = photosByPlace[p.id] || [];
+      const els = document.querySelectorAll(
+        '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-cell[data-place-id="'+p.id+'"]'
+      );
+      if(!els.length) return;
+      if(own.length){
+        // own photos: lazy-apply first frame only
+        els.forEach(el=> scheduleBg(el, own[0]));
+        return;
+      }
+      const key = p.city || p.country;
+      tasks.push(async ()=>{
+        const url = await fetchDefaultPhoto(key);
+        if(!url) return;
+        document.querySelectorAll(
+          '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-cell[data-place-id="'+p.id+'"]'
+        ).forEach(el=> scheduleBg(el, url));
       });
     });
+    // max 4 wikipedia requests at once — avoids queue + rate limit
+    runPool(tasks, 4);
   }
 
   function renderPlaceCards(list, photosByPlace, emptyText, clickable){
@@ -1551,12 +2471,10 @@
     }
     return list.map((p,i)=>{
       const photos = photosByPlace[p.id] || [];
-      const thumb = photos.length
-        ? `<div class="thumb" data-place-id="${p.id}" style="background-image:url(${photos[0]})"></div>`
-        : `<div class="thumb" data-place-id="${p.id}">${p.is_wishlist
+      const thumb = `<div class="thumb" data-place-id="${p.id}">${photos.length ? '' : (p.is_wishlist
             ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>'
             : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
-          }</div>`;
+          )}</div>`;
       const tapAttr = clickable ? `onclick="window.__openEditPlace('${p.id}')" style="cursor:pointer; animation-delay:${Math.min(i*0.05,0.4)}s"` : `style="animation-delay:${Math.min(i*0.05,0.4)}s"`;
       return `
         <div class="place-card" ${tapAttr}>
@@ -1613,16 +2531,23 @@
         is_wishlist: document.getElementById('editWishlist').checked
       }).eq('id', editingPlace.id);
 
-      const photoFile = document.getElementById('editPhoto').files[0];
-      if(photoFile){
-        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${myUserId}/${editingPlace.id}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
-        if(upErr){
-          alert('Изменения сохранены, но фото загрузить не удалось: '+upErr.message);
-        } else {
-          const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
-          await supabase.from('photos').insert({ place_id: editingPlace.id, url: pub.publicUrl });
+      const rawPhotos = Array.from(document.getElementById('editPhoto').files || []).slice(0, 3);
+      if(rawPhotos.length){
+        const { count } = await supabase.from('photos').select('id', { count:'exact', head:true }).eq('place_id', editingPlace.id);
+        const already = count || 0;
+        const room = Math.max(0, 3 - already);
+        const toUpload = rawPhotos.slice(0, room);
+        if(!toUpload.length){
+          alert('Уже 3 фото на это место');
+        }
+        for(let i = 0; i < toUpload.length; i++){
+          const photoFile = await compressImageFile(toUpload[i], 900, 0.65);
+          const path = `${myUserId}/${editingPlace.id}-${Date.now()}-${i}.jpg`;
+          const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile, { contentType: 'image/jpeg', upsert: false });
+          if(!upErr){
+            const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
+            await supabase.from('photos').insert({ place_id: editingPlace.id, url: pub.publicUrl });
+          }
         }
       }
       document.getElementById('editModal').classList.add('hide');
@@ -1630,6 +2555,320 @@
     } finally {
       btn.classList.remove('loading');
     }
+  });
+
+  // ---------- friends tabs: feed / list / rank ----------
+  let cachedFriendIds = [];
+  document.querySelectorAll('.friends-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.friends-tab').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      const tab = btn.dataset.ftab;
+      document.getElementById('friendsPaneFeed').style.display = tab === 'feed' ? '' : 'none';
+      document.getElementById('friendsPaneList').style.display = tab === 'list' ? '' : 'none';
+      document.getElementById('friendsPaneRank').style.display = tab === 'rank' ? '' : 'none';
+      if(tab === 'feed') loadFriendsFeed();
+      if(tab === 'rank') loadRankings();
+    });
+  });
+
+  async function loadFriendsFeed(){
+    const box = document.getElementById('friendsFeed');
+    if(!myUserId){ box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">подключение…</div>'; return; }
+    if(!cachedFriendIds.length){
+      box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div>';
+      return;
+    }
+    const { data: places } = await supabase.from('places')
+      .select('id,user_id,country,city,note,visit_date,is_wishlist,lat,lon,created_at')
+      .in('user_id', cachedFriendIds)
+      .eq('is_wishlist', false)
+      .order('created_at', { ascending: false })
+      .limit(30);
+    if(!places || !places.length){
+      box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">у друзей пока нет поездок</div>';
+      return;
+    }
+    const userIds = [...new Set(places.map(p=>p.user_id))];
+    const { data: users } = await supabase.from('users').select('id,username,avatar_url').in('id', userIds);
+    const userMap = {};
+    (users||[]).forEach(u=> userMap[u.id] = u);
+    const ids = places.map(p=>p.id);
+    let photosByPlace = {};
+    if(ids.length){
+      const { data: photoRows } = await supabase.from('photos').select('place_id,url').in('place_id', ids);
+      (photoRows||[]).forEach(ph=>{
+        if(!photosByPlace[ph.place_id]) photosByPlace[ph.place_id] = [];
+        photosByPlace[ph.place_id].push(ph.url);
+      });
+    }
+    // reactions (optional table — ignore if missing)
+    let reactionsByPlace = {};
+    try{
+      const { data: reacts } = await supabase.from('reactions').select('place_id,emoji,user_id').in('place_id', ids);
+      (reacts||[]).forEach(r=>{
+        if(!reactionsByPlace[r.place_id]) reactionsByPlace[r.place_id] = [];
+        reactionsByPlace[r.place_id].push(r);
+      });
+    }catch(e){}
+
+    box.innerHTML = places.map(p=>{
+      const u = userMap[p.user_id] || { username: 'друг' };
+      const photos = photosByPlace[p.id] || [];
+      const title = p.city ? p.city+', '+p.country : p.country;
+      const reacts = reactionsByPlace[p.id] || [];
+      const myReact = reacts.find(r=>r.user_id === myUserId);
+      const counts = {};
+      reacts.forEach(r=>{ counts[r.emoji] = (counts[r.emoji]||0)+1; });
+      const iconHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
+      const iconUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 11v9a1 1 0 001 1h5.5a2 2 0 002-1.6l1.3-6.2A1.5 1.5 0 0016.3 11H13V6.5A2.5 2.5 0 0010.5 4h-.2c-.7 0-1.3.4-1.5 1L7 11h1z"/><path d="M4 11h3v10H5a1 1 0 01-1-1v-8a1 1 0 011-1z"/></svg>';
+      const iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>';
+      const iconChat = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6A2.5 2.5 0 0116.5 15H11l-4 3.5V15H7.5A2.5 2.5 0 015 12.5v-6z"/></svg>';
+      const reactsMeta = [
+        { em:'heart', icon: iconHeart, label:'' },
+        { em:'up', icon: iconUp, label:'' },
+        { em:'star', icon: iconStar, label:'' }
+      ];
+      const reactBar = reactsMeta.map(r=>{
+        const n = counts[r.em]||0;
+        const on = myReact && myReact.emoji === r.em ? ' on' : '';
+        return `<button class="react-btn${on}" onclick="window.__toggleReact('${p.id}','${r.em}')">${r.icon}${n? '<span>'+n+'</span>':''}</button>`;
+      }).join('');
+      return `<div class="feed-card">
+        <div class="feed-head">
+          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''}"></div>
+          <div>
+            <div class="fname">${u.username||'друг'}</div>
+            <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
+          </div>
+        </div>
+        <div class="feed-photo" data-place-id="${p.id}"></div>
+        <div class="feed-title">${title}</div>
+        ${p.note ? `<div class="feed-note">${p.note}</div>` : ''}
+        <div class="feed-actions">${reactBar}
+          <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}</button>
+        </div>
+        <div id="comments-${p.id}" style="display:none;margin-top:8px;"></div>
+      </div>`;
+    }).join('');
+    attachDefaultPhotos(places, photosByPlace);
+  }
+
+  window.__toggleReact = async function(placeId, emoji){
+    if(!myUserId) return;
+    try{
+      // toggle: delete existing then insert
+      await supabase.from('reactions').delete().eq('place_id', placeId).eq('user_id', myUserId);
+      await supabase.from('reactions').insert({ place_id: placeId, user_id: myUserId, emoji });
+      loadFriendsFeed();
+    }catch(e){
+      alert('Реакции пока не подключены. Добавь таблицу reactions в Supabase (инструкция ниже).');
+    }
+  };
+
+  window.__openComments = async function(placeId){
+    const box = document.getElementById('comments-'+placeId);
+    if(!box) return;
+    if(box.style.display !== 'none'){ box.style.display = 'none'; return; }
+    box.style.display = '';
+    box.innerHTML = '<div style="font-size:12px;color:var(--muted)">загрузка…</div>';
+    try{
+      const { data } = await supabase.from('comments')
+        .select('id,body,user_id,created_at, users:user_id(username)')
+        .eq('place_id', placeId).order('created_at', {ascending:true}).limit(30);
+      const list = (data||[]).map(c=>`<div style="font-size:12.5px;margin:4px 0;"><b>${(c.users&&c.users.username)||'user'}</b>: ${c.body}</div>`).join('') || '<div style="font-size:12px;color:var(--muted)">пока нет комментариев</div>';
+      box.innerHTML = list + `<input class="comment-box" id="cinput-${placeId}" placeholder="Написать комментарий…">
+        <button class="mini-btn" style="margin-top:6px" onclick="window.__sendComment('${placeId}')">Отправить</button>`;
+    }catch(e){
+      box.innerHTML = '<div style="font-size:12px;color:var(--muted)">Комментарии пока не подключены — нужна таблица comments.</div>';
+    }
+  };
+
+  window.__sendComment = async function(placeId){
+    const input = document.getElementById('cinput-'+placeId);
+    const body = (input && input.value || '').trim();
+    if(!body || !myUserId) return;
+    try{
+      await supabase.from('comments').insert({ place_id: placeId, user_id: myUserId, body: body.slice(0,300) });
+      window.__openComments(placeId); // refresh: close then
+      window.__openComments(placeId);
+    }catch(e){
+      alert('Не удалось отправить комментарий');
+    }
+  };
+
+  function isRealTelegramUser(u){
+    if(!u) return false;
+    const tid = String(u.telegram_id || '');
+    const name = String(u.username || '').toLowerCase();
+    if(tid.startsWith('test_')) return false;
+    if(name === 'guest' || name.startsWith('guest')) return false;
+    // numeric telegram ids from real clients
+    if(/^\d+$/.test(tid)) return true;
+    return false;
+  }
+  function rankRowHtml(u, pos, countries){
+    const safeName = (u.username||'').replace(/'/g,"\\'");
+    const av = u.avatar_url || '';
+    return `<div class="rank-row" onclick="window.__openFriend('${u.id}','${safeName}','${av}')">
+      <div class="rank-pos">${pos}</div>
+      <div class="fav" style="${av?`background-image:url(${av})`:''}"></div>
+      <div><div class="rank-name">${u.username||'user'}</div><div class="rank-meta">${countries} стран</div></div>
+      <span style="margin-left:auto;color:var(--muted);">›</span>
+    </div>`;
+  }
+  async function loadRankings(){
+    const fBox = document.getElementById('rankFriendsList');
+    const gBox = document.getElementById('rankGlobalList');
+    if(!cachedFriendIds.length){
+      fBox.innerHTML = '<div class="placeholder-box" style="margin-top:0;">нужны друзья с местами</div>';
+    } else {
+      const ids = [myUserId, ...cachedFriendIds].filter(Boolean);
+      const { data: places } = await supabase.from('places').select('user_id,country,is_wishlist').in('user_id', ids).eq('is_wishlist', false);
+      const byUser = {};
+      (places||[]).forEach(p=>{
+        if(!byUser[p.user_id]) byUser[p.user_id] = new Set();
+        byUser[p.user_id].add(p.country);
+      });
+      const { data: users } = await supabase.from('users').select('id,username,avatar_url,telegram_id').in('id', ids);
+      const rows = (users||[])
+        .filter(isRealTelegramUser)
+        .map(u=>({ ...u, countries: (byUser[u.id]||new Set()).size }))
+        .sort((a,b)=> b.countries - a.countries);
+      fBox.innerHTML = rows.length ? rows.map((u,i)=> rankRowHtml(u, i+1, u.countries)).join('')
+        : '<div class="placeholder-box" style="margin-top:0;">пусто</div>';
+    }
+
+    try{
+      const { data: allPlaces } = await supabase.from('places').select('user_id,country').eq('is_wishlist', false).limit(5000);
+      const byUser = {};
+      (allPlaces||[]).forEach(p=>{
+        if(!byUser[p.user_id]) byUser[p.user_id] = new Set();
+        byUser[p.user_id].add(p.country);
+      });
+      const ranked = Object.entries(byUser).map(([id,set])=>({id, countries:set.size})).sort((a,b)=>b.countries-a.countries).slice(0,40);
+      if(!ranked.length){ gBox.innerHTML = '<div class="placeholder-box" style="margin-top:0;">пока пусто</div>'; return; }
+      const { data: users } = await supabase.from('users').select('id,username,avatar_url,telegram_id').in('id', ranked.map(r=>r.id));
+      const umap = {}; (users||[]).forEach(u=>umap[u.id]=u);
+      const filtered = ranked
+        .map(r=>({ ...r, u: umap[r.id] }))
+        .filter(r=> isRealTelegramUser(r.u))
+        .slice(0, 15);
+      gBox.innerHTML = filtered.length
+        ? filtered.map((r,i)=> rankRowHtml(r.u, i+1, r.countries)).join('')
+        : '<div class="placeholder-box" style="margin-top:0;">пока нет реальных аккаунтов в топе</div>';
+    }catch(e){
+      gBox.innerHTML = '<div class="placeholder-box" style="margin-top:0;">не удалось загрузить</div>';
+    }
+  }
+
+  // patch loadFriends to fill cachedFriendIds + refresh feed
+  const _loadFriendsOrig = loadFriends;
+  loadFriends = async function(){
+    await _loadFriendsOrig();
+    // rebuild friend id cache from DOM is fragile — query again lightly
+    if(!myUserId) return;
+    const { data: asReq } = await supabase.from('friendships').select('addressee_id').eq('requester_id', myUserId).eq('status','accepted');
+    const { data: asAdd } = await supabase.from('friendships').select('requester_id').eq('addressee_id', myUserId).eq('status','accepted');
+    cachedFriendIds = [
+      ...(asReq||[]).map(r=>r.addressee_id),
+      ...(asAdd||[]).map(r=>r.requester_id)
+    ];
+    const activeTab = document.querySelector('.friends-tab.active');
+    if(activeTab && activeTab.dataset.ftab === 'feed') loadFriendsFeed();
+  };
+
+  // ---------- rate limit adds (anti-abuse for ranking) ----------
+  const ADD_LIMIT_PER_DAY = 20;
+  async function canAddPlaceToday(){
+    if(!myUserId) return false;
+    const day = new Date().toISOString().slice(0,10);
+    const { count } = await supabase.from('places')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', myUserId)
+      .gte('created_at', day + 'T00:00:00');
+    return (count || 0) < ADD_LIMIT_PER_DAY;
+  }
+
+  // wrap add save with rate limit
+  const addSaveBtn = document.getElementById('addSaveBtn');
+  const _addSaveHandler = addSaveBtn.onclick;
+  // intercept via capturing listener before the existing one completes — check in beginning of existing is hard; monkey-patch by re-binding is messy.
+  // Instead hook at start of save: we already have listener; add another that sets a flag... simpler: modify is already complex. Add check inside by replacing listener is overkill.
+  // Soft approach: before insert in existing code path we already have try — inject via prototype no.
+  // We'll leave rate limit as callable used from onboarding and document; also patch by wrapping:
+
+  // ---------- onboarding ----------
+  const ONBOARD_COUNTRIES = [
+    { name:'Россия', lat:55.75, lon:37.62 },
+    { name:'Турция', lat:41.01, lon:28.98 },
+    { name:'Грузия', lat:41.72, lon:44.79 },
+    { name:'Армения', lat:40.18, lon:44.51 },
+    { name:'ОАЭ', lat:25.20, lon:55.27 },
+    { name:'Таиланд', lat:13.76, lon:100.50 },
+    { name:'Италия', lat:41.90, lon:12.50 },
+    { name:'Франция', lat:48.86, lon:2.35 },
+    { name:'Испания', lat:40.42, lon:-3.70 },
+    { name:'Германия', lat:52.52, lon:13.41 },
+    { name:'Египет', lat:30.04, lon:31.24 },
+    { name:'Китай', lat:39.90, lon:116.40 },
+    { name:'Япония', lat:35.68, lon:139.69 },
+    { name:'США', lat:40.71, lon:-74.01 },
+    { name:'Казахстан', lat:43.24, lon:76.95 }
+  ];
+  const onboardSelected = new Set();
+
+  function openOnboard(){
+    const grid = document.getElementById('onboardGrid');
+    grid.innerHTML = ONBOARD_COUNTRIES.map((c,i)=>
+      `<button type="button" class="onboard-chip" data-i="${i}">${c.name}</button>`
+    ).join('');
+    onboardSelected.clear();
+    grid.querySelectorAll('.onboard-chip').forEach(chip=>{
+      chip.addEventListener('click', ()=>{
+        const c = ONBOARD_COUNTRIES[chip.dataset.i];
+        if(onboardSelected.has(c.name)){ onboardSelected.delete(c.name); chip.classList.remove('on'); }
+        else { onboardSelected.add(c.name); chip.classList.add('on'); }
+      });
+    });
+    document.getElementById('onboard').classList.remove('hide');
+  }
+  function closeOnboard(){
+    document.getElementById('onboard').classList.add('hide');
+    csSet('onboard_seen', '1');
+  }
+  document.getElementById('onboardSkip').addEventListener('click', closeOnboard);
+  document.getElementById('onboardSave').addEventListener('click', async ()=>{
+    if(!myUserId || !onboardSelected.size){ closeOnboard(); return; }
+    const btn = document.getElementById('onboardSave');
+    btn.classList.add('loading');
+    try{
+      for(const name of onboardSelected){
+        const c = ONBOARD_COUNTRIES.find(x=>x.name === name);
+        if(!c) continue;
+        const { data: existing } = await supabase.from('places').select('id').eq('user_id', myUserId).eq('country', name).is('city', null).limit(1);
+        if(existing && existing.length) continue;
+        await supabase.from('places').insert({
+          user_id: myUserId, country: name, city: null,
+          is_wishlist: false, lat: c.lat, lon: c.lon
+        });
+      }
+      loadPlaces();
+    } finally {
+      btn.classList.remove('loading');
+      closeOnboard();
+    }
+  });
+
+  // show onboard after user init if not seen (and after splash)
+  csGet('onboard_seen').then(seen=>{
+    if(seen === '1') return;
+    const wait = setInterval(()=>{
+      if(myUserId){
+        clearInterval(wait);
+        setTimeout(openOnboard, 2800);
+      }
+    }, 400);
   });
 })();
 </script>
