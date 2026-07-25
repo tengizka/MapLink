@@ -351,6 +351,13 @@
   .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
+  #quoteStrip{
+    flex-shrink:0; padding:8px 20px 12px; text-align:center;
+  }
+  #quoteText{
+    font-family:'Fraunces',serif; font-style:italic; font-size:12.5px;
+    color:var(--muted); transition:opacity .5s ease;
+  }
   #globeMap{ position:absolute; inset:0; }
   .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo{ display:none !important; }
 
@@ -399,14 +406,14 @@
   .maplibregl-popup-content{ background:transparent !important; box-shadow:none !important; padding:0 !important; }
   .maplibregl-popup-tip{ display:none !important; }
 
-  /* ---------------- ADD PLACE MODAL ---------------- */
-  #addModal{
+  /* ---------------- ADD / EDIT PLACE MODAL ---------------- */
+  #addModal, #editModal{
     position:fixed; inset:0; z-index:80;
     background:rgba(58,46,43,.5);
     display:flex; align-items:center; justify-content:center;
     padding:24px;
   }
-  #addModal.hide{ display:none; }
+  #addModal.hide, #editModal.hide{ display:none; }
   .add-sheet{
     background:var(--card); width:100%; max-width:320px;
     border-radius:24px; padding:22px 20px;
@@ -447,7 +454,26 @@
   .add-save{
     width:100%; background:var(--rose); color:#fff; border:none;
     padding:13px; border-radius:20px; font-size:14px; font-weight:700; font-family:inherit;
+    position:relative; transition:transform .12s ease, opacity .2s ease;
   }
+  .add-save:active{ transform:scale(.97); }
+  .add-save.loading{ color:transparent; pointer-events:none; }
+  .add-save.loading::after{
+    content:''; position:absolute; left:50%; top:50%;
+    width:20px; height:20px; margin:-10px 0 0 -10px;
+    border-radius:50%;
+    border:2.5px solid rgba(255,255,255,.4);
+    border-top-color:#fff;
+    animation:btnSpin .7s linear infinite;
+  }
+  @keyframes btnSpin{ to{ transform:rotate(360deg); } }
+
+  /* universal tap feedback */
+  button, .navitem, .friend-row, .place-card, .mini-btn, .invite-btn, .bubble-add, .fab{
+    transition:transform .12s ease;
+  }
+  button:active, .invite-btn:active, .bubble-add:active, .mini-btn:active{ transform:scale(.94); }
+  .friend-row:active, .place-card:active{ transform:scale(.985); }
   .add-photo-label{
     display:block; text-align:center; background:var(--cream);
     border:1px dashed #D8C2B6; border-radius:14px; padding:12px;
@@ -536,6 +562,7 @@
       </div>
       <button class="fab" id="fabAdd">+</button>
     </div>
+    <div id="quoteStrip"><span id="quoteText"></span></div>
   </div>
 
   <!-- ADD PLACE MODAL -->
@@ -573,6 +600,28 @@
       <input type="file" accept="image/*" id="addPhoto" style="display:none;">
       <button class="add-save" id="addSaveBtn">Сохранить</button>
       <button class="add-cancel" id="addCancelBtn">Отмена</button>
+    </div>
+  </div>
+
+  <!-- EDIT PLACE MODAL -->
+  <div id="editModal" class="hide">
+    <div class="add-sheet">
+      <h3 id="editHeading">Место</h3>
+      <input class="add-field" id="editNote" placeholder="Заметка (необязательно)">
+      <input class="add-field" id="editDate" type="date">
+      <label class="add-toggle">
+        <input type="checkbox" id="editWishlist"> Это место мечты (ещё не была)
+      </label>
+      <label class="add-photo-label" for="editPhoto">
+        <span id="editPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          <span>Заменить фото</span>
+        </span>
+      </label>
+      <input type="file" accept="image/*" id="editPhoto" style="display:none;">
+      <button class="add-save" id="editSaveBtn">Сохранить</button>
+      <button class="add-cancel" id="editDeleteBtn" style="color:#B65B5B;">Удалить место</button>
+      <button class="add-cancel" id="editCancelBtn">Отмена</button>
     </div>
   </div>
 
@@ -821,6 +870,32 @@
       });
     });
   });
+
+  // ---------- inspirational quotes (static, local — never breaks) ----------
+  const quotes = [
+    '«Мир — это книга, и те, кто не путешествует, читают только одну страницу»',
+    '«Путешествие — единственное, на что тратишь деньги и становишься богаче»',
+    '«Не все, кто блуждает, потеряны»',
+    '«Собирай моменты, а не вещи»',
+    '«Жизнь коротка, а мир большой»',
+    '«Однажды в год отправляйся туда, где никогда не был»',
+    '«Лучшие виды открываются после самого трудного подъёма»',
+    '«Куда бы ты ни шла — иди с сердцем»',
+    '«Путешествия оставляют тебя без слов, а потом превращают в рассказчика»',
+    '«Дом — это не место, а чувство»'
+  ];
+  let quoteIndex = Math.floor(Math.random()*quotes.length);
+  function showQuote(){
+    const el = document.getElementById('quoteText');
+    el.style.opacity = '0';
+    setTimeout(()=>{
+      el.textContent = quotes[quoteIndex];
+      el.style.opacity = '1';
+      quoteIndex = (quoteIndex+1) % quotes.length;
+    }, 500);
+  }
+  showQuote();
+  setInterval(showQuote, 8000);
 
   // ---------- tutorial: real spotlight tour across actual screens ----------
   const coachSteps = [
@@ -1107,6 +1182,7 @@
 
     document.getElementById('fvPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто');
     document.getElementById('fvWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пусто');
+    attachDefaultPhotos(places, photosByPlace);
   };
 
   document.getElementById('friendViewBack').addEventListener('click', ()=> showScreen('friends'));
@@ -1192,6 +1268,8 @@
     document.getElementById('addWishlist').checked = false;
     document.getElementById('addDate').value = '';
     document.getElementById('dateWrap').classList.remove('open');
+    document.getElementById('addPhoto').value = '';
+    document.getElementById('addPhotoText').querySelector('span:last-child').textContent = 'Добавить фото';
     selectedCountry = (prefill && prefill.selectedCountry) || null;
     selectedCity = (prefill && prefill.selectedCity) || null;
     document.getElementById('countrySuggest').style.display = 'none';
@@ -1326,32 +1404,54 @@
       return;
     }
 
-    const place = {
-      user_id: myUserId,
-      country: selectedCountry.name,
-      city: selectedCity ? selectedCity.name : null,
-      visit_date: document.getElementById('addDate').value || null,
-      note: document.getElementById('addNote').value.trim() || null,
-      is_wishlist: document.getElementById('addWishlist').checked,
-      lat: selectedCity ? selectedCity.lat : selectedCountry.lat,
-      lon: selectedCity ? selectedCity.lon : selectedCountry.lon
-    };
+    const saveBtn = document.getElementById('addSaveBtn');
+    if(saveBtn.classList.contains('loading')) return; // already saving, ignore double-tap
+    saveBtn.classList.add('loading');
 
-    const { data: newPlace, error } = await supabase.from('places').insert(place).select().single();
+    try{
+      const cityName = selectedCity ? selectedCity.name : null;
 
-    const photoFile = document.getElementById('addPhoto').files[0];
-    if(!error && newPlace && photoFile){
-      const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${myUserId}/${newPlace.id}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
-      if(!upErr){
-        const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
-        await supabase.from('photos').insert({ place_id: newPlace.id, url: pub.publicUrl });
+      // prevent duplicate entries of the exact same place
+      let dupQuery = supabase.from('places').select('id').eq('user_id', myUserId).eq('country', selectedCountry.name);
+      dupQuery = cityName ? dupQuery.eq('city', cityName) : dupQuery.is('city', null);
+      const { data: existing } = await dupQuery.limit(1);
+      if(existing && existing.length){
+        alert('Это место уже есть в твоём списке');
+        return;
       }
-    }
 
-    closeAddModal();
-    loadPlaces();
+      const place = {
+        user_id: myUserId,
+        country: selectedCountry.name,
+        city: cityName,
+        visit_date: document.getElementById('addDate').value || null,
+        note: document.getElementById('addNote').value.trim() || null,
+        is_wishlist: document.getElementById('addWishlist').checked,
+        lat: selectedCity ? selectedCity.lat : selectedCountry.lat,
+        lon: selectedCity ? selectedCity.lon : selectedCountry.lon
+      };
+
+      const { data: newPlace, error } = await supabase.from('places').insert(place).select().single();
+      if(error){ alert('Не получилось сохранить: '+error.message); return; }
+
+      const photoFile = document.getElementById('addPhoto').files[0];
+      if(newPlace && photoFile){
+        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${myUserId}/${newPlace.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
+        if(upErr){
+          alert('Место сохранено, но фото загрузить не удалось: '+upErr.message);
+        } else {
+          const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
+          await supabase.from('photos').insert({ place_id: newPlace.id, url: pub.publicUrl });
+        }
+      }
+
+      closeAddModal();
+      loadPlaces();
+    } finally {
+      saveBtn.classList.remove('loading');
+    }
   });
 
   window.__deletePlace = async function(id){
@@ -1365,6 +1465,7 @@
     if(!myUserId) return;
     const { data } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
     const places = data || [];
+    allPlacesCache = places;
 
     // fetch photos for all these places in one batch
     const ids = places.map(p=>p.id);
@@ -1410,24 +1511,55 @@
     animateNumber(document.getElementById('statCities'), visited.length);
     animateNumber(document.getElementById('statWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
 
-    document.getElementById('myPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто — добавь первое место на планете');
-    document.getElementById('myWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пока пусто — отметь место мечты на планете');
+    document.getElementById('myPlacesList').innerHTML = renderPlaceCards(visited, photosByPlace, 'пока пусто — добавь первое место на планете', true);
+    document.getElementById('myWishlistList').innerHTML = renderPlaceCards(wishlist, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+    attachDefaultPhotos(places, photosByPlace);
   }
 
-  function renderPlaceCards(list, photosByPlace, emptyText){
+  // ---------- default photo-by-URL for places without an uploaded photo ----------
+  const defaultPhotoCache = {};
+  async function fetchDefaultPhoto(name){
+    if(!name) return null;
+    if(defaultPhotoCache[name] !== undefined) return defaultPhotoCache[name];
+    try{
+      const res = await fetch('https://ru.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name));
+      if(!res.ok) throw 0;
+      const data = await res.json();
+      const url = (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null;
+      defaultPhotoCache[name] = url;
+      return url;
+    }catch(e){
+      defaultPhotoCache[name] = null;
+      return null;
+    }
+  }
+  function attachDefaultPhotos(places, photosByPlace){
+    places.forEach(async p=>{
+      if((photosByPlace[p.id] || []).length) return; // already has a real uploaded photo
+      const url = await fetchDefaultPhoto(p.city || p.country);
+      if(!url) return;
+      document.querySelectorAll('.thumb[data-place-id="'+p.id+'"]').forEach(el=>{
+        el.style.backgroundImage = `url(${url})`;
+        el.innerHTML = '';
+      });
+    });
+  }
+
+  function renderPlaceCards(list, photosByPlace, emptyText, clickable){
     if(!list.length){
       return `<div class="placeholder-box" style="margin-top:0;">${emptyText}</div>`;
     }
     return list.map((p,i)=>{
       const photos = photosByPlace[p.id] || [];
       const thumb = photos.length
-        ? `<div class="thumb" style="background-image:url(${photos[0]})"></div>`
-        : `<div class="thumb">${p.is_wishlist
+        ? `<div class="thumb" data-place-id="${p.id}" style="background-image:url(${photos[0]})"></div>`
+        : `<div class="thumb" data-place-id="${p.id}">${p.is_wishlist
             ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>'
             : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
           }</div>`;
+      const tapAttr = clickable ? `onclick="window.__openEditPlace('${p.id}')" style="cursor:pointer; animation-delay:${Math.min(i*0.05,0.4)}s"` : `style="animation-delay:${Math.min(i*0.05,0.4)}s"`;
       return `
-        <div class="place-card" style="animation-delay:${Math.min(i*0.05,0.4)}s">
+        <div class="place-card" ${tapAttr}>
           ${thumb}
           <div class="pc-body">
             <div class="pc-title">${p.city ? p.city+', '+p.country : p.country}</div>
@@ -1438,6 +1570,67 @@
         </div>`;
     }).join('');
   }
+
+  // ---------- edit place modal ----------
+  let editingPlace = null;
+  let allPlacesCache = [];
+
+  window.__openEditPlace = function(placeId){
+    const p = allPlacesCache.find(x=>x.id === placeId);
+    if(!p) return;
+    editingPlace = p;
+    document.getElementById('editHeading').textContent = p.city ? p.city+', '+p.country : p.country;
+    document.getElementById('editNote').value = p.note || '';
+    document.getElementById('editDate').value = p.visit_date || '';
+    document.getElementById('editWishlist').checked = !!p.is_wishlist;
+    document.getElementById('editPhoto').value = '';
+    document.getElementById('editPhotoText').querySelector('span:last-child').textContent = 'Заменить фото';
+    document.getElementById('editModal').classList.remove('hide');
+  };
+  document.getElementById('editCancelBtn').addEventListener('click', ()=>{
+    document.getElementById('editModal').classList.add('hide');
+  });
+  document.getElementById('editPhoto').addEventListener('change', (e)=>{
+    const f = e.target.files[0];
+    document.getElementById('editPhotoText').querySelector('span:last-child').textContent = f ? f.name : 'Заменить фото';
+  });
+  document.getElementById('editDeleteBtn').addEventListener('click', async ()=>{
+    if(!editingPlace) return;
+    if(!confirm('Удалить это место?')) return;
+    await supabase.from('places').delete().eq('id', editingPlace.id);
+    document.getElementById('editModal').classList.add('hide');
+    loadPlaces();
+  });
+  document.getElementById('editSaveBtn').addEventListener('click', async ()=>{
+    if(!editingPlace) return;
+    const btn = document.getElementById('editSaveBtn');
+    if(btn.classList.contains('loading')) return;
+    btn.classList.add('loading');
+    try{
+      await supabase.from('places').update({
+        note: document.getElementById('editNote').value.trim() || null,
+        visit_date: document.getElementById('editDate').value || null,
+        is_wishlist: document.getElementById('editWishlist').checked
+      }).eq('id', editingPlace.id);
+
+      const photoFile = document.getElementById('editPhoto').files[0];
+      if(photoFile){
+        const ext = (photoFile.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${myUserId}/${editingPlace.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('place-photos').upload(path, photoFile);
+        if(upErr){
+          alert('Изменения сохранены, но фото загрузить не удалось: '+upErr.message);
+        } else {
+          const { data: pub } = supabase.storage.from('place-photos').getPublicUrl(path);
+          await supabase.from('photos').insert({ place_id: editingPlace.id, url: pub.publicUrl });
+        }
+      }
+      document.getElementById('editModal').classList.add('hide');
+      loadPlaces();
+    } finally {
+      btn.classList.remove('loading');
+    }
+  });
 })();
 </script>
 
