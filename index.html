@@ -87,20 +87,20 @@
     opacity:0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    text-rendering: geometricPrecision;
-    letter-spacing: 0.01em;
+    text-rendering: optimizeLegibility;
+    /* NO transform here — transforms blur text in iOS Telegram WebView */
   }
-  /* iPhone-safe: animate the WHOLE line (one layer) — glyphs stay sharp */
   .wobble-line.fonts-ready{
     opacity:1;
+    /* margin animation = layout, not compositor → sharp on iPhone */
     animation: lineFloat 1.35s ease-in-out infinite;
   }
   @keyframes lineFloat{
-    0%, 100%{ transform: translateY(0); }
-    50%{ transform: translateY(-6px); }
+    0%, 100%{ margin-top: 0; margin-bottom: 8px; }
+    50%{ margin-top: -8px; margin-bottom: 16px; }
   }
   .wobble-line span{ display: inline; }
-  /* desktop: per-letter hop */
+  /* desktop: per-letter hop (fine pointer only) */
   @media (hover: hover) and (pointer: fine){
     .wobble-line.fonts-ready{ animation: none; }
     .wobble-line span{
@@ -142,12 +142,50 @@
   .screen{
     flex:1; overflow-y:auto; padding:10px 20px 0;
     display:none;
+    opacity:0;
   }
-  .screen.active{ display:block; animation:screenIn .28s ease; }
+  .screen.active{
+    display:block;
+    animation:screenIn .38s cubic-bezier(.22,1,.36,1) forwards;
+  }
+  .screen.leaving{
+    display:block;
+    animation:screenOut .22s ease forwards;
+    pointer-events:none;
+  }
   @keyframes screenIn{
-    0%{ opacity:0; transform:translateY(8px); }
+    0%{ opacity:0; transform:translateY(14px) scale(.985); }
+    100%{ opacity:1; transform:translateY(0) scale(1); }
+  }
+  @keyframes screenOut{
+    0%{ opacity:1; transform:translateY(0); }
+    100%{ opacity:0; transform:translateY(-8px); }
+  }
+  .pane-in{
+    animation:paneIn .32s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes paneIn{
+    0%{ opacity:0; transform:translateX(12px); }
+    100%{ opacity:1; transform:translateX(0); }
+  }
+  .feed-card, .feed-card-compact, .rank-row, .friend-row, .place-card{
+    animation:cardRise .4s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes cardRise{
+    0%{ opacity:0; transform:translateY(12px); }
     100%{ opacity:1; transform:translateY(0); }
   }
+  .ig-grid .ig-cell, .places-grid .grid-cell{
+    animation:gridPop .35s cubic-bezier(.34,1.4,.64,1) both;
+  }
+  @keyframes gridPop{
+    0%{ opacity:0; transform:scale(.92); }
+    100%{ opacity:1; transform:scale(1); }
+  }
+  .navitem{
+    transition: color .25s ease, transform .25s cubic-bezier(.34,1.56,.64,1);
+  }
+  .navitem:active{ transform:scale(.9); }
   .placeholder-box{
     margin-top:40px;
     background:var(--card);
@@ -268,55 +306,110 @@
     background:linear-gradient(transparent, rgba(0,0,0,.55));
     white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
   }
-  /* Instagram-style friend profile */
+  /* Friend profile — travel journal (not Instagram) */
   #screen-friend-view{ padding-left:0; padding-right:0; }
   #screen-friend-view .back-row,
   #screen-friend-view .profile-head,
   #screen-friend-view #fvAddFriendWrap,
   #screen-friend-view #fvPrivateNote{ padding-left:20px; padding-right:20px; }
   .ig-tabs{
-    display:flex; border-top:1px solid rgba(0,0,0,.06); border-bottom:1px solid rgba(0,0,0,.06);
-    margin:12px 0 0;
+    display:flex; gap:8px; margin:14px 16px 0; padding:0;
+    border:none;
   }
-  html.theme-dark .ig-tabs{ border-color:rgba(255,255,255,.08); }
   .ig-tab{
-    flex:1; background:none; border:none; padding:12px 0 10px;
+    flex:1; background:var(--card); border:1.5px solid transparent;
+    border-radius:16px; padding:10px 8px;
     color:var(--muted); font-family:inherit; display:flex; flex-direction:column;
-    align-items:center; gap:4px; border-bottom:2px solid transparent;
+    align-items:center; gap:4px;
+    box-shadow:0 4px 12px -8px rgba(58,46,43,.2);
   }
   .ig-tab svg{ width:18px; height:18px; }
-  .ig-tab.active{ color:var(--ink); border-bottom-color:var(--rose-deep); }
+  .ig-tab.active{
+    color:var(--rose-deep); border-color:var(--rose);
+    background:var(--blush);
+  }
+  /* polaroid wall */
   .ig-grid{
-    display:grid; grid-template-columns:repeat(3, 1fr); gap:2px; margin:0;
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:14px 12px;
+    padding:16px 14px 8px;
+    margin:0;
   }
   .ig-grid .ig-cell{
-    aspect-ratio:1; background:var(--blush) center/cover no-repeat;
+    aspect-ratio:auto;
+    background:var(--card);
+    border-radius:6px 6px 18px 18px;
+    padding:8px 8px 12px;
+    box-shadow:0 8px 20px -10px rgba(58,46,43,.35);
     position:relative; cursor:pointer;
+    transition:transform .2s ease, box-shadow .2s ease;
+  }
+  .ig-grid .ig-cell:nth-child(odd){ transform:rotate(-1.2deg); }
+  .ig-grid .ig-cell:nth-child(even){ transform:rotate(1.4deg); }
+  .ig-grid .ig-cell:active{ transform:rotate(0deg) scale(.97); }
+  .ig-grid .ig-cell .ig-photo{
+    width:100%; aspect-ratio:1;
+    border-radius:4px;
+    background:var(--blush) center/cover no-repeat;
     transition:background-image .25s ease;
   }
-  .thumb, .grid-cell, .feed-photo{
+  .thumb, .grid-cell, .feed-photo, .ig-photo{
     transition:background-image .25s ease;
-  }
-  .ig-grid .ig-cell::after{
-    content:''; position:absolute; inset:0;
-    background:linear-gradient(180deg, transparent 42%, rgba(42,34,31,.75) 100%);
-    pointer-events:none;
   }
   .ig-grid .ig-cell .ig-label{
-    position:absolute; left:0; right:0; bottom:0; z-index:1;
-    padding:8px 7px 7px; color:#fff;
-    font-size:11px; font-weight:600; line-height:1.25;
-    text-shadow:0 1px 3px rgba(0,0,0,.35);
+    position:relative; z-index:1;
+    padding:10px 2px 0; color:var(--ink);
+    font-family:'Caveat',cursive; font-weight:700; font-size:16px;
+    line-height:1.15; text-align:center;
   }
   .ig-grid .ig-cell .ig-label small{
-    display:block; font-weight:500; font-size:9.5px; opacity:.9; margin-top:1px;
+    display:block; font-family:'Quicksand',sans-serif; font-weight:600;
+    font-size:10px; color:var(--muted); margin-top:2px;
+  }
+  .ig-grid .ig-cell .ig-stamp{
+    position:absolute; top:14px; right:12px; z-index:2;
+    width:36px; height:36px; border-radius:50%;
+    border:2px dashed var(--rose);
+    color:var(--rose-deep); font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+    background:rgba(255,253,251,.85);
+    transform:rotate(12deg);
+    letter-spacing:.02em;
   }
   .ig-grid .ig-cell .ig-multi{
-    position:absolute; top:6px; right:6px; z-index:1;
-    background:rgba(42,34,31,.45); color:#fff; border-radius:8px;
-    font-size:10px; padding:2px 6px; font-weight:700;
+    position:absolute; top:14px; left:12px; z-index:2;
+    background:var(--rose-deep); color:#fff; border-radius:10px;
+    font-size:10px; padding:2px 7px; font-weight:700;
   }
-  .ig-empty{ padding:30px 20px; text-align:center; color:var(--muted); font-size:13px; }
+  .ig-empty{
+    padding:36px 24px; text-align:center; color:var(--muted); font-size:13px;
+    font-family:'Fraunces',serif; font-style:italic;
+  }
+  /* ticket-style list cards on friend profile */
+  .journal-ticket{
+    display:flex; gap:12px; align-items:stretch;
+    background:var(--card); border-radius:16px;
+    margin:0 14px 10px; overflow:hidden;
+    box-shadow:0 6px 16px -10px rgba(58,46,43,.3);
+    cursor:pointer;
+  }
+  .journal-ticket .jt-photo{
+    width:88px; flex-shrink:0;
+    background:var(--blush) center/cover no-repeat;
+  }
+  .journal-ticket .jt-body{ padding:12px 12px 12px 0; min-width:0; flex:1; }
+  .journal-ticket .jt-city{
+    font-family:'Fraunces',serif; font-style:italic; font-size:16px;
+    color:var(--rose-deep);
+  }
+  .journal-ticket .jt-country{ font-size:11px; color:var(--muted); margin-top:2px; }
+  .journal-ticket .jt-date{
+    display:inline-block; margin-top:8px;
+    font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--sage-deep); border:1px solid var(--sage);
+    border-radius:8px; padding:2px 8px;
+  }
   .fv-toolbar{ display:flex; justify-content:flex-end; gap:4px; padding:8px 16px 6px; }
   #igPlaceModal{
     position:fixed; inset:0; z-index:85; background:rgba(42,34,31,.55);
@@ -663,8 +756,15 @@
     animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
   }
   @keyframes popIn{
-    0%{ transform:scale(.85); opacity:0; }
-    100%{ transform:scale(1); opacity:1; }
+    0%{ transform:scale(.88) translateY(12px); opacity:0; }
+    100%{ transform:scale(1) translateY(0); opacity:1; }
+  }
+  #addModal, #editModal, #igPlaceModal{
+    animation: fadeScrim .25s ease both;
+  }
+  @keyframes fadeScrim{
+    0%{ opacity:0; }
+    100%{ opacity:1; }
   }
   .add-sheet h3{
     font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin:0 0 16px;
@@ -1076,17 +1176,28 @@
 <script>
 (function(){
   // ---------- wobble text build ----------
+  // iOS/Telegram: plain text (cursive ligatures stay connected + no blur).
+  // Desktop: per-letter spans for hop animation.
   const text = "Specially for\nLinqerin";
   const wobbleEl = document.getElementById('wobbleText');
-  let delay = 0;
-  text.split('').forEach(ch=>{
-    if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); return; }
-    const span = document.createElement('span');
-    span.textContent = ch === ' ' ? '\u00A0' : ch;
-    span.style.animationDelay = (delay*0.06)+'s';
-    wobbleEl.appendChild(span);
-    delay++;
-  });
+  const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  if(isFinePointer){
+    let delay = 0;
+    text.split('').forEach(ch=>{
+      if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); return; }
+      const span = document.createElement('span');
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.animationDelay = (delay * 0.04) + 's';
+      wobbleEl.appendChild(span);
+      delay++;
+    });
+  } else {
+    // keep as continuous string so Caveat connects letters properly on iPhone
+    text.split('\n').forEach((line, i)=>{
+      if(i) wobbleEl.appendChild(document.createElement('br'));
+      wobbleEl.appendChild(document.createTextNode(line));
+    });
+  }
 
   // show splash text only after Caveat is fully ready (extra frame on iOS avoids soft glyphs)
   function revealSplashFonts(){
@@ -1116,16 +1227,41 @@
 
   // ---------- tab switching ----------
   function showScreen(name){
+    const target = document.getElementById('screen-'+name);
+    if(!target) return;
+    if(target.classList.contains('active') && !target.classList.contains('leaving')) return;
+
     document.querySelectorAll('.navitem').forEach(b=>b.classList.remove('active'));
-    document.querySelectorAll('.screen').forEach(s=>{
-      s.classList.remove('active');
-      s.style.display = 'none';
-    });
     const navBtn = document.querySelector('.navitem[data-screen="'+name+'"]');
     if(navBtn) navBtn.classList.add('active');
-    const target = document.getElementById('screen-'+name);
-    target.classList.add('active');
+
+    const current = document.querySelector('.screen.active:not(.leaving)');
+    if(current && current !== target){
+      current.classList.add('leaving');
+      current.classList.remove('active');
+      const prev = current;
+      setTimeout(()=>{
+        if(prev.classList.contains('leaving')){
+          prev.classList.remove('leaving');
+          prev.style.display = 'none';
+          prev.style.opacity = '';
+        }
+      }, 220);
+    } else {
+      document.querySelectorAll('.screen').forEach(s=>{
+        if(s !== target){
+          s.classList.remove('active','leaving');
+          s.style.display = 'none';
+        }
+      });
+    }
+
+    target.classList.remove('leaving');
     target.style.display = '';
+    // restart enter animation
+    target.classList.remove('active');
+    void target.offsetWidth;
+    target.classList.add('active');
   }
   document.querySelectorAll('.navitem').forEach(btn=>{
     btn.addEventListener('click', ()=> showScreen(btn.dataset.screen));
@@ -1189,20 +1325,38 @@
     document.getElementById('topAvatar').style.backgroundImage = `url(${tgUser.photo_url})`;
   }
 
-  // ---------- tiny CloudStorage helpers (with in-memory fallback outside Telegram) ----------
-  const memoryStore = {};
+  // ---------- storage helpers: CloudStorage only on Bot API ≥ 6.9, else localStorage ----------
+  // Accessing tg.CloudStorage on v6.0 logs "[Telegram.WebApp] CloudStorage is not supported"
+  function cloudStorageOk(){
+    try{
+      return !!(tg && typeof tg.isVersionAtLeast === 'function' && tg.isVersionAtLeast('6.9') && tg.CloudStorage);
+    }catch(e){ return false; }
+  }
+  function lsGet(key){
+    try{ return localStorage.getItem('ml_' + key); }catch(e){ return null; }
+  }
+  function lsSet(key, val){
+    try{ localStorage.setItem('ml_' + key, val); }catch(e){}
+  }
   function csGet(key){
     return new Promise(resolve=>{
-      if(tg && tg.CloudStorage){
-        tg.CloudStorage.getItem(key, (err, val)=> resolve(err ? null : val));
-      } else {
-        resolve(memoryStore[key] || null);
+      if(cloudStorageOk()){
+        try{
+          tg.CloudStorage.getItem(key, (err, val)=>{
+            if(err || val == null) resolve(lsGet(key));
+            else resolve(val);
+          });
+          return;
+        }catch(e){}
       }
+      resolve(lsGet(key));
     });
   }
   function csSet(key, val){
-    if(tg && tg.CloudStorage){ tg.CloudStorage.setItem(key, val, ()=>{}); }
-    else { memoryStore[key] = val; }
+    lsSet(key, val); // always mirror locally
+    if(cloudStorageOk()){
+      try{ tg.CloudStorage.setItem(key, String(val), ()=>{}); }catch(e){}
+    }
   }
 
   // ---------- theme ----------
@@ -1433,18 +1587,20 @@
   showQuote();
   setInterval(showQuote, 9000);
 
-  // ---------- tutorial: real spotlight tour across actual screens ----------
+  // ---------- tutorial: spotlight tour (updated for feed / rank / grid / privacy) ----------
   const coachSteps = [
-    { welcome:true, screen:'home', title:'Привет!', text:'Это MapLink — твоя личная планета путешествий. Быстро пробежимся, что где находится.' },
-    { screen:'home', target:'#globeBox', place:'below', title:'Твоя планета', text:'Крути пальцем в любую сторону и щипком приближай — появятся страны и города.' },
-    { screen:'home', target:'#globeBox', place:'below', title:'Тапни по названию', text:'Нажми прямо на подпись страны или города — выскочит пузырёк с кнопкой "Добавить".' },
-    { screen:'home', target:'#fabAdd', place:'above', title:'Или жми на плюсик', text:'Впиши страну (город необязателен) — этого хватит, чтобы сохранить место.' },
-    { screen:'friends', target:'#friendSearch', place:'below', title:'Ищи друзей', text:'Введи имя — покажем совпадения среди пользователей MapLink.' },
-    { screen:'friends', target:'#inviteBtn', place:'above', title:'Или зови по ссылке', text:'Поделись личной ссылкой — тот, кто тапнет по ней, сразу станет твоим другом.' },
-    { screen:'friends', target:'#requestsBlock', place:'below', title:'Заявки в друзья', text:'Если кто-то нашёл тебя через поиск — заявка появится прямо здесь.', fallbackTarget:'#friendSearch' },
-    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, повтор этого тура и удаление данных — всё здесь.' },
-    { screen:'profile', target:'#myPlacesList', place:'above', title:'Твои места', text:'Список всех посещённых стран — с датами, заметками и фото.' },
-    { screen:'profile', target:'#myWishlistList', place:'above', title:'Вишлист', text:'А тут откладываются места мечты, куда только хочешь попасть.' }
+    { welcome:true, screen:'home', title:'Привет!', text:'MapLink — твоя планета путешествий. Отмечай страны, смотри друзей и собирай коллекцию мест.' },
+    { screen:'home', target:'#globeBox', place:'below', title:'Живая планета', text:'Крути глобус пальцем, щипком приближай. Появятся названия стран и городов.' },
+    { screen:'home', target:'#globeBox', place:'below', title:'Добавить с карты', text:'Тапни по названию — всплывёт пузырёк «Добавить». Страна подставится сама, если выберешь город.' },
+    { screen:'home', target:'#fabAdd', place:'above', title:'Плюсик', text:'Или добавь вручную: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
+    { screen:'friends', target:'.friends-tabs', place:'below', title:'Три вкладки', text:'Лента — поездки друзей с реакциями. Друзья — поиск и заявки. Рейтинг — кто больше стран открыл.', friendsTab:'feed' },
+    { screen:'friends', target:'#friendsFeed', place:'above', title:'Лента как в Instagram', text:'Посты друзей: фото, название места, реакции ❤️ и комментарии. Без фото — компактная карточка.', friendsTab:'feed', fallbackTarget:'.friends-tabs' },
+    { screen:'friends', target:'#friendSearch', place:'below', title:'Найти друга', text:'Поиск по имени в MapLink. Можно отправить заявку — она придёт ему во вкладку «Друзья».', friendsTab:'list' },
+    { screen:'friends', target:'#inviteBtn', place:'above', title:'Пригласить ссылкой', text:'Поделись личной ссылкой — кто откроет, станет другом. Из рейтинга тоже можно открыть профиль и добавить.', friendsTab:'list' },
+    { screen:'friends', target:'#rankGlobalList', place:'above', title:'Рейтинг', text:'Топ по странам (только реальные аккаунты Telegram). Тап по человеку — его travel-journal: полароиды и билетики.', friendsTab:'rank', fallbackTarget:'.friends-tabs' },
+    { screen:'profile', target:'.profile-toolbar', place:'below', title:'Сетка или список', text:'Переключай вид стены мест и сортируй: по дате, названию или стране.' },
+    { screen:'profile', target:'#myPlacesList', place:'above', title:'Твои места', text:'Все поездки с фото. Тап — редактировать, добавить фото (до 3) или удалить.' },
+    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, приватный профиль (места скрыты не-друзьям), повтор тура и удаление всех данных.' }
   ];
   let coachIndex = 0;
 
@@ -1485,10 +1641,17 @@
     tip.style.left = ''; tip.style.top = ''; tip.style.bottom = '';
   }
 
+  function activateFriendsTab(tab){
+    if(!tab) return;
+    const btn = document.querySelector('.friends-tab[data-ftab="'+tab+'"]');
+    if(btn) btn.click();
+  }
+
   async function showCoachStep(i){
     const s = coachSteps[i];
     showScreen(s.screen);
-    await new Promise(r=>setTimeout(r, 340)); // wait for tab fade-in
+    if(s.friendsTab) activateFriendsTab(s.friendsTab);
+    await new Promise(r=>setTimeout(r, 360)); // wait for tab fade-in
 
     const hi = document.getElementById('coachHighlight');
 
@@ -1500,10 +1663,10 @@
       centerCoachTip();
     } else {
       let target = document.querySelector(s.target);
-      if((!target || target.offsetParent === null) && s.fallbackTarget){
+      if((!target || target.offsetParent === null || (target.getBoundingClientRect().height < 4)) && s.fallbackTarget){
         target = document.querySelector(s.fallbackTarget);
       }
-      if(!target){ // nothing to highlight, skip to next
+      if(!target){
         if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
         else closeTutorial();
         return;
@@ -1514,6 +1677,7 @@
       hi.style.top = (rect.top - 8) + 'px';
       hi.style.width = (rect.width + 16) + 'px';
       hi.style.height = (rect.height + 16) + 'px';
+      hi.style.boxShadow = '0 0 0 2000px rgba(42,34,31,.68)';
 
       placeCoachTip(rect, s.place);
     }
@@ -1825,16 +1989,33 @@
   function renderIgGrid(list, photosByPlace, emptyText){
     if(!list.length) return `<div class="ig-empty">${emptyText}</div>`;
     if(fvViewMode === 'list'){
-      return renderPlaceCards(list, photosByPlace, emptyText, false);
+      // passport-ticket list instead of plain cards
+      return list.map(p=>{
+        const photos = photosByPlace[p.id] || [];
+        const title = p.city || p.country;
+        const sub = p.city ? p.country : '';
+        return `<div class="journal-ticket" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
+          <div class="jt-photo" data-place-id="${p.id}"></div>
+          <div class="jt-body">
+            <div class="jt-city">${title}</div>
+            ${sub?`<div class="jt-country">${sub}</div>`:''}
+            ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
+          </div>
+        </div>`;
+      }).join('');
     }
-    return `<div class="ig-grid">` + list.map(p=>{
+    // polaroid wall
+    return `<div class="ig-grid">` + list.map((p,i)=>{
       const photos = photosByPlace[p.id] || [];
-      const multi = photos.length > 1 ? `<span class="ig-multi">1/${Math.min(photos.length,3)}</span>` : '';
+      const multi = photos.length > 1 ? `<span class="ig-multi">${photos.length}</span>` : '';
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
-      // no inline url — attachDefaultPhotos lazy-loads (faster first paint)
-      return `<div class="ig-cell" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
-        ${multi}
+      const stamp = p.is_wishlist
+        ? `<span class="ig-stamp">wish</span>`
+        : (p.visit_date ? `<span class="ig-stamp">${String(p.visit_date).slice(2,4) || '•'}</span>` : '');
+      return `<div class="ig-cell" onclick="window.__openIgPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s">
+        ${multi}${stamp}
+        <div class="ig-photo" data-place-id="${p.id}"></div>
         <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
     }).join('') + `</div>`;
@@ -1860,7 +2041,7 @@
     igModalPhotos = photos.slice();
     igModalIdx = 0;
     if(!igModalPhotos.length){
-      fetchDefaultPhoto(p.city || p.country).then(url=>{
+      fetchDefaultPhoto(p.city || p.country, p.country).then(url=>{
         if(url){ igModalPhotos = [url]; showIgModalPhoto(); }
       });
     }
@@ -2342,11 +2523,22 @@
     return arr;
   }
   function renderGrid(list, photosByPlace, emptyText, clickable){
-    if(!list.length) return `<div class="placeholder-box" style="margin-top:0;">${emptyText}</div>`;
-    return `<div class="places-grid">` + list.map(p=>{
-      const label = p.city || p.country;
+    if(!list.length) return `<div class="ig-empty">${emptyText}</div>`;
+    // polaroid wall — same as friend journal
+    return `<div class="ig-grid">` + list.map((p,i)=>{
+      const photos = photosByPlace[p.id] || [];
+      const multi = photos.length > 1 ? `<span class="ig-multi">${photos.length}</span>` : '';
+      const title = p.city || p.country;
+      const sub = p.city ? p.country : '';
+      const stamp = p.is_wishlist
+        ? `<span class="ig-stamp">wish</span>`
+        : (p.visit_date ? `<span class="ig-stamp">${String(p.visit_date).slice(2,4)||'•'}</span>` : '');
       const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
-      return `<div class="grid-cell" data-place-id="${p.id}" ${tap}><div class="grid-label">${label}</div></div>`;
+      return `<div class="ig-cell" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
+        ${multi}${stamp}
+        <div class="ig-photo" data-place-id="${p.id}"></div>
+        <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
+      </div>`;
     }).join('') + `</div>`;
   }
   function renderProfilePlaces(visited, wishlist, photosByPlace){
@@ -2401,14 +2593,123 @@
       return null;
     }
   }
-  async function fetchDefaultPhoto(name){
-    if(!name) return null;
-    if(defaultPhotoCache[name] !== undefined) return defaultPhotoCache[name];
-    // try Russian Wikipedia first, fall back to English if no article/thumbnail there
-    let url = await fetchWikiThumb('ru', name);
-    if(!url) url = await fetchWikiThumb('en', name);
+  // RU/EN country name → ISO 3166-1 alpha-2 for flagcdn
+  const COUNTRY_FLAG_CODES = {
+    'россия':'ru','russia':'ru','российская федерация':'ru',
+    'украина':'ua','ukraine':'ua',
+    'беларусь':'by','белоруссия':'by','belarus':'by',
+    'казахстан':'kz','kazakhstan':'kz',
+    'узбекистан':'uz','uzbekistan':'uz',
+    'кыргызстан':'kg','киргизия':'kg','kyrgyzstan':'kg',
+    'таджикистан':'tj','tajikistan':'tj',
+    'туркменистан':'tm','turkmenistan':'tm',
+    'армения':'am','armenia':'am',
+    'грузия':'ge','georgia':'ge',
+    'азербайджан':'az','azerbaijan':'az',
+    'молдова':'md','moldova':'md',
+    'турция':'tr','turkey':'tr','türkiye':'tr',
+    'оаэ':'ae','объединённые арабские эмираты':'ae','united arab emirates':'ae','uae':'ae',
+    'египет':'eg','egypt':'eg',
+    'тайланд':'th','таиланд':'th','thailand':'th',
+    'китай':'cn','china':'cn',
+    'япония':'jp','japan':'jp',
+    'южная корея':'kr','корея':'kr','south korea':'kr',
+    'индия':'in','india':'in',
+    'индонезия':'id','indonesia':'id',
+    'вьетнам':'vn','vietnam':'vn',
+    'италия':'it','italy':'it',
+    'франция':'fr','france':'fr',
+    'испания':'es','spain':'es',
+    'германия':'de','germany':'de',
+    'португалия':'pt','portugal':'pt',
+    'греция':'gr','greece':'gr',
+    'польша':'pl','poland':'pl',
+    'чехия':'cz','czech':'cz','чешская республика':'cz',
+    'австрия':'at','austria':'at',
+    'швейцария':'ch','switzerland':'ch',
+    'нидерланды':'nl','holland':'nl','netherlands':'nl',
+    'бельгия':'be','belgium':'be',
+    'великобритания':'gb','англия':'gb','united kingdom':'gb','uk':'gb',
+    'сша':'us','соединенные штаты':'us','соединенные штаты америки':'us','united states':'us','usa':'us',
+    'канада':'ca','canada':'ca',
+    'мексика':'mx','mexico':'mx',
+    'бразилия':'br','brazil':'br',
+    'аргентина':'ar','argentina':'ar',
+    'австралия':'au','australia':'au',
+    'новая зеландия':'nz','new zealand':'nz',
+    'израиль':'il','israel':'il',
+    'кипр':'cy','cyprus':'cy',
+    'мальта':'mt','malta':'mt',
+    'хорватия':'hr','croatia':'hr',
+    'черногория':'me','montenegro':'me',
+    'сербия':'rs','serbia':'rs',
+    'болгария':'bg','bulgaria':'bg',
+    'румыния':'ro','romania':'ro',
+    'венгрия':'hu','hungary':'hu',
+    'швеция':'se','sweden':'se',
+    'норвегия':'no','norway':'no',
+    'финляндия':'fi','finland':'fi',
+    'дания':'dk','denmark':'dk',
+    'исландия':'is','iceland':'is',
+    'ирландия':'ie','ireland':'ie',
+    'марокко':'ma','morocco':'ma',
+    'тунис':'tn','tunisia':'tn',
+    'юар':'za','south africa':'za',
+    'мальдивы':'mv','maldives':'mv',
+    'сейшелы':'sc','seychelles':'sc',
+    'шри-ланка':'lk','sri lanka':'lk',
+    'непал':'np','nepal':'np',
+    'сингапур':'sg','singapore':'sg',
+    'малайзия':'my','malaysia':'my',
+    'филиппины':'ph','philippines':'ph',
+    'куба':'cu','cuba':'cu',
+    'доминикана':'do','доминиканская республика':'do',
+    'катар':'qa','qatar':'qa',
+    'бахрейн':'bh','bahrain':'bh',
+    'саудовская аравия':'sa','saudi arabia':'sa',
+    'иордания':'jo','jordan':'jo',
+    'монголия':'mn','mongolia':'mn',
+    'камбоджа':'kh','cambodia':'kh',
+    'лаос':'la','laos':'la',
+    'эстония':'ee','estonia':'ee',
+    'латвия':'lv','latvia':'lv',
+    'литва':'lt','lithuania':'lt',
+    'словения':'si','slovenia':'si',
+    'словакия':'sk','slovakia':'sk',
+    'албания':'al','albania':'al',
+    'босния и герцеговина':'ba','bosnia':'ba',
+    'северная македония':'mk','macedonia':'mk',
+    'грузия':'ge'
+  };
+  function flagUrlForCountry(countryName){
+    if(!countryName) return null;
+    const code = COUNTRY_FLAG_CODES[String(countryName).trim().toLowerCase()];
+    if(!code) return null;
+    return 'https://flagcdn.com/w320/' + code + '.png';
+  }
+  // city → country wiki → flag. cache key includes both parts
+  async function fetchDefaultPhoto(name, countryFallback){
+    if(!name && !countryFallback) return null;
+    const cacheKey = (name || '') + '|' + (countryFallback || '');
+    if(defaultPhotoCache[cacheKey] !== undefined) return defaultPhotoCache[cacheKey];
+
+    let url = null;
+    // 1) city (or given name) on ru/en Wikipedia
+    if(name){
+      url = await fetchWikiThumb('ru', name);
+      if(!url) url = await fetchWikiThumb('en', name);
+    }
+    // 2) country article if city missing
+    if(!url && countryFallback && countryFallback !== name){
+      url = await fetchWikiThumb('ru', countryFallback);
+      if(!url) url = await fetchWikiThumb('en', countryFallback);
+    }
     url = shrinkWikiUrl(url);
-    defaultPhotoCache[name] = url;
+    // 3) always-available country flag
+    if(!url){
+      url = flagUrlForCountry(countryFallback || name);
+    }
+    defaultPhotoCache[cacheKey] = url;
     savePhotoCache();
     return url;
   }
@@ -2475,22 +2776,23 @@
     const tasks = [];
     places.forEach(p=>{
       const own = photosByPlace[p.id] || [];
-      const els = document.querySelectorAll(
-        '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-cell[data-place-id="'+p.id+'"]'
-      );
+      const sel = '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-photo[data-place-id="'+p.id+'"],.jt-photo[data-place-id="'+p.id+'"]';
+      const els = document.querySelectorAll(sel);
       if(!els.length) return;
       if(own.length){
-        // own photos: lazy-apply first frame only
         els.forEach(el=> scheduleBg(el, own[0]));
         return;
       }
-      const key = p.city || p.country;
       tasks.push(async ()=>{
-        const url = await fetchDefaultPhoto(key);
+        const url = await fetchDefaultPhoto(p.city || p.country, p.country);
         if(!url) return;
-        document.querySelectorAll(
-          '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-cell[data-place-id="'+p.id+'"]'
-        ).forEach(el=> scheduleBg(el, url));
+        document.querySelectorAll(sel).forEach(el=>{
+          if(url.indexOf('flagcdn.com') !== -1){
+            el.style.backgroundSize = 'cover';
+            el.style.backgroundPosition = 'center';
+          }
+          scheduleBg(el, url);
+        });
       });
     });
     // max 4 wikipedia requests at once — avoids queue + rate limit
@@ -2499,25 +2801,23 @@
 
   function renderPlaceCards(list, photosByPlace, emptyText, clickable){
     if(!list.length){
-      return `<div class="placeholder-box" style="margin-top:0;">${emptyText}</div>`;
+      return `<div class="ig-empty">${emptyText}</div>`;
     }
+    // ticket / boarding-pass list
     return list.map((p,i)=>{
-      const photos = photosByPlace[p.id] || [];
-      const thumb = `<div class="thumb" data-place-id="${p.id}">${photos.length ? '' : (p.is_wishlist
-            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>'
-            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="color:var(--rose-deep)"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
-          )}</div>`;
-      const tapAttr = clickable ? `onclick="window.__openEditPlace('${p.id}')" style="cursor:pointer; animation-delay:${Math.min(i*0.05,0.4)}s"` : `style="animation-delay:${Math.min(i*0.05,0.4)}s"`;
-      return `
-        <div class="place-card" ${tapAttr}>
-          ${thumb}
-          <div class="pc-body">
-            <div class="pc-title">${p.city ? p.city+', '+p.country : p.country}</div>
-            <div class="pc-date">${p.visit_date || ''}</div>
-            ${p.note ? `<div class="pc-note">${p.note}</div>` : ''}
-            ${p.is_wishlist ? '<span class="pc-wishlist-tag">место мечты</span>' : ''}
-          </div>
-        </div>`;
+      const title = p.city || p.country;
+      const sub = p.city ? p.country : '';
+      const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
+      return `<div class="journal-ticket" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
+        <div class="jt-photo" data-place-id="${p.id}"></div>
+        <div class="jt-body">
+          <div class="jt-city">${title}</div>
+          ${sub?`<div class="jt-country">${sub}</div>`:''}
+          ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
+          ${p.note?`<div class="jt-country" style="margin-top:6px;">${p.note}</div>`:''}
+          ${p.is_wishlist?'<span class="jt-date" style="border-color:var(--rose);color:var(--rose-deep);">мечта</span>':''}
+        </div>
+      </div>`;
     }).join('');
   }
 
@@ -2596,9 +2896,24 @@
       document.querySelectorAll('.friends-tab').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       const tab = btn.dataset.ftab;
-      document.getElementById('friendsPaneFeed').style.display = tab === 'feed' ? '' : 'none';
-      document.getElementById('friendsPaneList').style.display = tab === 'list' ? '' : 'none';
-      document.getElementById('friendsPaneRank').style.display = tab === 'rank' ? '' : 'none';
+      const panes = {
+        feed: document.getElementById('friendsPaneFeed'),
+        list: document.getElementById('friendsPaneList'),
+        rank: document.getElementById('friendsPaneRank')
+      };
+      Object.keys(panes).forEach(k=>{
+        const el = panes[k];
+        if(!el) return;
+        if(k === tab){
+          el.style.display = '';
+          el.classList.remove('pane-in');
+          void el.offsetWidth;
+          el.classList.add('pane-in');
+        } else {
+          el.style.display = 'none';
+          el.classList.remove('pane-in');
+        }
+      });
       if(tab === 'feed') loadFriendsFeed();
       if(tab === 'rank') loadRankings();
     });
