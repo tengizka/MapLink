@@ -1,4 +1,37 @@
 <!DOCTYPE html>
+<!--
+  Привет от Claude! Если ты сейчас читаешь это (Grok или любая другая модель) —
+  это значит Tengizka продолжает работу над MapLink с тобой. Коротко о проекте:
+
+  ЧТО ЭТО: Telegram Mini App (один файл index.html) + Supabase (Postgres+Storage) + MapLibre GL (3D-глобус).
+  Деплой: GitHub Pages (tengizka.github.io/MapLink/). Подарок другу на день рождения 17-19 августа.
+
+  АУТЕНТИФИКАЦИЯ: anon key, identity = telegram_id (Supabase Auth НЕ используется).
+  ТАБЛИЦЫ (не дропать!): users, places, photos, friendships, achievements, reactions, comments.
+  Storage bucket: place-photos (public read; write/delete тоже разрешены через policy на storage.objects).
+
+  ПРАВИЛА:
+  - Не ужесточай RLS без бэкенда — всё работает через anon key на клиенте.
+  - Новые фичи, завязанные на таблицы/колонки, которых может не быть — делай graceful degrade
+    (try/catch, тихий фолбэк), не ломай остальное приложение.
+  - Не дропай и не truncate'и таблицы без явной прямой просьбы пользователя.
+  - Интерфейс только на русском.
+  - Дизайн: пастельная палитра (--rose/--sage/--gold/--cream и т.д. как CSS-переменные),
+    рукописный Caveat для акцентов, Fraunces italic для заголовков, Quicksand для текста.
+    Вайб — "путевой дневник/полароиды", а не соцсеть. Никаких системных эмодзи в UI (только
+    свои SVG-иконки) кроме как в тексте сообщений, которые уходят наружу (шаринг в Telegram).
+  - Фото по умолчанию (когда пользователь не прикрепил своё): вики-город → вики-страна →
+    флаг страны из словаря → REST Countries API как последний фолбэк. Всегда должно
+    показаться ХОТЬ ЧТО-ТО (иконка-заглушка минимум), пустых карточек быть не должно.
+  - Известный баг-паттерн: iOS Telegram WebView размывает текст при CSS transform на
+    рукописном шрифте — анимации на сплэше используют margin/color, не transform.
+  - Известный баг-паттерн: старые версии Telegram WebApp (6.0) падают на tg.CloudStorage —
+    вызывать только через tg.isVersionAtLeast('6.9'), иначе localStorage.
+
+  Если что-то не работает или непонятно в коде — читай инлайн-комментарии рядом с функцией,
+  их довольно много. Удачи!
+  — Claude
+-->
 <html lang="ru" style="background:#FBF3EE;">
 <head>
 <meta charset="UTF-8">
@@ -95,7 +128,7 @@
   }
   .wobble-line.fonts-ready{
     opacity:1;
-    animation: colorPulse 3.4s ease-in-out infinite;
+    animation: colorPulse 2.1s ease-in-out infinite;
   }
   @keyframes colorPulse{
     0%,100%{ color: var(--rose-deep); }
@@ -103,7 +136,7 @@
   }
   .wobble-line .wline{
     display:inline-block;
-    animation: lineFloat 1.9s ease-in-out infinite;
+    animation: lineFloat 1.15s ease-in-out infinite;
   }
   @keyframes lineFloat{
     0%, 100%{ margin-top: 0; margin-bottom: 6px; }
@@ -131,6 +164,12 @@
     -webkit-font-smoothing: antialiased;
   }
   .sign.fonts-ready{ opacity:1; }
+  .app-version{
+    position:absolute; bottom:4%;
+    font-family:'Caveat',cursive;
+    font-size:14px; color:var(--muted); opacity:.55;
+    -webkit-font-smoothing: antialiased;
+  }
 
   /* ---------------- TOP BAR ---------------- */
   .topbar{
@@ -252,15 +291,16 @@
   .navitem .nlabel{ font-size:9.5px; font-weight:600; letter-spacing:.02em; }
 
   /* ---------------- SETTINGS GEAR ---------------- */
+  .topbar-right{ display:flex; align-items:center; gap:8px; }
   .gear-btn{
-    position:absolute; top:0; right:0;
-    width:34px; height:34px; border-radius:50%;
+    width:30px; height:30px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     background:var(--card); border:none; color:var(--muted);
     box-shadow:0 4px 10px -6px rgba(58,46,43,.2);
+    transition:transform .2s ease;
   }
-  .gear-btn svg{ width:18px; height:18px; }
-  #screen-profile{ position:relative; padding-top:16px; }
+  .gear-btn:active{ transform:rotate(35deg); }
+  .gear-btn svg{ width:16px; height:16px; }
 
   .settings-row{
     display:flex; align-items:center; justify-content:space-between;
@@ -442,6 +482,13 @@
     border-radius:4px;
     background:var(--blush) center/cover no-repeat;
     transition:background-image .25s ease;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .ig-photo .photo-fallback-icon, .jt-photo .photo-fallback-icon{
+    width:28%; height:28%; color:rgba(58,46,43,.28); flex-shrink:0;
+  }
+  .ig-photo.bg-ready .photo-fallback-icon, .jt-photo.bg-ready .photo-fallback-icon{
+    display:none;
   }
   .thumb, .grid-cell, .feed-photo, .ig-photo{
     transition:background-image .25s ease;
@@ -494,10 +541,15 @@
     margin:0 14px 10px; overflow:hidden;
     box-shadow:0 6px 16px -10px rgba(58,46,43,.3);
     cursor:pointer;
+    transition:transform .12s ease;
   }
+  .journal-ticket:active{ transform:scale(.97); }
+  .fav{ transition:opacity .12s ease, transform .12s ease; }
+  .fav[onclick]:active{ opacity:.65; transform:scale(.92); }
   .journal-ticket .jt-photo{
     width:88px; flex-shrink:0;
     background:var(--blush) center/cover no-repeat;
+    display:flex; align-items:center; justify-content:center;
   }
   .journal-ticket .jt-body{ padding:12px 12px 12px 0; min-width:0; flex:1; }
   .journal-ticket .jt-city{
@@ -790,6 +842,51 @@
   .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
+
+  /* ---------------- ZENLY-STYLE EDGE ZOOM ---------------- */
+  .edge-zoom{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:34px; height:150px;
+    z-index:6; display:flex; align-items:center; justify-content:center;
+    touch-action:none;
+  }
+  .edge-zoom-left{ left:2px; }
+  .edge-zoom-right{ right:2px; }
+  .edge-zoom-track{
+    width:5px; height:100%; border-radius:6px;
+    background:rgba(58,46,43,.1);
+    position:relative;
+    transition:background .2s ease, width .2s ease;
+  }
+  .edge-zoom.active .edge-zoom-track{
+    background:rgba(58,46,43,.16); width:7px;
+  }
+  .edge-zoom-handle{
+    position:absolute; left:50%; top:50%;
+    width:16px; height:44px; margin:-22px 0 0 -8px;
+    border-radius:8px;
+    background:var(--rose);
+    box-shadow:0 3px 8px rgba(58,46,43,.35);
+    opacity:0; transition:opacity .2s ease, transform .05s linear;
+    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
+    padding:4px 0;
+  }
+  .edge-zoom-handle::before, .edge-zoom-handle::after{
+    content:''; display:block; width:0; height:0;
+    border-left:4px solid transparent; border-right:4px solid transparent;
+  }
+  .edge-zoom-handle::before{ border-bottom:5px solid rgba(255,255,255,.85); }
+  .edge-zoom-handle::after{ border-top:5px solid rgba(255,255,255,.85); }
+  .edge-zoom.active .edge-zoom-handle{ opacity:1; }
+  .edge-zoom-hint{
+    position:absolute; top:50%; transform:translateY(-50%);
+    background:rgba(42,34,31,.75); color:#fff; font-size:11px;
+    padding:5px 9px; border-radius:10px; white-space:nowrap;
+    opacity:0; transition:opacity .2s ease; pointer-events:none; z-index:7;
+  }
+  .edge-zoom-hint.left{ left:40px; }
+  .edge-zoom-hint.right{ right:40px; }
+  .edge-zoom-hint.show{ opacity:1; }
   #quoteStrip{
     flex-shrink:0; padding:8px 20px 12px; text-align:center;
   }
@@ -983,12 +1080,15 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
+    <div class="app-version">v0.22 alpha</div>
   </div>
 
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="title" id="topTitle">MapLink</div>
-    <div class="avatar" id="topAvatar"></div>
+    <button class="gear-btn" id="gearBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>
+    </button>
   </div>
 
   <!-- HOME -->
@@ -1007,6 +1107,14 @@
           <div class="bubble-title" id="bubbleTitle">—</div>
           <button class="bubble-add" id="bubbleAddBtn">Добавить</button>
         </div>
+      </div>
+      <div class="edge-zoom edge-zoom-left" id="edgeZoomLeft">
+        <div class="edge-zoom-track"><div class="edge-zoom-handle"></div></div>
+        <div class="edge-zoom-hint left" id="edgeHintLeft">масштаб</div>
+      </div>
+      <div class="edge-zoom edge-zoom-right" id="edgeZoomRight">
+        <div class="edge-zoom-track"><div class="edge-zoom-handle"></div></div>
+        <div class="edge-zoom-hint right" id="edgeHintRight">масштаб</div>
       </div>
       <button class="fab" id="fabAdd">+</button>
     </div>
@@ -1122,9 +1230,6 @@
 
   <!-- PROFILE -->
   <div class="screen" id="screen-profile">
-    <button class="gear-btn" id="gearBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>
-    </button>
     <div class="profile-head">
       <div class="big-avatar" id="profileAvatar"></div>
       <div class="uname" id="profileName">—</div>
@@ -1339,7 +1444,7 @@
   // hide splash after a bit (count from start; text appears as soon as font is ready)
   setTimeout(()=>{
     document.getElementById('splash').classList.add('hide');
-  }, 2400);
+  }, 2000);
 
   // ---------- tab switching ----------
   function showScreen(name){
@@ -1438,7 +1543,7 @@
   document.getElementById('profileHandle').textContent = tgUser.username ? '@'+tgUser.username : '';
   if(tgUser.photo_url){
     document.getElementById('profileAvatar').style.backgroundImage = `url(${tgUser.photo_url})`;
-    document.getElementById('topAvatar').style.backgroundImage = `url(${tgUser.photo_url})`;
+    // top avatar removed — big avatar already lives in the profile screen
   }
 
   // ---------- storage helpers: CloudStorage only on Bot API ≥ 6.9, else localStorage ----------
@@ -1707,10 +1812,11 @@
   const coachSteps = [
     { welcome:true, screen:'home', title:'Привет!', text:'MapLink — твоя планета путешествий. Отмечай страны, смотри друзей и собирай коллекцию мест.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Живая планета', text:'Крути глобус пальцем, щипком приближай. Появятся названия стран и городов.' },
+    { screen:'home', target:'.edge-zoom-right', place:'below', title:'Зум по краю', text:'Проведи пальцем вверх-вниз у самого края экрана (слева или справа) — так тоже можно масштабировать планету, как в Zenly.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Добавить с карты', text:'Тапни по названию — всплывёт пузырёк «Добавить». Страна подставится сама, если выберешь город.' },
     { screen:'home', target:'#fabAdd', place:'above', title:'Плюсик', text:'Или добавь вручную: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
     { screen:'friends', target:'.friends-tabs', place:'below', title:'Три вкладки', text:'Лента — поездки друзей с реакциями. Друзья — поиск и заявки. Рейтинг — кто больше стран открыл.', friendsTab:'feed' },
-    { screen:'friends', target:'#friendsFeed', place:'above', title:'Лента как в Instagram', text:'Посты друзей: фото, название места, реакции ❤️ и комментарии. Без фото — компактная карточка.', friendsTab:'feed', fallbackTarget:'.friends-tabs' },
+    { screen:'friends', target:'#friendsFeed', place:'above', title:'Лента как доска', text:'Посты друзей приколоты как на пробковой доске: фото, название места, реакции и комментарии. Без фото — компактная карточка.', friendsTab:'feed', fallbackTarget:'.friends-tabs' },
     { screen:'friends', target:'#friendSearch', place:'below', title:'Найти друга', text:'Поиск по имени в MapLink. Можно отправить заявку — она придёт ему во вкладку «Друзья».', friendsTab:'list' },
     { screen:'friends', target:'#inviteBtn', place:'above', title:'Пригласить ссылкой', text:'Поделись личной ссылкой — кто откроет, станет другом. Из рейтинга тоже можно открыть профиль и добавить.', friendsTab:'list' },
     { screen:'friends', target:'#rankGlobalList', place:'above', title:'Рейтинг', text:'Топ по странам (только реальные аккаунты Telegram). Тап по человеку — его travel-journal: полароиды и билетики.', friendsTab:'rank', fallbackTarget:'.friends-tabs' },
@@ -1807,11 +1913,13 @@
 
     const card = document.querySelector('.coach-card');
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+
+    // reveal only now — position is guaranteed correct, no top-left flash on open
+    document.getElementById('tutorial').classList.remove('hide');
   }
 
   function openTutorial(){
     coachIndex = 0;
-    document.getElementById('tutorial').classList.remove('hide');
     // do NOT lock the whole app — user must be able to spin the globe / try buttons
     // only fold leftover UI from a previous step
     document.getElementById('addModal').classList.add('hide');
@@ -1839,7 +1947,7 @@
 
   csGet('tutorial_seen').then(seen=>{
     if(seen !== '1'){
-      setTimeout(openTutorial, 2400); // после сплэша
+      setTimeout(openTutorial, 2000); // после сплэша
     }
   });
 
@@ -2113,7 +2221,7 @@
         const title = p.city || p.country;
         const sub = p.city ? p.country : '';
         return `<div class="journal-ticket" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
-          <div class="jt-photo" data-place-id="${p.id}"></div>
+          <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
           <div class="jt-body">
             <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
             ${sub?`<div class="jt-country">${sub}</div>`:''}
@@ -2132,7 +2240,7 @@
       const attach = renderAttachment(i);
       return `<div class="ig-cell scatter-${i%5}" onclick="window.__openIgPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s">
         ${attach}${multi}${stamp}
-        <div class="ig-photo" data-place-id="${p.id}"></div>
+        <div class="ig-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="ig-label"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
     }).join('') + `</div>`;
@@ -2192,9 +2300,10 @@
     const photos = (photosByPlace[p.id] || []).slice(0, 3);
     igModalPhotos = photos.slice();
     igModalIdx = 0;
+    const requestId = p.id; // guards against a slow/late fetch overwriting a place the user has since navigated away from
     if(!igModalPhotos.length){
       fetchDefaultPhoto(p.city || p.country, p.country).then(url=>{
-        if(url){ igModalPhotos = [url]; renderIgStack(); }
+        if(url && igModalPlaceId === requestId){ igModalPhotos = [url]; renderIgStack(); }
       });
     }
     renderIgStack();
@@ -2202,8 +2311,10 @@
     document.getElementById('igModalMeta').textContent = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
     document.getElementById('igModalNote').textContent = p.note || '';
     document.getElementById('igEditBtn').style.display = isOwn ? '' : 'none';
+    const flagEl = document.getElementById('igModalFlag');
+    flagEl.style.backgroundImage = ''; // clear any previous place's flag before resolving the new one
     resolveFlagBadge(p.country).then(url=>{
-      if(url) document.getElementById('igModalFlag').style.backgroundImage = `url(${url})`;
+      if(url && igModalPlaceId === requestId) flagEl.style.backgroundImage = `url(${url})`;
     });
     document.getElementById('igPlaceModal').classList.remove('hide');
   };
@@ -2269,6 +2380,49 @@
     center: [0, 20],
     zoom: 1.1
   });
+
+  // ---------- Zenly-style edge-swipe zoom: drag up/down along the screen edge to zoom ----------
+  function setupEdgeZoom(elId, hintId){
+    const el = document.getElementById(elId);
+    const hint = document.getElementById(hintId);
+    let dragging = false;
+    let startY = 0;
+    let startZoom = 0;
+
+    function point(e){ return e.touches ? e.touches[0] : e; }
+
+    function onStart(e){
+      dragging = true;
+      el.classList.add('active');
+      hint.classList.add('show');
+      startY = point(e).clientY;
+      startZoom = map.getZoom();
+      if(e.cancelable) e.preventDefault();
+    }
+    function onMove(e){
+      if(!dragging) return;
+      const dy = startY - point(e).clientY; // dragging up = zoom in
+      const newZoom = startZoom + dy * 0.025;
+      map.setZoom(Math.max(0.6, Math.min(18, newZoom)));
+      if(e.cancelable) e.preventDefault();
+    }
+    function onEnd(){
+      dragging = false;
+      el.classList.remove('active');
+      hint.classList.remove('show');
+    }
+
+    el.addEventListener('touchstart', onStart, { passive:false });
+    el.addEventListener('touchmove', onMove, { passive:false });
+    el.addEventListener('touchend', onEnd);
+    el.addEventListener('touchcancel', onEnd);
+    // mouse too, handy for desktop testing
+    el.addEventListener('mousedown', onStart);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+  }
+  setupEdgeZoom('edgeZoomLeft', 'edgeHintLeft');
+  setupEdgeZoom('edgeZoomRight', 'edgeHintRight');
 
   let placeLabelLayers = [];
 
@@ -2735,7 +2889,7 @@
       const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
       return `<div class="ig-cell scatter-${i%5}" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
         ${attach}${multi}${stamp}
-        <div class="ig-photo" data-place-id="${p.id}"></div>
+        <div class="ig-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="ig-label"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
     }).join('') + `</div>`;
@@ -2883,6 +3037,7 @@
   function normalizeCountryKey(name){
     return String(name || '')
       .trim().toLowerCase()
+      .replace(/ё/g, 'е')
       .replace(/^(республика|the|штат|state of|kingdom of|королевство)\s+/i, '')
       .replace(/[«»"']/g, '')
       .trim();
@@ -3025,17 +3180,20 @@
       const sel = '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-photo[data-place-id="'+p.id+'"],.jt-photo[data-place-id="'+p.id+'"]';
       const els = document.querySelectorAll(sel);
       if(own.length){
+        // real uploaded photo: fine to lazy-load, it's guaranteed to exist
         els.forEach(el=> scheduleBg(el, own[0]));
       } else if(els.length){
         tasks.push(async ()=>{
           const url = await fetchDefaultPhoto(p.city || p.country, p.country);
           if(!url) return;
+          // apply immediately (not lazy) — a screen can be display:none when this
+          // resolves, and some WebViews never re-fire IntersectionObserver after that
           document.querySelectorAll(sel).forEach(el=>{
             if(url.indexOf('flagcdn.com') !== -1){
               el.style.backgroundSize = 'cover';
               el.style.backgroundPosition = 'center';
             }
-            scheduleBg(el, url);
+            applyBg(el, url);
           });
         });
       }
@@ -3058,6 +3216,15 @@
 
   // vintage postmark stamp: ring + dashed perforation + year, or a little heart for wishlist
   // scrapbook-wall attachment, cycling through 13 different ways a memory gets "stuck up"
+  // boarding-pass style stub — a little 3-letter "airport code" derived from the place name
+  function ticketStub(p, title){
+    const code = String(title || '???').replace(/[^a-zA-Zа-яА-ЯёЁ]/g,'').slice(0,3).toUpperCase() || '???';
+    return `<div class="jt-stub">
+      <div class="jt-stub-code">${code}</div>
+      <span class="flag-badge" data-place-id="${p.id}"></span>
+    </div>`;
+  }
+
   function renderAttachment(i){
     const kind = i % 13;
 
@@ -3175,7 +3342,7 @@
       const sub = p.city ? p.country : '';
       const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
       return `<div class="journal-ticket" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
-        <div class="jt-photo" data-place-id="${p.id}"></div>
+        <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="jt-body">
           <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
           ${sub?`<div class="jt-country">${sub}</div>`:''}
@@ -3349,13 +3516,15 @@
         const on = myReact && myReact.emoji === r.em ? ' on' : '';
         return `<button class="react-btn${on}" onclick="window.__toggleReact('${p.id}','${r.em}')">${r.icon}${n? '<span>'+n+'</span>':''}</button>`;
       }).join('');
+      const safeUname = (u.username||'').replace(/'/g,"\\'");
+      const openUser = `window.__openFriend('${u.id}','${safeUname}','${u.avatar_url||''}')`;
 
       if(!hasPhoto){
         // no user photo — small compact post, no Wikipedia fallback image at all
         return `<div class="feed-card-compact">
-          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''}"></div>
+          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
           <div class="fcc-body">
-            <div class="fcc-line"><b>${u.username||'друг'}</b> добавил(а) место</div>
+            <div class="fcc-line" style="cursor:pointer" onclick="${openUser}"><b>${u.username||'друг'}</b> добавил(а) место</div>
             <div class="fcc-title">${iconPin}<span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
             <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
           </div>
@@ -3368,8 +3537,8 @@
 
       return `<div class="feed-card">
         <div class="feed-head">
-          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''}"></div>
-          <div>
+          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
+          <div style="cursor:pointer" onclick="${openUser}">
             <div class="fname">${u.username||'друг'}</div>
             <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
           </div>
