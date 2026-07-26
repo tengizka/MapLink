@@ -391,6 +391,52 @@
     filter:drop-shadow(0 2px 2px rgba(58,46,43,.25));
   }
   .attach-clip svg{ width:100%; height:100%; }
+  .attach-star, .attach-heart, .attach-seal, .attach-button{
+    top:-10px; left:-8px; width:26px; height:26px;
+    transform:rotate(-12deg);
+    filter:drop-shadow(0 3px 3px rgba(58,46,43,.25));
+  }
+  .attach-star svg, .attach-heart svg, .attach-seal svg, .attach-button svg{ width:100%; height:100%; }
+  .attach-heart{ left:auto; right:-6px; top:-8px; transform:rotate(10deg); }
+  .attach-seal{ left:50%; top:-12px; margin-left:-13px; transform:rotate(0deg); }
+  .attach-button{ right:-6px; top:-10px; left:auto; transform:rotate(14deg); }
+  .attach-bow{
+    top:-14px; left:50%; width:34px; height:22px; margin-left:-17px;
+    filter:drop-shadow(0 3px 3px rgba(58,46,43,.25));
+  }
+  .attach-bow svg{ width:100%; height:100%; }
+  .attach-binder{
+    top:-12px; left:50%; width:32px; height:18px; margin-left:-16px;
+    filter:drop-shadow(0 3px 2px rgba(58,46,43,.25));
+  }
+  .attach-binder svg{ width:100%; height:100%; }
+  .attach-xtape{ top:-6px; left:50%; width:1px; height:1px; }
+  .attach-safety{
+    top:-10px; left:50%; width:38px; height:20px; margin-left:-19px;
+    transform:rotate(-4deg);
+    filter:drop-shadow(0 2px 2px rgba(58,46,43,.2));
+  }
+  .attach-safety svg{ width:100%; height:100%; }
+  .attach-corners{ inset:6px; }
+  .corner-mount{
+    position:absolute; width:0; height:0; opacity:.7;
+    border-style:solid;
+  }
+  .corner-mount.tl{
+    top:0; left:0;
+    border-width:14px 14px 0 0;
+    border-color:var(--blush) transparent transparent transparent;
+  }
+  .corner-mount.br{
+    bottom:0; right:0;
+    border-width:0 0 14px 14px;
+    border-color:transparent transparent var(--blush) transparent;
+  }
+  .attach-thread{
+    top:-30px; left:50%; width:20px; height:40px; margin-left:-10px;
+    filter:drop-shadow(0 2px 2px rgba(58,46,43,.2));
+  }
+  .attach-thread svg{ width:100%; height:100%; }
   .ig-grid .ig-cell .ig-photo{
     width:100%; aspect-ratio:1;
     border-radius:4px;
@@ -409,6 +455,12 @@
   .ig-grid .ig-cell .ig-label small{
     display:block; font-family:'Quicksand',sans-serif; font-weight:600;
     font-size:10px; color:var(--muted); margin-top:2px;
+  }
+  .flag-badge{
+    display:inline-block; width:18px; height:13px;
+    border-radius:3px; background:var(--blush) center/cover no-repeat;
+    box-shadow:0 0 0 1px rgba(58,46,43,.15), 0 2px 3px rgba(58,46,43,.2);
+    vertical-align:middle; flex-shrink:0;
   }
   .ig-grid .ig-cell .ig-stamp{
     position:absolute; top:12px; right:10px; z-index:2;
@@ -470,29 +522,52 @@
     max-height:88vh; overflow-x:hidden; overflow-y:auto;
     animation:popIn .28s cubic-bezier(.34,1.56,.64,1);
   }
-  .ig-modal-photo-wrap{ position:relative; }
-  .ig-modal-photo{
-    width:100%; aspect-ratio:1; background:var(--blush) center/cover no-repeat;
+  .ig-modal-photo-wrap{ position:relative; padding:22px 22px 10px; }
+  #igStack{ position:relative; width:100%; aspect-ratio:1; }
+  .ig-stack-photo{
+    position:absolute; inset:0;
+    background:var(--blush) center/cover no-repeat;
+    border-radius:4px;
+    box-shadow:0 10px 20px -8px rgba(58,46,43,.4);
+    transition:transform .38s cubic-bezier(.32,1,.4,1), opacity .3s ease;
+    cursor:pointer;
   }
+  .ig-stack-photo.depth-1{ transform:translate(10px,10px) rotate(4deg); z-index:1; }
+  .ig-stack-photo.depth-2{ transform:translate(-8px,16px) rotate(-5deg); z-index:0; }
+  .ig-stack-photo.depth-0{ transform:translate(0,0) rotate(0deg); z-index:2; }
+  .ig-stack-photo.flick-left{ transform:translate(-160%,-10%) rotate(-26deg) !important; opacity:0; z-index:3; }
+  .ig-stack-photo.flick-right{ transform:translate(160%,-10%) rotate(26deg) !important; opacity:0; z-index:3; }
   .ig-nav{
     position:absolute; top:50%; transform:translateY(-50%);
     width:32px; height:32px; border-radius:50%; border:none;
     background:rgba(255,253,251,.92); color:var(--ink);
     display:flex; align-items:center; justify-content:center;
     font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,.12);
+    z-index:4;
   }
-  .ig-nav.prev{ left:8px; }
-  .ig-nav.next{ right:8px; }
+  .ig-nav.prev{ left:14px; }
+  .ig-nav.next{ right:14px; }
   .ig-dots{ display:flex; justify-content:center; gap:5px; padding:8px 0 0; }
   .ig-dots span{ width:6px; height:6px; border-radius:50%; background:#E4D2C8; }
   .ig-dots span.on{ background:var(--rose); }
-  .ig-modal-body{ padding:14px 16px 16px; }
-  .ig-modal-title{ font-family:'Fraunces',serif; font-style:italic; font-size:18px; }
+  .ig-modal-body{ padding:14px 16px 6px; }
+  .ig-modal-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px;
+    display:flex; align-items:center; gap:6px;
+  }
   .ig-modal-meta{ font-size:12px; color:var(--muted); margin:4px 0 8px; }
   .ig-modal-note{ font-size:13px; line-height:1.45; }
+  .ig-modal-actions{ display:flex; gap:6px; padding:8px 12px 12px; }
+  .ig-modal-edit{
+    flex-shrink:0; display:flex; align-items:center; gap:6px;
+    border:none; background:var(--blush); color:var(--rose-deep);
+    padding:11px 16px; border-radius:var(--r-md); font-family:inherit;
+    font-size:12.5px; font-weight:700;
+  }
+  .ig-modal-edit svg{ width:14px; height:14px; }
   .ig-modal-close{
-    width:100%; border:none; background:none; color:var(--muted);
-    padding:12px; font-family:inherit; font-size:13px;
+    flex:1; border:none; background:none; color:var(--muted);
+    padding:11px; font-family:inherit; font-size:13px;
   }
 
   /* ---------------- FEED / RANK ---------------- */
@@ -1126,18 +1201,24 @@
   <!-- IG place detail modal -->
   <div id="igPlaceModal" class="hide">
     <div class="ig-modal-card">
-      <div class="ig-modal-photo-wrap">
-        <div class="ig-modal-photo" id="igModalPhoto"></div>
+      <div class="ig-modal-photo-wrap" id="igStackWrap">
+        <div id="igStack"></div>
         <button type="button" class="ig-nav prev" id="igNavPrev" style="display:none;">‹</button>
         <button type="button" class="ig-nav next" id="igNavNext" style="display:none;">›</button>
       </div>
       <div class="ig-dots" id="igDots"></div>
       <div class="ig-modal-body">
-        <div class="ig-modal-title" id="igModalTitle">—</div>
+        <div class="ig-modal-title"><span class="flag-badge" id="igModalFlag"></span> <span id="igModalTitle">—</span></div>
         <div class="ig-modal-meta" id="igModalMeta"></div>
         <div class="ig-modal-note" id="igModalNote"></div>
       </div>
-      <button class="ig-modal-close" id="igModalClose">Закрыть</button>
+      <div class="ig-modal-actions">
+        <button class="ig-modal-edit" id="igEditBtn" style="display:none;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+          Изменить
+        </button>
+        <button class="ig-modal-close" id="igModalClose">Закрыть</button>
+      </div>
     </div>
   </div>
 
@@ -2034,7 +2115,7 @@
         return `<div class="journal-ticket" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
           <div class="jt-photo" data-place-id="${p.id}"></div>
           <div class="jt-body">
-            <div class="jt-city">${title}</div>
+            <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
             ${sub?`<div class="jt-country">${sub}</div>`:''}
             ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
           </div>
@@ -2052,52 +2133,94 @@
       return `<div class="ig-cell scatter-${i%5}" onclick="window.__openIgPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s">
         ${attach}${multi}${stamp}
         <div class="ig-photo" data-place-id="${p.id}"></div>
-        <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
+        <div class="ig-label"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
     }).join('') + `</div>`;
   }
 
-  function showIgModalPhoto(){
-    const photoEl = document.getElementById('igModalPhoto');
-    const url = igModalPhotos[igModalIdx];
-    photoEl.style.backgroundImage = url ? `url(${url})` : '';
-    document.getElementById('igNavPrev').style.display = igModalPhotos.length > 1 ? '' : 'none';
-    document.getElementById('igNavNext').style.display = igModalPhotos.length > 1 ? '' : 'none';
+  let igModalOwn = false;
+  let igModalPlaceId = null;
+
+  function renderIgStack(){
+    const stack = document.getElementById('igStack');
+    const n = igModalPhotos.length;
+    stack.innerHTML = '';
+    if(!n) return;
+    // show up to 3 layered photos: current on top, next two peeking behind
+    const layers = Math.min(3, n);
+    for(let d = layers - 1; d >= 0; d--){
+      const idx = (igModalIdx + d) % n;
+      const el = document.createElement('div');
+      el.className = 'ig-stack-photo depth-' + d;
+      el.style.backgroundImage = `url(${igModalPhotos[idx]})`;
+      if(d === 0 && n > 1){
+        el.addEventListener('click', ()=> advanceIgStack(1));
+      }
+      stack.appendChild(el);
+    }
+    document.getElementById('igNavPrev').style.display = n > 1 ? '' : 'none';
+    document.getElementById('igNavNext').style.display = n > 1 ? '' : 'none';
     const dots = document.getElementById('igDots');
-    dots.innerHTML = igModalPhotos.length > 1
+    dots.innerHTML = n > 1
       ? igModalPhotos.map((_,i)=>`<span class="${i===igModalIdx?'on':''}"></span>`).join('')
       : '';
   }
-  window.__openIgPlace = function(placeId){
-    const places = window.__fvPlacesCache || [];
-    const photosByPlace = window.__fvPhotosCache || {};
-    const p = places.find(x=>x.id === placeId);
+
+  function advanceIgStack(dir){
+    const n = igModalPhotos.length;
+    if(n < 2) return;
+    const front = document.querySelector('.ig-stack-photo.depth-0');
+    if(front) front.classList.add(dir > 0 ? 'flick-left' : 'flick-right');
+    igModalIdx = (igModalIdx + dir + n) % n;
+    setTimeout(renderIgStack, dir ? 220 : 0);
+  }
+
+  // works for BOTH your own places and a friend's — looks up whichever cache has it
+  window.__openPlaceView = function(placeId){
+    let p = allPlacesCache.find(x=>x.id === placeId);
+    let photosByPlace = window.__ownPhotosCache || {};
+    let isOwn = true;
+    if(!p){
+      p = (window.__fvPlacesCache || []).find(x=>x.id === placeId);
+      photosByPlace = window.__fvPhotosCache || {};
+      isOwn = false;
+    }
     if(!p) return;
+
+    igModalPlaceId = p.id;
+    igModalOwn = isOwn;
     const photos = (photosByPlace[p.id] || []).slice(0, 3);
     igModalPhotos = photos.slice();
     igModalIdx = 0;
     if(!igModalPhotos.length){
       fetchDefaultPhoto(p.city || p.country, p.country).then(url=>{
-        if(url){ igModalPhotos = [url]; showIgModalPhoto(); }
+        if(url){ igModalPhotos = [url]; renderIgStack(); }
       });
     }
-    showIgModalPhoto();
+    renderIgStack();
     document.getElementById('igModalTitle').textContent = p.city ? p.city+', '+p.country : p.country;
     document.getElementById('igModalMeta').textContent = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
     document.getElementById('igModalNote').textContent = p.note || '';
+    document.getElementById('igEditBtn').style.display = isOwn ? '' : 'none';
+    resolveFlagBadge(p.country).then(url=>{
+      if(url) document.getElementById('igModalFlag').style.backgroundImage = `url(${url})`;
+    });
     document.getElementById('igPlaceModal').classList.remove('hide');
   };
+  // kept as an alias so any older onclick markup still works
+  window.__openIgPlace = window.__openPlaceView;
+
+  document.getElementById('igEditBtn').addEventListener('click', ()=>{
+    document.getElementById('igPlaceModal').classList.add('hide');
+    if(igModalPlaceId) window.__openEditPlace(igModalPlaceId);
+  });
   document.getElementById('igNavPrev').addEventListener('click', (e)=>{
     e.stopPropagation();
-    if(!igModalPhotos.length) return;
-    igModalIdx = (igModalIdx - 1 + igModalPhotos.length) % igModalPhotos.length;
-    showIgModalPhoto();
+    advanceIgStack(-1);
   });
   document.getElementById('igNavNext').addEventListener('click', (e)=>{
     e.stopPropagation();
-    if(!igModalPhotos.length) return;
-    igModalIdx = (igModalIdx + 1) % igModalPhotos.length;
-    showIgModalPhoto();
+    advanceIgStack(1);
   });
   function syncFvViewBtns(){
     document.getElementById('fvViewGridBtn').classList.toggle('active', fvViewMode === 'grid');
@@ -2536,6 +2659,7 @@
         photosByPlace[ph.place_id].push(ph.url);
       });
     }
+    window.__ownPhotosCache = photosByPlace;
 
     placeMarkers.forEach(m=>m.remove());
     placeMarkers = [];
@@ -2608,11 +2732,11 @@
       const sub = p.city ? p.country : '';
       const stamp = renderStamp(p);
       const attach = renderAttachment(i);
-      const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
+      const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
       return `<div class="ig-cell scatter-${i%5}" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
         ${attach}${multi}${stamp}
         <div class="ig-photo" data-place-id="${p.id}"></div>
-        <div class="ig-label">${title}${sub?`<small>${sub}</small>`:''}</div>
+        <div class="ig-label"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}${sub?`<small>${sub}</small>`:''}</div>
       </div>`;
     }).join('') + `</div>`;
   }
@@ -2756,11 +2880,42 @@
     'северная македония':'mk','macedonia':'mk',
     'грузия':'ge'
   };
+  function normalizeCountryKey(name){
+    return String(name || '')
+      .trim().toLowerCase()
+      .replace(/^(республика|the|штат|state of|kingdom of|королевство)\s+/i, '')
+      .replace(/[«»"']/g, '')
+      .trim();
+  }
   function flagUrlForCountry(countryName){
     if(!countryName) return null;
-    const code = COUNTRY_FLAG_CODES[String(countryName).trim().toLowerCase()];
+    const code = COUNTRY_FLAG_CODES[normalizeCountryKey(countryName)];
     if(!code) return null;
     return 'https://flagcdn.com/w320/' + code + '.png';
+  }
+  // last-resort fallback for any country name our dictionary doesn't know (handles odd
+  // spellings/translations coming from Nominatim) — no key needed, CORS-friendly
+  const flagApiCache = {};
+  async function flagViaRestCountriesApi(countryName){
+    if(!countryName) return null;
+    const key = normalizeCountryKey(countryName);
+    if(flagApiCache[key] !== undefined) return flagApiCache[key];
+    const ctrl = new AbortController();
+    const timer = setTimeout(()=> ctrl.abort(), 4000);
+    try{
+      const res = await fetch('https://restcountries.com/v3.1/name/'+encodeURIComponent(countryName)+'?fields=flags', { signal: ctrl.signal });
+      clearTimeout(timer);
+      if(!res.ok){ flagApiCache[key] = null; return null; }
+      const data = await res.json();
+      const item = Array.isArray(data) ? data[0] : data;
+      const url = (item && item.flags && (item.flags.png || item.flags.svg)) || null;
+      flagApiCache[key] = url;
+      return url;
+    }catch(e){
+      clearTimeout(timer);
+      flagApiCache[key] = null;
+      return null;
+    }
   }
   // city → country wiki → flag. cache key includes both parts
   async function fetchDefaultPhoto(name, countryFallback){
@@ -2780,9 +2935,13 @@
       if(!url) url = await fetchWikiThumb('en', countryFallback);
     }
     url = shrinkWikiUrl(url);
-    // 3) always-available country flag
+    // 3) known-country flag (instant, no network)
     if(!url){
       url = flagUrlForCountry(countryFallback || name);
+    }
+    // 4) any other country name — resolve via REST Countries API
+    if(!url){
+      url = await flagViaRestCountriesApi(countryFallback || name);
     }
     defaultPhotoCache[cacheKey] = url;
     savePhotoCache();
@@ -2847,37 +3006,61 @@
     await Promise.all(workers);
   }
 
+  const flagBadgeCache = {};
+  async function resolveFlagBadge(countryName){
+    const key = normalizeCountryKey(countryName);
+    if(!key) return null;
+    if(flagBadgeCache[key] !== undefined) return flagBadgeCache[key];
+    let url = flagUrlForCountry(countryName);
+    if(!url) url = await flagViaRestCountriesApi(countryName);
+    flagBadgeCache[key] = url;
+    return url;
+  }
+
   function attachDefaultPhotos(places, photosByPlace){
     const tasks = [];
+    const flagTasks = [];
     places.forEach(p=>{
       const own = photosByPlace[p.id] || [];
       const sel = '.thumb[data-place-id="'+p.id+'"],.grid-cell[data-place-id="'+p.id+'"],.feed-photo[data-place-id="'+p.id+'"],.ig-photo[data-place-id="'+p.id+'"],.jt-photo[data-place-id="'+p.id+'"]';
       const els = document.querySelectorAll(sel);
-      if(!els.length) return;
       if(own.length){
         els.forEach(el=> scheduleBg(el, own[0]));
-        return;
-      }
-      tasks.push(async ()=>{
-        const url = await fetchDefaultPhoto(p.city || p.country, p.country);
-        if(!url) return;
-        document.querySelectorAll(sel).forEach(el=>{
-          if(url.indexOf('flagcdn.com') !== -1){
-            el.style.backgroundSize = 'cover';
-            el.style.backgroundPosition = 'center';
-          }
-          scheduleBg(el, url);
+      } else if(els.length){
+        tasks.push(async ()=>{
+          const url = await fetchDefaultPhoto(p.city || p.country, p.country);
+          if(!url) return;
+          document.querySelectorAll(sel).forEach(el=>{
+            if(url.indexOf('flagcdn.com') !== -1){
+              el.style.backgroundSize = 'cover';
+              el.style.backgroundPosition = 'center';
+            }
+            scheduleBg(el, url);
+          });
         });
-      });
+      }
+      const flagEls = document.querySelectorAll('.flag-badge[data-place-id="'+p.id+'"]');
+      if(flagEls.length && p.country){
+        flagTasks.push(async ()=>{
+          const url = await resolveFlagBadge(p.country);
+          if(!url) return;
+          document.querySelectorAll('.flag-badge[data-place-id="'+p.id+'"]').forEach(el=>{
+            el.style.backgroundImage = `url(${url})`;
+            el.classList.add('ready');
+          });
+        });
+      }
     });
     // max 4 wikipedia requests at once — avoids queue + rate limit
     runPool(tasks, 4);
+    runPool(flagTasks, 4);
   }
 
   // vintage postmark stamp: ring + dashed perforation + year, or a little heart for wishlist
-  // scrapbook-wall attachment, cycling through 3 different ways a memory gets "stuck up"
+  // scrapbook-wall attachment, cycling through 13 different ways a memory gets "stuck up"
   function renderAttachment(i){
-    const kind = i % 3;
+    const kind = i % 13;
+
     if(kind === 0){
       // washi tape
       const tapeColor = (i % 6 < 3) ? 'rgba(197,123,133,.4)' : 'rgba(169,183,154,.45)';
@@ -2885,14 +3068,77 @@
       return `<div class="attach attach-tape" style="transform:translateX(-50%) rotate(${rot}deg); background:${tapeColor};"></div>`;
     }
     if(kind === 1){
-      // pushpin
+      // pushpin (rose)
       return `<div class="attach attach-pin">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="10" r="7.5" fill="var(--rose-deep)"/><circle cx="9.5" cy="7.5" r="2.2" fill="rgba(255,255,255,.55)"/><path d="M12 16.5l2 6-2 1.5-2-1.5z" fill="var(--rose-deep)"/></svg>
       </div>`;
     }
-    // paperclip
-    return `<div class="attach attach-clip">
-      <svg viewBox="0 0 24 34"><path d="M6 12V7a5 5 0 0110 0v15a3 3 0 01-6 0V9a1.3 1.3 0 012.6 0v13" fill="none" stroke="#9CA3AD" stroke-width="2.1" stroke-linecap="round"/></svg>
+    if(kind === 2){
+      // paperclip
+      return `<div class="attach attach-clip">
+        <svg viewBox="0 0 24 34"><path d="M6 12V7a5 5 0 0110 0v15a3 3 0 01-6 0V9a1.3 1.3 0 012.6 0v13" fill="none" stroke="#9CA3AD" stroke-width="2.1" stroke-linecap="round"/></svg>
+      </div>`;
+    }
+    if(kind === 3){
+      // gold star sticker
+      return `<div class="attach attach-star">
+        <svg viewBox="0 0 24 24"><path d="M12 2.5l2.7 5.9 6.3.7-4.7 4.4 1.2 6.3L12 16.6l-5.5 3.2 1.2-6.3-4.7-4.4 6.3-.7z" fill="var(--gold)"/></svg>
+      </div>`;
+    }
+    if(kind === 4){
+      // little heart sticker
+      return `<div class="attach attach-heart">
+        <svg viewBox="0 0 24 24"><path d="M12 20.5s-8-5-9.7-10C1.3 7 3 4 6.2 4c1.9 0 3.5 1 4.8 2.9C12.3 5 13.9 4 15.8 4 19 4 20.7 7 19.7 10.5c-1.7 5-9.7 10-9.7 10z" fill="var(--rose)"/></svg>
+      </div>`;
+    }
+    if(kind === 5){
+      // wax seal
+      return `<div class="attach attach-seal">
+        <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="11" fill="var(--rose-deep)"/><circle cx="13" cy="13" r="11" fill="none" stroke="rgba(0,0,0,.15)" stroke-width="1"/><path d="M13 7l1.6 3.2 3.5.5-2.5 2.5.6 3.5L13 15l-3.2 1.7.6-3.5-2.5-2.5 3.5-.5z" fill="rgba(255,255,255,.35)"/></svg>
+      </div>`;
+    }
+    if(kind === 6){
+      // bow / ribbon
+      return `<div class="attach attach-bow">
+        <svg viewBox="0 0 30 20"><path d="M15 10C15 6 10 3 6 4c-3 .8-3 6 0 7 3 1 9-.5 9-1z" fill="var(--sage-deep)"/><path d="M15 10c0-4 5-7 9-6 3 .8 3 6 0 7-3 1-9-.5-9-1z" fill="var(--sage)"/><circle cx="15" cy="10" r="2.3" fill="var(--sage-deep)"/></svg>
+      </div>`;
+    }
+    if(kind === 7){
+      // binder clip
+      return `<div class="attach attach-binder">
+        <svg viewBox="0 0 30 18"><rect x="4" y="2" width="22" height="9" rx="2" fill="#5B5049"/><rect x="4" y="2" width="22" height="3.5" rx="1.6" fill="#7A6D64"/><path d="M13 11v6M17 11v6" stroke="#5B5049" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </div>`;
+    }
+    if(kind === 8){
+      // crossed tape (X)
+      const c = (i % 2 === 0) ? 'rgba(197,123,133,.4)' : 'rgba(201,163,92,.4)';
+      return `<div class="attach attach-xtape">
+        <div style="position:absolute; width:34px; height:12px; background:${c}; transform:rotate(35deg); border:1px solid rgba(255,255,255,.5);"></div>
+        <div style="position:absolute; width:34px; height:12px; background:${c}; transform:rotate(-35deg); border:1px solid rgba(255,255,255,.5);"></div>
+      </div>`;
+    }
+    if(kind === 9){
+      // safety pin
+      return `<div class="attach attach-safety">
+        <svg viewBox="0 0 34 18"><path d="M4 14c-2-3-1-8 4-9 4-1 8 2 9 6l11 3" fill="none" stroke="#AAB2BC" stroke-width="2" stroke-linecap="round"/><circle cx="8" cy="6.5" r="2.6" fill="#AAB2BC"/><circle cx="28" cy="14" r="2.6" fill="#AAB2BC"/></svg>
+      </div>`;
+    }
+    if(kind === 10){
+      // photo-corner mounts (two opposite triangle corners)
+      return `<div class="attach attach-corners">
+        <div class="corner-mount tl"></div>
+        <div class="corner-mount br"></div>
+      </div>`;
+    }
+    if(kind === 11){
+      // enamel pin / button badge
+      return `<div class="attach attach-button">
+        <svg viewBox="0 0 26 26"><circle cx="13" cy="13" r="10.5" fill="var(--gold)"/><circle cx="13" cy="13" r="10.5" fill="none" stroke="rgba(255,255,255,.5)" stroke-width="1.4" stroke-dasharray="2.5 2.5"/><circle cx="10" cy="10" r="2" fill="rgba(255,255,255,.5)"/></svg>
+      </div>`;
+    }
+    // thread + pin, like a detective board string
+    return `<div class="attach attach-thread">
+      <svg viewBox="0 0 20 40"><path d="M10 34V6" stroke="#C57B85" stroke-width="1.3" stroke-dasharray="1 3"/><circle cx="10" cy="6" r="4.5" fill="var(--rose-deep)"/><circle cx="8" cy="4.5" r="1.3" fill="rgba(255,255,255,.5)"/></svg>
     </div>`;
   }
 
@@ -2927,11 +3173,11 @@
     return list.map((p,i)=>{
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
-      const tap = clickable ? `onclick="window.__openEditPlace('${p.id}')"` : '';
+      const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
       return `<div class="journal-ticket" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
         <div class="jt-photo" data-place-id="${p.id}"></div>
         <div class="jt-body">
-          <div class="jt-city">${title}</div>
+          <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
           ${sub?`<div class="jt-country">${sub}</div>`:''}
           ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
           ${p.note?`<div class="jt-country" style="margin-top:6px;">${p.note}</div>`:''}
@@ -3110,7 +3356,7 @@
           <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''}"></div>
           <div class="fcc-body">
             <div class="fcc-line"><b>${u.username||'друг'}</b> добавил(а) место</div>
-            <div class="fcc-title">${iconPin}${title}</div>
+            <div class="fcc-title">${iconPin}<span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
             <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
           </div>
           <div class="feed-actions" style="margin-top:0;">${reactBar}
@@ -3129,7 +3375,7 @@
           </div>
         </div>
         <div class="feed-photo" data-place-id="${p.id}"></div>
-        <div class="feed-title">${title}</div>
+        <div class="feed-title"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
         ${p.note ? `<div class="feed-note">${p.note}</div>` : ''}
         <div class="feed-actions">${reactBar}
           <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}</button>
@@ -3137,8 +3383,9 @@
         <div id="comments-${p.id}" style="display:none;margin-top:8px;"></div>
       </div>`;
     }).join('');
-    // only real uploaded photos get lazy-loaded here — compact (no-photo) posts never fetch a Wikipedia fallback
-    attachDefaultPhotos(places.filter(p => (photosByPlace[p.id]||[]).length > 0), photosByPlace);
+    // flags resolve for every post; the Wikipedia photo-fetch itself still only
+    // triggers for cards that actually have a .feed-photo element (full photo posts)
+    attachDefaultPhotos(places, photosByPlace);
   }
 
   window.__toggleReact = async function(placeId, emoji){
