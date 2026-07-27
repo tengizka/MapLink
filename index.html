@@ -552,6 +552,27 @@
     display:flex; align-items:center; justify-content:center;
   }
   .journal-ticket .jt-body{ padding:12px 12px 12px 0; min-width:0; flex:1; }
+  .jt-eyebrow{
+    font-size:8.5px; letter-spacing:.1em; color:var(--muted); opacity:.75;
+    margin-bottom:3px;
+  }
+  .jt-stub{
+    flex-shrink:0; width:42px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    background:var(--blush); position:relative;
+    border-left:2px dashed rgba(58,46,43,.18);
+  }
+  .jt-stub::before, .jt-stub::after{
+    content:''; position:absolute; left:-6px; width:12px; height:12px;
+    border-radius:50%; background:var(--cream);
+  }
+  .jt-stub::before{ top:-6px; }
+  .jt-stub::after{ bottom:-6px; }
+  .jt-stub-code{
+    font-family:'Fraunces',serif; font-style:italic; font-weight:700; font-size:13px;
+    color:var(--rose-deep); writing-mode:vertical-rl; text-orientation:mixed;
+    letter-spacing:.05em;
+  }
   .journal-ticket .jt-city{
     font-family:'Fraunces',serif; font-style:italic; font-size:16px;
     color:var(--rose-deep);
@@ -647,7 +668,8 @@
   #fvAddFriendWrap{ text-align:center; margin:8px 0 14px; }
   .feed-card{
     background:var(--card); border-radius:18px; padding:12px;
-    margin-bottom:12px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+    margin-bottom:18px; box-shadow:0 6px 14px -6px rgba(58,46,43,.3);
+    position:relative;
   }
   .feed-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
   .feed-head .fav{ width:36px; height:36px; border-radius:50%; background:var(--sage) center/cover no-repeat; }
@@ -683,7 +705,16 @@
   .feed-card-compact{
     display:grid; grid-template-columns:auto 1fr; align-items:center;
     gap:4px 10px; background:var(--card); border-radius:14px;
-    padding:10px 12px; margin-bottom:10px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+    padding:10px 12px; margin-bottom:18px; box-shadow:0 6px 14px -6px rgba(58,46,43,.3);
+    position:relative;
+  }
+  #friendsFeed{
+    background:
+      radial-gradient(circle, rgba(58,46,43,.07) 1px, transparent 1.6px) 0 0/14px 14px,
+      linear-gradient(160deg, #D9BFA0, #C9A87F);
+    border-radius:18px;
+    padding:16px 10px 10px;
+    box-shadow:inset 0 2px 8px rgba(58,46,43,.25);
   }
   .feed-card-compact .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; grid-row:1/3; }
   .fcc-body{ min-width:0; }
@@ -1080,7 +1111,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.22 alpha</div>
+    <div class="app-version">v0.23 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2223,10 +2254,12 @@
         return `<div class="journal-ticket" data-place-id="${p.id}" onclick="window.__openIgPlace('${p.id}')">
           <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
           <div class="jt-body">
+            <div class="jt-eyebrow">MAPLINK · BOARDING PASS</div>
             <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
             ${sub?`<div class="jt-country">${sub}</div>`:''}
             ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
           </div>
+          ${ticketStub(p, title)}
         </div>`;
       }).join('');
     }
@@ -3344,12 +3377,14 @@
       return `<div class="journal-ticket" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
         <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="jt-body">
+          <div class="jt-eyebrow">MAPLINK · BOARDING PASS</div>
           <div class="jt-city"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
           ${sub?`<div class="jt-country">${sub}</div>`:''}
           ${p.visit_date?`<span class="jt-date">${p.visit_date}</span>`:''}
           ${p.note?`<div class="jt-country" style="margin-top:6px;">${p.note}</div>`:''}
           ${p.is_wishlist?'<span class="jt-date" style="border-color:var(--rose);color:var(--rose-deep);">мечта</span>':''}
         </div>
+        ${ticketStub(p, title)}
       </div>`;
     }).join('');
   }
@@ -3492,7 +3527,7 @@
       });
     }catch(e){}
 
-    box.innerHTML = places.map(p=>{
+    box.innerHTML = places.map((p,i)=>{
       const u = userMap[p.user_id] || { username: 'друг' };
       const photos = photosByPlace[p.id] || [];
       const hasPhoto = photos.length > 0;
@@ -3519,9 +3554,13 @@
       const safeUname = (u.username||'').replace(/'/g,"\\'");
       const openUser = `window.__openFriend('${u.id}','${safeUname}','${u.avatar_url||''}')`;
 
+      const rot = ['-1.4deg','1.6deg','-.8deg','1.1deg','-1.9deg'][i % 5];
+      const attach = renderAttachment(i);
+
       if(!hasPhoto){
         // no user photo — small compact post, no Wikipedia fallback image at all
-        return `<div class="feed-card-compact">
+        return `<div class="feed-card-compact" style="transform:rotate(${rot});">
+          ${attach}
           <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
           <div class="fcc-body">
             <div class="fcc-line" style="cursor:pointer" onclick="${openUser}"><b>${u.username||'друг'}</b> добавил(а) место</div>
@@ -3535,7 +3574,8 @@
         </div>`;
       }
 
-      return `<div class="feed-card">
+      return `<div class="feed-card" style="transform:rotate(${rot});">
+        ${attach}
         <div class="feed-head">
           <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
           <div style="cursor:pointer" onclick="${openUser}">
