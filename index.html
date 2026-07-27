@@ -293,14 +293,14 @@
   /* ---------------- SETTINGS GEAR ---------------- */
   .topbar-right{ display:flex; align-items:center; gap:8px; }
   .gear-btn{
-    width:30px; height:30px; border-radius:50%;
+    width:40px; height:40px; border-radius:50%;
     display:flex; align-items:center; justify-content:center;
     background:var(--card); border:none; color:var(--muted);
     box-shadow:0 4px 10px -6px rgba(58,46,43,.2);
     transition:transform .2s ease;
   }
   .gear-btn:active{ transform:rotate(35deg); }
-  .gear-btn svg{ width:16px; height:16px; }
+  .gear-btn svg{ width:21px; height:21px; }
 
   .settings-row{
     display:flex; align-items:center; justify-content:space-between;
@@ -688,15 +688,23 @@
     color:var(--rose-deep); line-height:1.25; margin-top:2px;
   }
   .feed-note{ font-size:12.5px; color:var(--muted); margin:4px 0 8px; }
-  .feed-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .feed-actions{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
   .react-btn{
     border:none; background:var(--blush); color:var(--rose-deep);
-    border-radius:20px; padding:7px 12px; font-size:12px; font-family:inherit;
+    border-radius:20px; padding:8px 13px; font-size:12px; font-family:inherit;
     display:inline-flex; align-items:center; gap:5px; font-weight:600;
+    transition:transform .15s cubic-bezier(.34,1.56,.64,1), background .15s ease;
   }
+  .react-btn:active{ transform:scale(.88); }
   .react-btn svg{ width:15px; height:15px; flex-shrink:0; }
-  .react-btn.on{ background:var(--rose); color:#fff; }
+  .react-btn.on{ background:var(--rose); color:#fff; animation:reactPop .35s cubic-bezier(.34,1.56,.64,1); }
   .react-btn.on svg{ stroke:#fff; }
+  .react-btn span{ min-width:8px; text-align:left; }
+  @keyframes reactPop{
+    0%{ transform:scale(1); }
+    40%{ transform:scale(1.28); }
+    100%{ transform:scale(1); }
+  }
   .comment-box{
     width:100%; margin-top:8px; padding:10px 12px; border-radius:12px;
     border:1px solid #EEDDD3; background:var(--cream);
@@ -728,13 +736,24 @@
   .fcc-title svg{ width:14px; height:14px; color:var(--rose-deep); flex-shrink:0; }
   .feed-card-compact .feed-actions{ grid-column:1/-1; margin-top:6px; }
   .rank-row{
-    display:flex; align-items:center; gap:10px;
-    background:var(--card); border-radius:14px; padding:10px 12px; margin-bottom:8px;
+    display:flex; align-items:center; gap:12px;
+    background:var(--card); border-radius:var(--r-md); padding:12px 14px; margin-bottom:10px;
+    box-shadow:0 6px 14px -6px rgba(58,46,43,.28);
+    transition:transform .12s ease;
   }
-  .rank-pos{ width:24px; font-weight:700; color:var(--rose-deep); font-size:14px; }
-  .rank-row .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; }
-  .rank-name{ font-size:13px; font-weight:600; }
-  .rank-meta{ font-size:11px; color:var(--muted); }
+  .rank-row:active{ transform:scale(.98); }
+  .rank-pos{
+    width:28px; height:28px; border-radius:50%; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; color:var(--rose-deep); font-size:13px;
+    background:var(--blush);
+  }
+  .rank-row:nth-child(1) .rank-pos{ background:linear-gradient(135deg,#F3D98E,#D8A93A); color:#5A430E; }
+  .rank-row:nth-child(2) .rank-pos{ background:linear-gradient(135deg,#E4E4E4,#B9B9B9); color:#484848; }
+  .rank-row:nth-child(3) .rank-pos{ background:linear-gradient(135deg,#E3B48C,#B9764A); color:#4A2C15; }
+  .rank-row .fav{ width:40px; height:40px; border-radius:50%; background:var(--sage) center/cover no-repeat; flex-shrink:0; box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(58,46,43,.1); }
+  .rank-name{ font-family:'Fraunces',serif; font-style:italic; font-size:14.5px; font-weight:600; }
+  .rank-meta{ font-size:11px; color:var(--muted); margin-top:1px; }
 
 
   /* ---------------- FRIENDS ---------------- */
@@ -746,16 +765,17 @@
   }
   .search-box::placeholder{ color:var(--muted); }
   .friend-row{
-    display:flex; align-items:center; gap:10px;
-    background:var(--card); padding:10px 12px; border-radius:14px;
-    margin-bottom:10px; box-shadow:0 4px 10px -6px rgba(58,46,43,.15);
+    display:flex; align-items:center; gap:12px;
+    background:var(--card); padding:12px 14px; border-radius:var(--r-md);
+    margin-bottom:10px; box-shadow:0 6px 14px -6px rgba(58,46,43,.28);
     animation:cardIn .35s ease both;
   }
   .friend-row .fav{
-    width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; flex-shrink:0;
+    width:40px; height:40px; border-radius:50%; background:var(--sage) center/cover no-repeat; flex-shrink:0;
+    box-shadow:0 0 0 2px var(--card), 0 0 0 3px rgba(58,46,43,.1);
   }
-  .friend-row .fname{ font-size:13px; font-weight:600; }
-  .friend-row .fstat{ font-size:11px; color:var(--muted); }
+  .friend-row .fname{ font-family:'Fraunces',serif; font-style:italic; font-size:14.5px; font-weight:600; }
+  .friend-row .fstat{ font-size:11px; color:var(--muted); margin-top:1px; }
   .mini-btn{
     margin-left:auto; font-size:11.5px; font-weight:700;
     padding:6px 12px; border-radius:14px; border:none;
@@ -874,50 +894,41 @@
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
 
-  /* ---------------- ZENLY-STYLE EDGE ZOOM ---------------- */
+  /* ---------------- EDGE ZOOM (minimal, edge-flush, ruler-style feedback) ---------------- */
   .edge-zoom{
-    position:absolute; top:50%; transform:translateY(-50%);
-    width:34px; height:150px;
-    z-index:6; display:flex; align-items:center; justify-content:center;
-    touch-action:none;
+    position:absolute; top:0; bottom:0;
+    width:18px; z-index:6; touch-action:none;
   }
-  .edge-zoom-left{ left:2px; }
-  .edge-zoom-right{ right:2px; }
-  .edge-zoom-track{
-    width:5px; height:100%; border-radius:6px;
-    background:rgba(58,46,43,.1);
-    position:relative;
-    transition:background .2s ease, width .2s ease;
+  .edge-zoom-left{ left:0; }
+  .edge-zoom-right{ right:0; }
+  .edge-zoom-gauge{
+    position:fixed; z-index:7;
+    width:34px; height:180px; margin-top:-90px;
+    border-radius:17px;
+    background:rgba(255,253,251,.95);
+    box-shadow:0 10px 24px -6px rgba(58,46,43,.35);
+    opacity:0; transform:scale(.85);
+    transition:opacity .16s ease, transform .16s ease;
+    overflow:hidden; pointer-events:none;
   }
-  .edge-zoom.active .edge-zoom-track{
-    background:rgba(58,46,43,.16); width:7px;
+  .edge-zoom-gauge.show{ opacity:1; transform:scale(1); }
+  .ez-strip{
+    position:absolute; left:0; right:0; top:50%;
+    will-change:transform;
   }
-  .edge-zoom-handle{
-    position:absolute; left:50%; top:50%;
-    width:16px; height:44px; margin:-22px 0 0 -8px;
-    border-radius:8px;
-    background:var(--rose);
-    box-shadow:0 3px 8px rgba(58,46,43,.35);
-    opacity:0; transition:opacity .2s ease, transform .05s linear;
-    display:flex; flex-direction:column; align-items:center; justify-content:space-between;
-    padding:4px 0;
+  .ez-tick{
+    height:10px; display:flex; align-items:center; justify-content:center;
   }
-  .edge-zoom-handle::before, .edge-zoom-handle::after{
-    content:''; display:block; width:0; height:0;
-    border-left:4px solid transparent; border-right:4px solid transparent;
+  .ez-tick::after{
+    content:''; width:9px; height:1.6px; border-radius:1px;
+    background:rgba(58,46,43,.28);
   }
-  .edge-zoom-handle::before{ border-bottom:5px solid rgba(255,255,255,.85); }
-  .edge-zoom-handle::after{ border-top:5px solid rgba(255,255,255,.85); }
-  .edge-zoom.active .edge-zoom-handle{ opacity:1; }
-  .edge-zoom-hint{
-    position:absolute; top:50%; transform:translateY(-50%);
-    background:rgba(42,34,31,.75); color:#fff; font-size:11px;
-    padding:5px 9px; border-radius:10px; white-space:nowrap;
-    opacity:0; transition:opacity .2s ease; pointer-events:none; z-index:7;
+  .ez-tick.major::after{ width:15px; height:2px; background:rgba(58,46,43,.4); }
+  .ez-center-line{
+    position:absolute; left:0; right:0; top:50%; height:2px; margin-top:-1px;
+    background:var(--rose); border-radius:2px;
+    box-shadow:0 0 0 4px rgba(197,123,133,.18);
   }
-  .edge-zoom-hint.left{ left:40px; }
-  .edge-zoom-hint.right{ right:40px; }
-  .edge-zoom-hint.show{ opacity:1; }
   #quoteStrip{
     flex-shrink:0; padding:8px 20px 12px; text-align:center;
   }
@@ -1111,7 +1122,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.23 alpha</div>
+    <div class="app-version">v0.24 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1139,13 +1150,11 @@
           <button class="bubble-add" id="bubbleAddBtn">Добавить</button>
         </div>
       </div>
-      <div class="edge-zoom edge-zoom-left" id="edgeZoomLeft">
-        <div class="edge-zoom-track"><div class="edge-zoom-handle"></div></div>
-        <div class="edge-zoom-hint left" id="edgeHintLeft">масштаб</div>
-      </div>
-      <div class="edge-zoom edge-zoom-right" id="edgeZoomRight">
-        <div class="edge-zoom-track"><div class="edge-zoom-handle"></div></div>
-        <div class="edge-zoom-hint right" id="edgeHintRight">масштаб</div>
+      <div class="edge-zoom edge-zoom-left" id="edgeZoomLeft"></div>
+      <div class="edge-zoom edge-zoom-right" id="edgeZoomRight"></div>
+      <div class="edge-zoom-gauge" id="edgeGauge">
+        <div class="ez-strip" id="ezStrip"></div>
+        <div class="ez-center-line"></div>
       </div>
       <button class="fab" id="fabAdd">+</button>
     </div>
@@ -1843,7 +1852,7 @@
   const coachSteps = [
     { welcome:true, screen:'home', title:'Привет!', text:'MapLink — твоя планета путешествий. Отмечай страны, смотри друзей и собирай коллекцию мест.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Живая планета', text:'Крути глобус пальцем, щипком приближай. Появятся названия стран и городов.' },
-    { screen:'home', target:'.edge-zoom-right', place:'below', title:'Зум по краю', text:'Проведи пальцем вверх-вниз у самого края экрана (слева или справа) — так тоже можно масштабировать планету, как в Zenly.' },
+    { screen:'home', target:'.edge-zoom-right', place:'below', title:'Зум по краю', text:'Проведи пальцем вверх-вниз у самого края экрана (слева или справа) — так тоже можно масштабировать планету.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Добавить с карты', text:'Тапни по названию — всплывёт пузырёк «Добавить». Страна подставится сама, если выберешь город.' },
     { screen:'home', target:'#fabAdd', place:'above', title:'Плюсик', text:'Или добавь вручную: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
     { screen:'friends', target:'.friends-tabs', place:'below', title:'Три вкладки', text:'Лента — поездки друзей с реакциями. Друзья — поиск и заявки. Рейтинг — кто больше стран открыл.', friendsTab:'feed' },
@@ -2326,6 +2335,11 @@
       photosByPlace = window.__fvPhotosCache || {};
       isOwn = false;
     }
+    if(!p){
+      p = (window.__feedPlacesCache || []).find(x=>x.id === placeId);
+      photosByPlace = window.__feedPhotosCache || {};
+      isOwn = p && p.user_id === myUserId;
+    }
     if(!p) return;
 
     igModalPlaceId = p.id;
@@ -2414,35 +2428,63 @@
     zoom: 1.1
   });
 
-  // ---------- Zenly-style edge-swipe zoom: drag up/down along the screen edge to zoom ----------
-  function setupEdgeZoom(elId, hintId){
+  // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom, ruler-style feedback ----------
+  const ezStrip = document.getElementById('ezStrip');
+  const ezGauge = document.getElementById('edgeGauge');
+  // build the tick strip once — long enough to cover generous drag range
+  (function buildTicks(){
+    const total = 140;
+    let html = '';
+    for(let i=0;i<total;i++){
+      html += `<div class="ez-tick${i%5===0?' major':''}"></div>`;
+    }
+    ezStrip.innerHTML = html;
+    ezStrip.style.height = (total*10)+'px';
+    ezStrip.style.top = '50%';
+    ezStrip.style.transform = 'translateY(calc(-50% + 0px))';
+  })();
+
+  function setupEdgeZoom(elId, side){
     const el = document.getElementById(elId);
-    const hint = document.getElementById(hintId);
     let dragging = false;
     let startY = 0;
     let startZoom = 0;
+    let pendingZoom = null;
+    let raf = null;
 
     function point(e){ return e.touches ? e.touches[0] : e; }
 
+    function flush(){
+      raf = null;
+      if(pendingZoom !== null) map.setZoom(pendingZoom);
+    }
+
     function onStart(e){
       dragging = true;
-      el.classList.add('active');
-      hint.classList.add('show');
       startY = point(e).clientY;
       startZoom = map.getZoom();
+      ezGauge.style.top = startY + 'px';
+      ezGauge.style[side] = '10px';
+      ezGauge.style[side === 'left' ? 'right' : 'left'] = 'auto';
+      ezGauge.classList.add('show');
+      ezStrip.style.transform = 'translateY(calc(-50% + 0px))';
       if(e.cancelable) e.preventDefault();
     }
     function onMove(e){
       if(!dragging) return;
       const dy = startY - point(e).clientY; // dragging up = zoom in
-      const newZoom = startZoom + dy * 0.025;
-      map.setZoom(Math.max(0.6, Math.min(18, newZoom)));
+      const newZoom = Math.max(0.6, Math.min(18, startZoom + dy * 0.018));
+      pendingZoom = newZoom;
+      if(!raf) raf = requestAnimationFrame(flush);
+      // ruler ticks slide exactly with the finger — clamped so the strip never runs out
+      const tickOffset = Math.max(-620, Math.min(620, dy));
+      ezStrip.style.transform = `translateY(calc(-50% + ${tickOffset}px))`;
       if(e.cancelable) e.preventDefault();
     }
     function onEnd(){
       dragging = false;
-      el.classList.remove('active');
-      hint.classList.remove('show');
+      pendingZoom = null;
+      ezGauge.classList.remove('show');
     }
 
     el.addEventListener('touchstart', onStart, { passive:false });
@@ -2454,8 +2496,8 @@
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onEnd);
   }
-  setupEdgeZoom('edgeZoomLeft', 'edgeHintLeft');
-  setupEdgeZoom('edgeZoomRight', 'edgeHintRight');
+  setupEdgeZoom('edgeZoomLeft', 'left');
+  setupEdgeZoom('edgeZoomRight', 'right');
 
   let placeLabelLayers = [];
 
@@ -3517,6 +3559,8 @@
         photosByPlace[ph.place_id].push(ph.url);
       });
     }
+    window.__feedPlacesCache = places;
+    window.__feedPhotosCache = photosByPlace;
     // reactions (optional table — ignore if missing)
     let reactionsByPlace = {};
     try{
@@ -3524,6 +3568,14 @@
       (reacts||[]).forEach(r=>{
         if(!reactionsByPlace[r.place_id]) reactionsByPlace[r.place_id] = [];
         reactionsByPlace[r.place_id].push(r);
+      });
+    }catch(e){}
+    // comment counts (optional table — ignore if missing)
+    let commentCountByPlace = {};
+    try{
+      const { data: cRows } = await supabase.from('comments').select('place_id').in('place_id', ids);
+      (cRows||[]).forEach(c=>{
+        commentCountByPlace[c.place_id] = (commentCountByPlace[c.place_id]||0) + 1;
       });
     }catch(e){}
 
@@ -3568,7 +3620,7 @@
             <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
           </div>
           <div class="feed-actions" style="margin-top:0;">${reactBar}
-            <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}</button>
+            <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}${commentCountByPlace[p.id] ? "<span>"+commentCountByPlace[p.id]+"</span>" : ""}</button>
           </div>
           <div id="comments-${p.id}" style="display:none;margin-top:8px;grid-column:1/-1;"></div>
         </div>`;
@@ -3583,11 +3635,11 @@
             <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
           </div>
         </div>
-        <div class="feed-photo" data-place-id="${p.id}"></div>
+        <div class="feed-photo" data-place-id="${p.id}" style="cursor:pointer" onclick="window.__openPlaceView('${p.id}')"></div>
         <div class="feed-title"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
         ${p.note ? `<div class="feed-note">${p.note}</div>` : ''}
         <div class="feed-actions">${reactBar}
-          <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}</button>
+          <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}${commentCountByPlace[p.id] ? "<span>"+commentCountByPlace[p.id]+"</span>" : ""}</button>
         </div>
         <div id="comments-${p.id}" style="display:none;margin-top:8px;"></div>
       </div>`;
