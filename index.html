@@ -273,12 +273,32 @@
 
   /* ---------------- BOTTOM NAV ---------------- */
   .navbar{
-    display:flex; justify-content:space-around; align-items:center;
-    padding:12px 0 max(14px, env(safe-area-inset-bottom));
+    display:flex; justify-content:space-around; align-items:flex-end;
+    padding:0 0 max(10px, env(safe-area-inset-bottom));
     background:var(--card);
     border-top:1px solid transparent;
     flex-shrink:0;
+    position:relative;
   }
+  .nav-planet{
+    position:relative;
+    top:-18px;
+    margin:0 4px;
+  }
+  .planet-ring{
+    width:52px; height:52px; border-radius:50%;
+    background:linear-gradient(145deg, var(--rose), var(--rose-deep));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 22px -6px rgba(197,123,133,.55), 0 0 0 4px var(--card);
+    color:#fff;
+    transition:transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s ease;
+  }
+  .nav-planet:active .planet-ring{ transform:scale(.88); }
+  .nav-planet.active .planet-ring{
+    box-shadow:0 8px 22px -6px rgba(197,123,133,.65), 0 0 0 4px var(--card), 0 0 0 6px var(--rose);
+  }
+  .planet-ring svg{ width:26px; height:26px; }
+  .navitem:not(.nav-planet){ padding:10px 0 6px; }
   html:not(.theme-dark) .navbar{ border-top-color:#EEE0D8; }
   html.theme-dark .navbar{ border-top-color:rgba(255,255,255,.06); }
   .navitem{
@@ -644,25 +664,6 @@
   }
 
   /* ---------------- FEED / RANK ---------------- */
-  .friends-tabs{
-    display:flex; gap:8px; margin:4px 0 14px;
-  }
-  .friends-tab{
-    flex:1; border:none; border-radius:18px; padding:12px 8px 10px;
-    font-family:inherit; font-size:11.5px; font-weight:700;
-    background:var(--card); color:var(--muted);
-    box-shadow:0 4px 12px -6px rgba(58,46,43,.18);
-    display:flex; flex-direction:column; align-items:center; gap:6px;
-    transition:transform .15s ease, background .2s ease, color .2s ease;
-  }
-  .friends-tab svg{ width:22px; height:22px; opacity:.75; }
-  .friends-tab.active{
-    background:linear-gradient(145deg, var(--rose), var(--rose-deep));
-    color:#fff;
-    box-shadow:0 8px 18px -8px rgba(197,123,133,.55);
-  }
-  .friends-tab.active svg{ opacity:1; }
-  .friends-tab:active{ transform:scale(.96); }
   .rank-row{ cursor:pointer; }
   .rank-row:active{ transform:scale(.985); }
   #fvAddFriendWrap{ text-align:center; margin:8px 0 14px; }
@@ -894,40 +895,30 @@
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
 
-  /* ---------------- EDGE ZOOM (minimal, edge-flush, ruler-style feedback) ---------------- */
+  /* ---------------- EDGE ZOOM: soft glow wave ---------------- */
   .edge-zoom{
     position:absolute; top:0; bottom:0;
-    width:18px; z-index:6; touch-action:none;
+    width:20px; z-index:6; touch-action:none;
   }
   .edge-zoom-left{ left:0; }
   .edge-zoom-right{ right:0; }
-  .edge-zoom-gauge{
-    position:fixed; z-index:7;
-    width:34px; height:180px; margin-top:-90px;
-    border-radius:17px;
-    background:rgba(255,253,251,.95);
-    box-shadow:0 10px 24px -6px rgba(58,46,43,.35);
-    opacity:0; transform:scale(.85);
-    transition:opacity .16s ease, transform .16s ease;
-    overflow:hidden; pointer-events:none;
+  .edge-glow{
+    position:absolute; top:0; bottom:0; width:3px; z-index:5;
+    background:linear-gradient(180deg, transparent, rgba(197,123,133,.35), transparent);
+    opacity:0;
+    transition:opacity .35s ease;
+    pointer-events:none;
+    filter:blur(2px);
   }
-  .edge-zoom-gauge.show{ opacity:1; transform:scale(1); }
-  .ez-strip{
-    position:absolute; left:0; right:0; top:50%;
-    will-change:transform;
+  .edge-glow-left{ left:8px; }
+  .edge-glow-right{ right:8px; }
+  .edge-glow.active{
+    opacity:1;
+    animation:edgePulse 1.4s ease-in-out infinite;
   }
-  .ez-tick{
-    height:10px; display:flex; align-items:center; justify-content:center;
-  }
-  .ez-tick::after{
-    content:''; width:9px; height:1.6px; border-radius:1px;
-    background:rgba(58,46,43,.28);
-  }
-  .ez-tick.major::after{ width:15px; height:2px; background:rgba(58,46,43,.4); }
-  .ez-center-line{
-    position:absolute; left:0; right:0; top:50%; height:2px; margin-top:-1px;
-    background:var(--rose); border-radius:2px;
-    box-shadow:0 0 0 4px rgba(197,123,133,.18);
+  @keyframes edgePulse{
+    0%,100%{ opacity:.25; filter:blur(1px); }
+    50%{ opacity:.55; filter:blur(3px); }
   }
   #quoteStrip{
     flex-shrink:0; padding:8px 20px 12px; text-align:center;
@@ -1122,7 +1113,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.24 alpha</div>
+    <div class="app-version">v0.25 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1134,7 +1125,7 @@
   </div>
 
   <!-- HOME -->
-  <div class="screen active" id="screen-home">
+  <div class="screen" id="screen-home">
     <div class="home-topstats">
       <div class="world-pct">Открыто <b id="statWorldPct">0%</b> мира</div>
       <div class="sub-stats">
@@ -1152,10 +1143,8 @@
       </div>
       <div class="edge-zoom edge-zoom-left" id="edgeZoomLeft"></div>
       <div class="edge-zoom edge-zoom-right" id="edgeZoomRight"></div>
-      <div class="edge-zoom-gauge" id="edgeGauge">
-        <div class="ez-strip" id="ezStrip"></div>
-        <div class="ez-center-line"></div>
-      </div>
+      <div class="edge-glow" id="edgeGlowLeft"></div>
+      <div class="edge-glow" id="edgeGlowRight"></div>
       <button class="fab" id="fabAdd">+</button>
     </div>
     <div id="quoteStrip"><span id="quoteText"></span></div>
@@ -1222,49 +1211,37 @@
   </div>
 
   <!-- FRIENDS -->
+  <!-- FEED -->
+  <div class="screen active" id="screen-feed" style="padding:10px 14px 0;">
+    <div id="friendsFeed"><div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div></div>
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- FRIENDS -->
   <div class="screen" id="screen-friends">
-    <div class="friends-tabs">
-      <button class="friends-tab active" data-ftab="feed">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>
-        Лента
-      </button>
-      <button class="friends-tab" data-ftab="list">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>
-        Друзья
-      </button>
-      <button class="friends-tab" data-ftab="rank">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>
-        Рейтинг
-      </button>
+    <input class="search-box" id="friendSearch" placeholder="Найти по имени в MapLink…">
+    <div id="searchResults"></div>
+    <div id="requestsBlock" style="display:none;">
+      <div class="section-cap">заявки в друзья</div>
+      <div id="requestsList"></div>
     </div>
+    <div class="section-cap">мои друзья</div>
+    <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
+    <div class="section-cap">пригласить</div>
+    <div class="invite-card">
+      <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
+      <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
+    </div>
+    <div style="height:20px;"></div>
+  </div>
 
-    <div id="friendsPaneFeed">
-      <div id="friendsFeed"><div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div></div>
-    </div>
-
-    <div id="friendsPaneList" style="display:none;">
-      <input class="search-box" id="friendSearch" placeholder="Найти по имени в MapLink…">
-      <div id="searchResults"></div>
-      <div id="requestsBlock" style="display:none;">
-        <div class="section-cap">заявки в друзья</div>
-        <div id="requestsList"></div>
-      </div>
-      <div class="section-cap">мои друзья</div>
-      <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
-      <div class="section-cap">пригласить</div>
-      <div class="invite-card">
-        <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
-        <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
-      </div>
-    </div>
-
-    <div id="friendsPaneRank" style="display:none;">
-      <div class="section-cap">среди друзей</div>
-      <div id="rankFriendsList"><div class="placeholder-box" style="margin-top:0;">нужны друзья с местами</div></div>
-      <div class="section-cap">общий топ</div>
-      <div id="rankGlobalList"><div class="placeholder-box" style="margin-top:0;">считаем…</div></div>
-      <p style="font-size:11px;color:var(--muted);line-height:1.4;margin:8px 0 16px;">Только реальные аккаунты Telegram и посещённые места (без вишлиста). Нажми на человека, чтобы открыть профиль.</p>
-    </div>
+  <!-- RANK -->
+  <div class="screen" id="screen-rank">
+    <div class="section-cap">среди друзей</div>
+    <div id="rankFriendsList"><div class="placeholder-box" style="margin-top:0;">нужны друзья с местами</div></div>
+    <div class="section-cap">общий топ</div>
+    <div id="rankGlobalList"><div class="placeholder-box" style="margin-top:0;">считаем…</div></div>
+    <p style="font-size:11px;color:var(--muted);line-height:1.4;margin:8px 0 16px;">Только реальные аккаунты Telegram и посещённые места (без вишлиста). Нажми на человека, чтобы открыть профиль.</p>
     <div style="height:20px;"></div>
   </div>
 
@@ -1413,13 +1390,22 @@
 
   <!-- NAVBAR -->
   <div class="navbar">
-    <button class="navitem active" data-screen="home">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>
-      <div class="nlabel">Планета</div>
+    <button class="navitem active" data-screen="feed">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>
+      <div class="nlabel">Лента</div>
     </button>
     <button class="navitem" data-screen="friends">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>
       <div class="nlabel">Друзья</div>
+    </button>
+    <button class="navitem nav-planet" data-screen="home">
+      <div class="planet-ring">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>
+      </div>
+    </button>
+    <button class="navitem" data-screen="rank">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>
+      <div class="nlabel">Рейтинг</div>
     </button>
     <button class="navitem" data-screen="profile">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1-4 3.8-6 7-6s6 2 7 6"/></svg>
@@ -1525,7 +1511,13 @@
     target.classList.add('active');
   }
   document.querySelectorAll('.navitem').forEach(btn=>{
-    btn.addEventListener('click', ()=> showScreen(btn.dataset.screen));
+    btn.addEventListener('click', ()=>{
+      const name = btn.dataset.screen;
+      showScreen(name);
+      if(name === 'feed') loadFriendsFeed();
+      if(name === 'rank') loadRankings();
+      if(name === 'friends') loadFriends();
+    });
   });
 
   // ---------- Telegram WebApp ----------
@@ -1853,16 +1845,12 @@
     { welcome:true, screen:'home', title:'Привет!', text:'MapLink — твоя планета путешествий. Отмечай страны, смотри друзей и собирай коллекцию мест.' },
     { screen:'home', target:'#globeBox', place:'below', title:'Живая планета', text:'Крути глобус пальцем, щипком приближай. Появятся названия стран и городов.' },
     { screen:'home', target:'.edge-zoom-right', place:'below', title:'Зум по краю', text:'Проведи пальцем вверх-вниз у самого края экрана (слева или справа) — так тоже можно масштабировать планету.' },
-    { screen:'home', target:'#globeBox', place:'below', title:'Добавить с карты', text:'Тапни по названию — всплывёт пузырёк «Добавить». Страна подставится сама, если выберешь город.' },
-    { screen:'home', target:'#fabAdd', place:'above', title:'Плюсик', text:'Или добавь вручную: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
-    { screen:'friends', target:'.friends-tabs', place:'below', title:'Три вкладки', text:'Лента — поездки друзей с реакциями. Друзья — поиск и заявки. Рейтинг — кто больше стран открыл.', friendsTab:'feed' },
-    { screen:'friends', target:'#friendsFeed', place:'above', title:'Лента как доска', text:'Посты друзей приколоты как на пробковой доске: фото, название места, реакции и комментарии. Без фото — компактная карточка.', friendsTab:'feed', fallbackTarget:'.friends-tabs' },
-    { screen:'friends', target:'#friendSearch', place:'below', title:'Найти друга', text:'Поиск по имени в MapLink. Можно отправить заявку — она придёт ему во вкладку «Друзья».', friendsTab:'list' },
-    { screen:'friends', target:'#inviteBtn', place:'above', title:'Пригласить ссылкой', text:'Поделись личной ссылкой — кто откроет, станет другом. Из рейтинга тоже можно открыть профиль и добавить.', friendsTab:'list' },
-    { screen:'friends', target:'#rankGlobalList', place:'above', title:'Рейтинг', text:'Топ по странам (только реальные аккаунты Telegram). Тап по человеку — его travel-journal: полароиды и билетики.', friendsTab:'rank', fallbackTarget:'.friends-tabs' },
-    { screen:'profile', target:'.profile-toolbar', place:'below', title:'Сетка или список', text:'Переключай вид стены мест и сортируй: по дате, названию или стране.' },
-    { screen:'profile', target:'#myPlacesList', place:'above', title:'Твои места', text:'Все поездки с фото. Тап — редактировать, добавить фото (до 3) или удалить.' },
-    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, приватный профиль (места скрыты не-друзьям), повтор тура и удаление всех данных.' }
+    { screen:'home', target:'#fabAdd', place:'above', title:'Добавить место', text:'Тапни по названию страны на карте или жми на плюсик: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
+    { screen:'feed', target:'#friendsFeed', place:'above', title:'Лента как доска', text:'Поездки друзей приколоты как на пробковой доске: фото, реакции и комментарии. Без фото — компактная карточка.', fallbackTarget:'#screen-feed' },
+    { screen:'friends', target:'#friendSearch', place:'below', title:'Друзья', text:'Ищи по имени в MapLink или скинь личную ссылку — тот, кто откроет, сразу станет другом.' },
+    { screen:'rank', target:'#rankGlobalList', place:'above', title:'Рейтинг', text:'Топ по числу открытых стран (только реальные аккаунты Telegram). Тап по человеку — его travel-journal.', fallbackTarget:'#screen-rank' },
+    { screen:'profile', target:'.profile-toolbar', place:'below', title:'Сетка или список', text:'Переключай вид стены мест и сортируй: по дате, названию или стране.', fallbackTarget:'#myPlacesList' },
+    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, приватный профиль, повтор тура и удаление всех данных.' }
   ];
   let coachIndex = 0;
 
@@ -1903,17 +1891,10 @@
     tip.style.left = ''; tip.style.top = ''; tip.style.bottom = '';
   }
 
-  function activateFriendsTab(tab){
-    if(!tab) return;
-    const btn = document.querySelector('.friends-tab[data-ftab="'+tab+'"]');
-    if(btn) btn.click();
-  }
-
   async function showCoachStep(i){
     const s = coachSteps[i];
     const wasActive = document.getElementById('screen-'+s.screen)?.classList.contains('active');
     showScreen(s.screen);
-    if(s.friendsTab) activateFriendsTab(s.friendsTab);
     // only pay the full screen-fade wait when we actually switched screens
     await new Promise(r=>setTimeout(r, wasActive ? 90 : 380));
 
@@ -2428,24 +2409,11 @@
     zoom: 1.1
   });
 
-  // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom, ruler-style feedback ----------
-  const ezStrip = document.getElementById('ezStrip');
-  const ezGauge = document.getElementById('edgeGauge');
-  // build the tick strip once — long enough to cover generous drag range
-  (function buildTicks(){
-    const total = 140;
-    let html = '';
-    for(let i=0;i<total;i++){
-      html += `<div class="ez-tick${i%5===0?' major':''}"></div>`;
-    }
-    ezStrip.innerHTML = html;
-    ezStrip.style.height = (total*10)+'px';
-    ezStrip.style.top = '50%';
-    ezStrip.style.transform = 'translateY(calc(-50% + 0px))';
-  })();
+  // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom, soft glow feedback ----------
 
   function setupEdgeZoom(elId, side){
     const el = document.getElementById(elId);
+    const glow = document.getElementById(side === 'left' ? 'edgeGlowLeft' : 'edgeGlowRight');
     let dragging = false;
     let startY = 0;
     let startZoom = 0;
@@ -2456,35 +2424,28 @@
 
     function flush(){
       raf = null;
-      if(pendingZoom !== null) map.setZoom(pendingZoom);
+      if(dragging && pendingZoom !== null) map.setZoom(pendingZoom);
     }
 
     function onStart(e){
       dragging = true;
       startY = point(e).clientY;
       startZoom = map.getZoom();
-      ezGauge.style.top = startY + 'px';
-      ezGauge.style[side] = '10px';
-      ezGauge.style[side === 'left' ? 'right' : 'left'] = 'auto';
-      ezGauge.classList.add('show');
-      ezStrip.style.transform = 'translateY(calc(-50% + 0px))';
+      if(glow) glow.classList.add('active');
       if(e.cancelable) e.preventDefault();
     }
     function onMove(e){
       if(!dragging) return;
       const dy = startY - point(e).clientY; // dragging up = zoom in
-      const newZoom = Math.max(0.6, Math.min(18, startZoom + dy * 0.018));
-      pendingZoom = newZoom;
+      pendingZoom = Math.max(0.6, Math.min(18, startZoom + dy * 0.018));
       if(!raf) raf = requestAnimationFrame(flush);
-      // ruler ticks slide exactly with the finger — clamped so the strip never runs out
-      const tickOffset = Math.max(-620, Math.min(620, dy));
-      ezStrip.style.transform = `translateY(calc(-50% + ${tickOffset}px))`;
       if(e.cancelable) e.preventDefault();
     }
     function onEnd(){
       dragging = false;
       pendingZoom = null;
-      ezGauge.classList.remove('show');
+      if(raf){ cancelAnimationFrame(raf); raf = null; }
+      if(glow) glow.classList.remove('active');
     }
 
     el.addEventListener('touchstart', onStart, { passive:false });
@@ -3042,6 +3003,7 @@
     'китай':'cn','china':'cn',
     'япония':'jp','japan':'jp',
     'южная корея':'kr','корея':'kr','south korea':'kr',
+    'северная корея':'kp','north korea':'kp',
     'индия':'in','india':'in',
     'индонезия':'id','indonesia':'id',
     'вьетнам':'vn','vietnam':'vn',
@@ -3091,7 +3053,7 @@
     'малайзия':'my','malaysia':'my',
     'филиппины':'ph','philippines':'ph',
     'куба':'cu','cuba':'cu',
-    'доминикана':'do','доминиканская республика':'do',
+    'доминикана':'do','доминиканская республика':'do','dominican republic':'do',
     'катар':'qa','qatar':'qa',
     'бахрейн':'bh','bahrain':'bh',
     'саудовская аравия':'sa','saudi arabia':'sa',
@@ -3107,7 +3069,81 @@
     'албания':'al','albania':'al',
     'босния и герцеговина':'ba','bosnia':'ba',
     'северная македония':'mk','macedonia':'mk',
-    'грузия':'ge'
+    // --- Americas ---
+    'эквадор':'ec','ecuador':'ec',
+    'перу':'pe','peru':'pe',
+    'чили':'cl','chile':'cl',
+    'колумбия':'co','colombia':'co',
+    'венесуэла':'ve','venezuela':'ve',
+    'уругвай':'uy','uruguay':'uy',
+    'парагвай':'py','paraguay':'py',
+    'боливия':'bo','bolivia':'bo',
+    'панама':'pa','panama':'pa',
+    'коста-рика':'cr','costa rica':'cr',
+    'гватемала':'gt','guatemala':'gt',
+    'гондурас':'hn','honduras':'hn',
+    'сальвадор':'sv','el salvador':'sv',
+    'никарагуа':'ni','nicaragua':'ni',
+    'ямайка':'jm','jamaica':'jm',
+    'багамы':'bs','bahamas':'bs',
+    'барбадос':'bb','barbados':'bb',
+    'тринидад и тобаго':'tt','trinidad':'tt',
+    'гаити':'ht','haiti':'ht',
+    // --- Africa ---
+    'нигерия':'ng','nigeria':'ng',
+    'кения':'ke','kenya':'ke',
+    'танзания':'tz','tanzania':'tz',
+    'эфиопия':'et','ethiopia':'et',
+    'гана':'gh','ghana':'gh',
+    'уганда':'ug','uganda':'ug',
+    'зимбабве':'zw','zimbabwe':'zw',
+    'замбия':'zm','zambia':'zm',
+    'намибия':'na','namibia':'na',
+    'ботсвана':'bw','botswana':'bw',
+    'мозамбик':'mz','mozambique':'mz',
+    'ангола':'ao','angola':'ao',
+    'сенегал':'sn','senegal':'sn',
+    'кот-д’ивуар':'ci','кот-дивуар':'ci','ivory coast':'ci',
+    'камерун':'cm','cameroon':'cm',
+    'др конго':'cd','демократическая республика конго':'cd','congo':'cd',
+    'руанда':'rw','rwanda':'rw',
+    'мадагаскар':'mg','madagascar':'mg',
+    'маврикий':'mu','mauritius':'mu',
+    'алжир':'dz','algeria':'dz',
+    'ливия':'ly','libya':'ly',
+    'судан':'sd','sudan':'sd',
+    'сомали':'so','somalia':'so',
+    // --- Middle East / South & Southeast Asia ---
+    'ирак':'iq','iraq':'iq',
+    'иран':'ir','iran':'ir',
+    'кувейт':'kw','kuwait':'kw',
+    'оман':'om','oman':'om',
+    'йемен':'ye','yemen':'ye',
+    'ливан':'lb','lebanon':'lb',
+    'сирия':'sy','syria':'sy',
+    'афганистан':'af','afghanistan':'af',
+    'пакистан':'pk','pakistan':'pk',
+    'бангладеш':'bd','bangladesh':'bd',
+    'мьянма':'mm','myanmar':'mm',
+    'бутан':'bt','bhutan':'bt',
+    'бруней':'bn','brunei':'bn',
+    'восточный тимор':'tl','тимор-лешти':'tl','timor-leste':'tl',
+    // --- Oceania ---
+    'папуа — новая гвинея':'pg','папуа новая гвинея':'pg','papua new guinea':'pg',
+    'фиджи':'fj','fiji':'fj',
+    'самоа':'ws','samoa':'ws',
+    'тонга':'to','tonga':'to',
+    'вануату':'vu','vanuatu':'vu',
+    'палау':'pw','palau':'pw',
+    'соломоновы острова':'sb','solomon islands':'sb',
+    // --- Europe microstates ---
+    'сан-марино':'sm','san marino':'sm',
+    'ватикан':'va','vatican':'va',
+    'монако':'mc','monaco':'mc',
+    'лихтенштейн':'li','liechtenstein':'li',
+    'андорра':'ad','andorra':'ad',
+    'люксембург':'lu','luxembourg':'lu',
+    'косово':'xk','kosovo':'xk'
   };
   function normalizeCountryKey(name){
     return String(name || '')
@@ -3148,6 +3184,28 @@
     }
   }
   // city → country wiki → flag. cache key includes both parts
+  // deterministic little abstract pattern, seeded by place name — zero network dependency,
+  // guarantees a photo box is never left blank even if every other source failed
+  function hashStr(s){
+    let h = 0;
+    for(let i=0;i<s.length;i++){ h = (h*31 + s.charCodeAt(i)) >>> 0; }
+    return h;
+  }
+  function generatePlaceholderPattern(name){
+    const h = hashStr(name || 'MapLink');
+    const palette = ['#C57B85','#A9B79A','#C9A35C','#8FC1D4','#D9A0A8','#7E9270'];
+    const c1 = palette[h % palette.length];
+    const c2 = palette[(h >> 3) % palette.length];
+    const x1 = 15 + (h % 55), y1 = 15 + ((h >> 4) % 55);
+    const x2 = 15 + ((h >> 8) % 55), y2 = 15 + ((h >> 12) % 55);
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>`+
+      `<rect width='100' height='100' fill='#FBF3EE'/>`+
+      `<circle cx='${x1}' cy='${y1}' r='40' fill='${c1}' opacity='0.55'/>`+
+      `<circle cx='${x2}' cy='${y2}' r='32' fill='${c2}' opacity='0.5'/>`+
+      `</svg>`;
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  }
+
   async function fetchDefaultPhoto(name, countryFallback){
     if(!name && !countryFallback) return null;
     const cacheKey = (name || '') + '|' + (countryFallback || '');
@@ -3172,6 +3230,10 @@
     // 4) any other country name — resolve via REST Countries API
     if(!url){
       url = await flagViaRestCountriesApi(countryFallback || name);
+    }
+    // 5) guaranteed local fallback — never leaves a blank polaroid
+    if(!url){
+      url = generatePlaceholderPattern(name || countryFallback);
     }
     defaultPhotoCache[cacheKey] = url;
     savePhotoCache();
@@ -3499,35 +3561,8 @@
     }
   });
 
-  // ---------- friends tabs: feed / list / rank ----------
+  // ---------- friends: feed / list / rank are now separate screens ----------
   let cachedFriendIds = [];
-  document.querySelectorAll('.friends-tab').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('.friends-tab').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      const tab = btn.dataset.ftab;
-      const panes = {
-        feed: document.getElementById('friendsPaneFeed'),
-        list: document.getElementById('friendsPaneList'),
-        rank: document.getElementById('friendsPaneRank')
-      };
-      Object.keys(panes).forEach(k=>{
-        const el = panes[k];
-        if(!el) return;
-        if(k === tab){
-          el.style.display = '';
-          el.classList.remove('pane-in');
-          void el.offsetWidth;
-          el.classList.add('pane-in');
-        } else {
-          el.style.display = 'none';
-          el.classList.remove('pane-in');
-        }
-      });
-      if(tab === 'feed') loadFriendsFeed();
-      if(tab === 'rank') loadRankings();
-    });
-  });
 
   async function loadFriendsFeed(){
     const box = document.getElementById('friendsFeed');
@@ -3769,8 +3804,7 @@
       ...(asReq||[]).map(r=>r.addressee_id),
       ...(asAdd||[]).map(r=>r.requester_id)
     ];
-    const activeTab = document.querySelector('.friends-tab.active');
-    if(activeTab && activeTab.dataset.ftab === 'feed') loadFriendsFeed();
+    loadFriendsFeed();
   };
 
   // ---------- rate limit adds (anti-abuse for ranking) ----------
