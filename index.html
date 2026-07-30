@@ -137,10 +137,13 @@
   .wobble-line .wline{
     display:inline-block;
     animation: lineFloat 1.15s ease-in-out infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
   }
   @keyframes lineFloat{
-    0%, 100%{ margin-top: 0; margin-bottom: 6px; }
-    50%{ margin-top: -7px; margin-bottom: 13px; }
+    0%, 100%{ transform: translateY(0) translateZ(0); }
+    50%{ transform: translateY(-7px) translateZ(0); }
   }
   .wobble-line span{ display: inline; }
   /* desktop: per-letter hop (fine pointer only) */
@@ -282,7 +285,7 @@
   }
   .nav-planet{
     position:relative;
-    top:-18px;
+    top:-14px;
     margin:0 4px;
   }
   .planet-ring{
@@ -825,57 +828,49 @@
   /* overlay is non-blocking so user can try the globe / buttons under the highlight */
   #tutorial{
     position:fixed; inset:0; z-index:90;
-    pointer-events:none;
+    display:flex; align-items:center; justify-content:center;
+    padding:24px;
   }
   #tutorial.hide{ display:none; }
-  #coachHighlight{
-    position:fixed; z-index:91;
-    box-shadow:0 0 0 2000px rgba(42,34,31,.68);
-    border:2px solid var(--rose);
-    border-radius:16px;
-    pointer-events:none;
-    will-change:left, top;
+  .tut-scrim{
+    position:absolute; inset:0;
+    background:rgba(42,34,31,.45);
   }
-  #coachHighlight::after{
-    content:''; position:absolute; inset:-6px; border-radius:inherit;
-    border:2px solid rgba(197,123,133,.5);
-    animation:coachRing 1.6s ease-out infinite;
+  .tut-card{
+    position:relative; z-index:1;
+    width:100%; max-width:300px;
+    background:var(--card); border-radius:26px;
+    padding:28px 24px 20px;
+    text-align:center;
+    box-shadow:0 20px 44px -12px rgba(0,0,0,.45);
+    animation:tutPop .32s cubic-bezier(.34,1.56,.64,1);
   }
-  @keyframes coachRing{
-    0%{ transform:scale(1); opacity:.9; }
-    100%{ transform:scale(1.25); opacity:0; }
+  @keyframes tutPop{
+    0%{ transform:scale(.88); opacity:0; }
+    100%{ transform:scale(1); opacity:1; }
   }
-  #coachTip{
-    position:fixed; z-index:92; width:260px;
-    pointer-events:auto;
+  .tut-icon{
+    width:64px; height:64px; margin:0 auto 16px;
+    border-radius:50%;
+    background:linear-gradient(145deg, var(--rose), var(--rose-deep));
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 10px 22px -8px rgba(197,123,133,.55);
   }
-  #coachTip.centered{
-    left:50% !important; top:50% !important;
-    transform:translate(-50%,-50%);
+  .tut-icon svg{ width:30px; height:30px; color:#fff; }
+  .tut-dots{ display:flex; justify-content:center; gap:6px; margin-bottom:14px; }
+  .tut-dots span{ width:6px; height:6px; border-radius:50%; background:var(--blush); transition:transform .2s ease, background .2s ease; }
+  .tut-dots span.on{ background:var(--rose); transform:scale(1.3); }
+  .tut-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:20px; margin-bottom:8px;
   }
-  .coach-card{
-    background:var(--card); border-radius:20px; padding:18px 18px 14px;
-    box-shadow:0 16px 32px -10px rgba(0,0,0,.4);
-    animation:tutSlide .3s cubic-bezier(.34,1.56,.64,1);
-  }
-  @keyframes tutSlide{
-    0%{ transform:translateY(10px) scale(.96); opacity:0; }
-    100%{ transform:translateY(0) scale(1); opacity:1; }
-  }
-  .coach-step-label{
-    font-size:10.5px; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; margin-bottom:6px;
-  }
-  .coach-title{
-    font-family:'Fraunces',serif; font-style:italic; font-size:18px; margin-bottom:6px;
-  }
-  .coach-text{ font-size:13px; color:var(--muted); line-height:1.5; margin-bottom:14px; }
-  .coach-actions{ display:flex; align-items:center; justify-content:space-between; }
+  .tut-text{ font-size:13.5px; color:var(--muted); line-height:1.55; margin-bottom:18px; }
+  .tut-actions{ display:flex; align-items:center; justify-content:space-between; }
   .tut-next{
-    background:var(--rose); color:#fff; border:none; padding:9px 20px;
-    border-radius:18px; font-size:13px; font-weight:700; font-family:inherit;
+    background:var(--rose); color:#fff; border:none; padding:11px 24px;
+    border-radius:20px; font-size:13.5px; font-weight:700; font-family:inherit;
   }
   .tut-skip{
-    background:none; border:none; color:var(--muted); font-size:12px; font-family:inherit;
+    background:none; border:none; color:var(--muted); font-size:12.5px; font-family:inherit;
   }
 
   /* ---------------- GLOBE ---------------- */
@@ -895,33 +890,49 @@
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
   #globeBox{ position:relative; flex:1; }
 
-  /* ---------------- EDGE ZOOM: soft glow wave ---------------- */
+  /* ---------------- EDGE ZOOM: clear fill-bar feedback, GPU-cheap ---------------- */
   .edge-zoom{
     position:absolute; top:0; bottom:0;
-    width:20px; z-index:6; touch-action:none;
+    width:26px; z-index:6; touch-action:none;
   }
   .edge-zoom-left{ left:0; }
   .edge-zoom-right{ right:0; }
-  .edge-glow{
-    position:absolute; top:0; bottom:0; width:3px; z-index:5;
-    background:linear-gradient(180deg, transparent, rgba(197,123,133,.35), transparent);
+  .edge-glow-track{
+    position:absolute; top:8%; bottom:8%; width:4px; z-index:5;
+    border-radius:4px;
+    background:rgba(58,46,43,.08);
     opacity:0;
-    transition:opacity .35s ease;
+    transition:opacity .2s ease;
     pointer-events:none;
-    filter:blur(2px);
+    overflow:hidden;
   }
-  .edge-glow-left{ left:8px; }
-  .edge-glow-right{ right:8px; }
-  .edge-glow.active{
-    opacity:1;
-    animation:edgePulse 1.4s ease-in-out infinite;
+  .edge-glow-left{ left:6px; }
+  .edge-glow-right{ right:6px; }
+  .edge-glow-track.active{ opacity:1; }
+  .edge-glow-fill{
+    position:absolute; left:0; right:0; bottom:0; top:0;
+    border-radius:4px;
+    background:linear-gradient(180deg, var(--rose), var(--rose-deep));
+    transform:scaleY(0);
+    transform-origin:bottom;
+    will-change:transform;
   }
-  @keyframes edgePulse{
-    0%,100%{ opacity:.25; filter:blur(1px); }
-    50%{ opacity:.55; filter:blur(3px); }
+  .edge-zoom-badge{
+    position:absolute; top:50%; transform:translateY(-50%) scale(.7);
+    width:34px; height:34px; border-radius:50%;
+    background:var(--rose-deep); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:700;
+    box-shadow:0 6px 14px -4px rgba(58,46,43,.4);
+    opacity:0; transition:opacity .15s ease, transform .15s ease;
+    pointer-events:none; z-index:6;
+    will-change:transform;
   }
+  .edge-zoom-badge.left{ left:16px; }
+  .edge-zoom-badge.right{ right:16px; }
+  .edge-zoom-badge.active{ opacity:1; transform:translateY(-50%) scale(1); }
   #quoteStrip{
-    flex-shrink:0; padding:8px 20px 12px; text-align:center;
+    flex-shrink:0; padding:8px 20px 28px; text-align:center;
   }
   #quoteText{
     font-family:'Fraunces',serif; font-style:italic; font-size:12.5px;
@@ -1113,7 +1124,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.25 alpha</div>
+    <div class="app-version">v0.27 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1125,7 +1136,7 @@
   </div>
 
   <!-- HOME -->
-  <div class="screen" id="screen-home">
+  <div class="screen active" id="screen-home">
     <div class="home-topstats">
       <div class="world-pct">Открыто <b id="statWorldPct">0%</b> мира</div>
       <div class="sub-stats">
@@ -1143,8 +1154,10 @@
       </div>
       <div class="edge-zoom edge-zoom-left" id="edgeZoomLeft"></div>
       <div class="edge-zoom edge-zoom-right" id="edgeZoomRight"></div>
-      <div class="edge-glow" id="edgeGlowLeft"></div>
-      <div class="edge-glow" id="edgeGlowRight"></div>
+      <div class="edge-glow-track edge-glow-left" id="edgeTrackLeft"><div class="edge-glow-fill" id="edgeFillLeft"></div></div>
+      <div class="edge-glow-track edge-glow-right" id="edgeTrackRight"><div class="edge-glow-fill" id="edgeFillRight"></div></div>
+      <div class="edge-zoom-badge left" id="edgeBadgeLeft"></div>
+      <div class="edge-zoom-badge right" id="edgeBadgeRight"></div>
       <button class="fab" id="fabAdd">+</button>
     </div>
     <div id="quoteStrip"><span id="quoteText"></span></div>
@@ -1212,7 +1225,7 @@
 
   <!-- FRIENDS -->
   <!-- FEED -->
-  <div class="screen active" id="screen-feed" style="padding:10px 14px 0;">
+  <div class="screen" id="screen-feed" style="padding:10px 14px 0;">
     <div id="friendsFeed"><div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div></div>
     <div style="height:20px;"></div>
   </div>
@@ -1374,23 +1387,22 @@
 
   <!-- TUTORIAL (spotlight coachmarks over real screens) -->
   <div id="tutorial" class="hide">
-    <div id="coachHighlight"></div>
-    <div id="coachTip">
-      <div class="coach-card">
-        <div class="coach-step-label" id="coachStepLabel">1 / 8</div>
-        <div class="coach-title" id="coachTitle">Привет!</div>
-        <div class="coach-text" id="coachText">MapLink — твоя личная планета путешествий.</div>
-        <div class="coach-actions">
-          <button class="tut-skip" id="tutSkip">Пропустить</button>
-          <button class="tut-next" id="tutNext">Дальше</button>
-        </div>
+    <div class="tut-scrim"></div>
+    <div class="tut-card">
+      <div class="tut-icon" id="tutIcon"></div>
+      <div class="tut-dots" id="tutDots"></div>
+      <div class="tut-title" id="tutTitle">Привет!</div>
+      <div class="tut-text" id="tutText">MapLink — твоя личная планета путешествий.</div>
+      <div class="tut-actions">
+        <button class="tut-skip" id="tutSkip">Пропустить</button>
+        <button class="tut-next" id="tutNext">Дальше</button>
       </div>
     </div>
   </div>
 
   <!-- NAVBAR -->
   <div class="navbar">
-    <button class="navitem active" data-screen="feed">
+    <button class="navitem" data-screen="feed">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>
       <div class="nlabel">Лента</div>
     </button>
@@ -1398,7 +1410,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>
       <div class="nlabel">Друзья</div>
     </button>
-    <button class="navitem nav-planet" data-screen="home">
+    <button class="navitem nav-planet active" data-screen="home">
       <div class="planet-ring">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>
       </div>
@@ -1840,135 +1852,81 @@
   showQuote();
   setInterval(showQuote, 9000);
 
-  // ---------- tutorial: spotlight tour (updated for feed / rank / grid / privacy) ----------
-  const coachSteps = [
-    { welcome:true, screen:'home', title:'Привет!', text:'MapLink — твоя планета путешествий. Отмечай страны, смотри друзей и собирай коллекцию мест.' },
-    { screen:'home', target:'#globeBox', place:'below', title:'Живая планета', text:'Крути глобус пальцем, щипком приближай. Появятся названия стран и городов.' },
-    { screen:'home', target:'.edge-zoom-right', place:'below', title:'Зум по краю', text:'Проведи пальцем вверх-вниз у самого края экрана (слева или справа) — так тоже можно масштабировать планету.' },
-    { screen:'home', target:'#fabAdd', place:'above', title:'Добавить место', text:'Тапни по названию страны на карте или жми на плюсик: страна, город, до 3 фото, заметка. Можно сразу в вишлист.' },
-    { screen:'feed', target:'#friendsFeed', place:'above', title:'Лента как доска', text:'Поездки друзей приколоты как на пробковой доске: фото, реакции и комментарии. Без фото — компактная карточка.', fallbackTarget:'#screen-feed' },
-    { screen:'friends', target:'#friendSearch', place:'below', title:'Друзья', text:'Ищи по имени в MapLink или скинь личную ссылку — тот, кто откроет, сразу станет другом.' },
-    { screen:'rank', target:'#rankGlobalList', place:'above', title:'Рейтинг', text:'Топ по числу открытых стран (только реальные аккаунты Telegram). Тап по человеку — его travel-journal.', fallbackTarget:'#screen-rank' },
-    { screen:'profile', target:'.profile-toolbar', place:'below', title:'Сетка или список', text:'Переключай вид стены мест и сортируй: по дате, названию или стране.', fallbackTarget:'#myPlacesList' },
-    { screen:'profile', target:'#gearBtn', place:'below-left', title:'Настройки', text:'Тёмная тема, приватный профиль, повтор тура и удаление всех данных.' }
+  // ---------- tutorial: short welcome carousel, no screen-switching, no element targeting ----------
+  const tutSlides = [
+    {
+      screen:'home',
+      title:'Привет!',
+      text:'MapLink — твоя личная планета путешествий. Пробежимся по разделам — это займёт полминуты.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>'
+    },
+    {
+      screen:'home',
+      title:'Планета',
+      text:'Крути глобус пальцем, приближай щипком или у самого края экрана. Тапни по стране на карте или жми «+» — добавишь место с фото и заметкой.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
+    },
+    {
+      screen:'feed',
+      title:'Лента',
+      text:'Здесь поездки друзей — как на пробковой доске: фото, реакции, комментарии. Тапни на фото — увидишь все снимки места.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>'
+    },
+    {
+      screen:'friends',
+      title:'Друзья',
+      text:'Ищи по имени в MapLink или скинь личную ссылку — кто откроет, сразу станет другом.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>'
+    },
+    {
+      screen:'rank',
+      title:'Рейтинг',
+      text:'Топ по числу открытых стран среди друзей и вообще всех в MapLink. Тап по человеку — его travel-journal.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>'
+    },
+    {
+      screen:'profile',
+      title:'Профиль',
+      text:'Твои места — сеткой или списком, с сортировкой. Настройки (тема, приватность, удаление данных) — шестерёнка сверху.',
+      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>'
+    }
   ];
-  let coachIndex = 0;
+  let tutIndex = 0;
 
-  function placeCoachTip(rect, place){
-    const tip = document.getElementById('coachTip');
-    tip.classList.remove('centered');
-    const tipW = 260;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    let left = rect.left + rect.width/2 - tipW/2;
-    left = Math.max(14, Math.min(left, vw - tipW - 14));
-    tip.style.left = left + 'px';
-    tip.style.bottom = '';
-    tip.style.top = '';
-
-    // estimate tip height (render invisibly-positioned first, then measure)
-    tip.style.visibility = 'hidden';
-    tip.style.top = '0px';
-    const tipH = tip.getBoundingClientRect().height;
-    tip.style.visibility = '';
-
-    let wantsAbove = (place === 'above');
-    let top;
-    if(wantsAbove){
-      top = rect.top - 14 - tipH;
-      if(top < 12){ wantsAbove = false; } // not enough room above, flip below
-    }
-    if(!wantsAbove){
-      top = rect.bottom + 14;
-      if(top + tipH > vh - 12){ top = vh - 12 - tipH; } // clamp so it never runs off the bottom
-      if(top < 12){ top = 12; }
-    }
-    tip.style.top = top + 'px';
-  }
-
-  function centerCoachTip(){
-    const tip = document.getElementById('coachTip');
-    tip.classList.add('centered');
-    tip.style.left = ''; tip.style.top = ''; tip.style.bottom = '';
-  }
-
-  async function showCoachStep(i){
-    const s = coachSteps[i];
-    const wasActive = document.getElementById('screen-'+s.screen)?.classList.contains('active');
+  function renderTutSlide(){
+    const s = tutSlides[tutIndex];
     showScreen(s.screen);
-    // only pay the full screen-fade wait when we actually switched screens
-    await new Promise(r=>setTimeout(r, wasActive ? 90 : 380));
-
-    const hi = document.getElementById('coachHighlight');
-
-    if(s.welcome){
-      hi.style.width = '0px';
-      hi.style.height = '0px';
-      hi.style.left = '-9999px';
-      hi.style.boxShadow = '0 0 0 2000px rgba(42,34,31,.68)';
-      centerCoachTip();
-    } else {
-      let target = document.querySelector(s.target);
-      if((!target || target.offsetParent === null || (target.getBoundingClientRect().height < 4)) && s.fallbackTarget){
-        target = document.querySelector(s.fallbackTarget);
-      }
-      if(!target){
-        if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
-        else closeTutorial();
-        return;
-      }
-
-      const rect = target.getBoundingClientRect();
-      hi.style.left = (rect.left - 8) + 'px';
-      hi.style.top = (rect.top - 8) + 'px';
-      hi.style.width = (rect.width + 16) + 'px';
-      hi.style.height = (rect.height + 16) + 'px';
-      hi.style.boxShadow = '0 0 0 2000px rgba(42,34,31,.68)';
-
-      placeCoachTip(rect, s.place);
-    }
-
-    document.getElementById('coachStepLabel').textContent = (i+1) + ' / ' + coachSteps.length;
-    document.getElementById('coachTitle').textContent = s.title;
-    document.getElementById('coachText').textContent = s.text;
-    document.getElementById('tutNext').textContent = i === coachSteps.length-1 ? 'Готово' : 'Дальше';
-
-    const card = document.querySelector('.coach-card');
+    if(s.screen === 'feed') loadFriendsFeed();
+    if(s.screen === 'rank') loadRankings();
+    document.getElementById('tutIcon').innerHTML = s.icon;
+    document.getElementById('tutTitle').textContent = s.title;
+    document.getElementById('tutText').textContent = s.text;
+    document.getElementById('tutNext').textContent = tutIndex === tutSlides.length-1 ? 'Начать' : 'Дальше';
+    document.getElementById('tutDots').innerHTML = tutSlides.map((_,i)=>`<span class="${i===tutIndex?'on':''}"></span>`).join('');
+    const card = document.querySelector('.tut-card');
     card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
-
-    // reveal only now — position is guaranteed correct, no top-left flash on open
-    document.getElementById('tutorial').classList.remove('hide');
   }
 
   function openTutorial(){
-    coachIndex = 0;
-    // do NOT lock the whole app — user must be able to spin the globe / try buttons
-    // only fold leftover UI from a previous step
-    document.getElementById('addModal').classList.add('hide');
-    document.getElementById('editModal').classList.add('hide');
-    document.getElementById('countryBubble').classList.remove('show');
-    showCoachStep(coachIndex);
+    tutIndex = 0;
+    renderTutSlide();
+    document.getElementById('tutorial').classList.remove('hide');
   }
   function closeTutorial(){
     document.getElementById('tutorial').classList.add('hide');
     csSet('tutorial_seen', '1');
+    showScreen('home'); // land back on the planet, not wherever the tour happened to stop
   }
   document.getElementById('tutNext').addEventListener('click', ()=>{
-    // fold any UI the previous step may have opened
-    document.getElementById('addModal').classList.add('hide');
-    document.getElementById('editModal').classList.add('hide');
-    document.getElementById('countryBubble').classList.remove('show');
-    if(coachIndex === coachSteps.length-1){ closeTutorial(); return; }
-    coachIndex++; showCoachStep(coachIndex);
+    if(tutIndex === tutSlides.length-1){ closeTutorial(); return; }
+    tutIndex++; renderTutSlide();
   });
   document.getElementById('tutSkip').addEventListener('click', closeTutorial);
   document.getElementById('replayTutorialBtn').addEventListener('click', openTutorial);
-  window.addEventListener('resize', ()=>{
-    if(!document.getElementById('tutorial').classList.contains('hide')) showCoachStep(coachIndex);
-  });
 
   csGet('tutorial_seen').then(seen=>{
     if(seen !== '1'){
-      setTimeout(openTutorial, 2000); // после сплэша
+      setTimeout(openTutorial, 1600); // после сплэша
     }
   });
 
@@ -2409,11 +2367,14 @@
     zoom: 1.1
   });
 
-  // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom, soft glow feedback ----------
+  // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom ----------
+  const EDGE_ZOOM_MIN = 0.6, EDGE_ZOOM_MAX = 18;
 
   function setupEdgeZoom(elId, side){
     const el = document.getElementById(elId);
-    const glow = document.getElementById(side === 'left' ? 'edgeGlowLeft' : 'edgeGlowRight');
+    const track = document.getElementById(side === 'left' ? 'edgeTrackLeft' : 'edgeTrackRight');
+    const fill = document.getElementById(side === 'left' ? 'edgeFillLeft' : 'edgeFillRight');
+    const badge = document.getElementById(side === 'left' ? 'edgeBadgeLeft' : 'edgeBadgeRight');
     let dragging = false;
     let startY = 0;
     let startZoom = 0;
@@ -2422,30 +2383,38 @@
 
     function point(e){ return e.touches ? e.touches[0] : e; }
 
-    function flush(){
+    function paint(){
       raf = null;
-      if(dragging && pendingZoom !== null) map.setZoom(pendingZoom);
+      if(!dragging || pendingZoom === null) return;
+      map.setZoom(pendingZoom);
+      const frac = Math.max(0, Math.min(1, (pendingZoom - EDGE_ZOOM_MIN) / (EDGE_ZOOM_MAX - EDGE_ZOOM_MIN)));
+      fill.style.transform = 'scaleY(' + frac + ')';
+      badge.textContent = Math.round(frac * 100) + '%';
     }
 
     function onStart(e){
       dragging = true;
       startY = point(e).clientY;
       startZoom = map.getZoom();
-      if(glow) glow.classList.add('active');
+      if(track) track.classList.add('active');
+      if(badge) badge.classList.add('active');
+      pendingZoom = startZoom;
+      paint(); // instant initial fill, no first-frame delay
       if(e.cancelable) e.preventDefault();
     }
     function onMove(e){
       if(!dragging) return;
       const dy = startY - point(e).clientY; // dragging up = zoom in
-      pendingZoom = Math.max(0.6, Math.min(18, startZoom + dy * 0.018));
-      if(!raf) raf = requestAnimationFrame(flush);
+      pendingZoom = Math.max(EDGE_ZOOM_MIN, Math.min(EDGE_ZOOM_MAX, startZoom + dy * 0.018));
+      if(!raf) raf = requestAnimationFrame(paint);
       if(e.cancelable) e.preventDefault();
     }
     function onEnd(){
       dragging = false;
       pendingZoom = null;
       if(raf){ cancelAnimationFrame(raf); raf = null; }
-      if(glow) glow.classList.remove('active');
+      if(track) track.classList.remove('active');
+      if(badge) badge.classList.remove('active');
     }
 
     el.addEventListener('touchstart', onStart, { passive:false });
@@ -3305,6 +3274,7 @@
     if(flagBadgeCache[key] !== undefined) return flagBadgeCache[key];
     let url = flagUrlForCountry(countryName);
     if(!url) url = await flagViaRestCountriesApi(countryName);
+    if(!url) url = generatePlaceholderPattern(countryName); // guaranteed, never blank
     flagBadgeCache[key] = url;
     return url;
   }
