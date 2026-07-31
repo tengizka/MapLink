@@ -124,7 +124,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
-    /* NO transform here — transforms blur text in iOS Telegram WebView */
   }
   .wobble-line.fonts-ready{
     opacity:1;
@@ -134,29 +133,19 @@
     0%,100%{ color: var(--rose-deep); }
     50%{ color:#B9707C; }
   }
-  .wobble-line .wline{
-    display:inline-block;
-    animation: lineFloat 1.15s ease-in-out infinite;
+  .wobble-line span{
+    display: inline-block;
+    animation: wobble 1.4s ease-in-out infinite;
     will-change: transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
   }
-  @keyframes lineFloat{
-    0%, 100%{ transform: translateY(0) translateZ(0); }
-    50%{ transform: translateY(-7px) translateZ(0); }
-  }
-  .wobble-line span{ display: inline; }
-  /* desktop: per-letter hop (fine pointer only) */
-  @media (hover: hover) and (pointer: fine){
-    .wobble-line.fonts-ready{ animation: none; }
-    .wobble-line span{
-      display: inline-block;
-      animation: wobble 1.35s ease-in-out infinite;
-    }
-    @keyframes wobble{
-      0%, 100%{ transform: translateY(0); }
-      50%{ transform: translateY(-3px); }
-    }
+  @keyframes wobble{
+    0%{ transform: translateY(0) rotate(0deg) translateZ(0); }
+    25%{ transform: translateY(-5px) rotate(-5deg) translateZ(0); }
+    50%{ transform: translateY(0) rotate(0deg) translateZ(0); }
+    75%{ transform: translateY(4px) rotate(5deg) translateZ(0); }
+    100%{ transform: translateY(0) rotate(0deg) translateZ(0); }
   }
   .sign{
     position:absolute; bottom:8%;
@@ -667,8 +656,6 @@
   }
 
   /* ---------------- FEED / RANK ---------------- */
-  .rank-row{ cursor:pointer; }
-  .rank-row:active{ transform:scale(.985); }
   #fvAddFriendWrap{ text-align:center; margin:8px 0 14px; }
   .feed-card{
     background:var(--card); border-radius:18px; padding:12px;
@@ -1124,7 +1111,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.27 alpha</div>
+    <div class="app-version">v0.29 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1430,33 +1417,17 @@
 <script>
 (function(){
   // ---------- wobble text build ----------
-  // iOS/Telegram: plain text (cursive ligatures stay connected + no blur).
-  // Desktop: per-letter spans for hop animation.
   const text = "Specially for\nLinqerin";
   const wobbleEl = document.getElementById('wobbleText');
-  const isFinePointer = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-  if(isFinePointer){
-    let delay = 0;
-    text.split('').forEach(ch=>{
-      if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); return; }
-      const span = document.createElement('span');
-      span.textContent = ch === ' ' ? '\u00A0' : ch;
-      span.style.animationDelay = (delay * 0.04) + 's';
-      wobbleEl.appendChild(span);
-      delay++;
-    });
-  } else {
-    // keep each line as one continuous text node so Caveat connects letters properly on iPhone,
-    // but wrap lines individually so they can float with a slight phase offset (wave, not flat bob)
-    text.split('\n').forEach((line, i)=>{
-      if(i) wobbleEl.appendChild(document.createElement('br'));
-      const lineEl = document.createElement('span');
-      lineEl.className = 'wline';
-      lineEl.style.animationDelay = (i * 0.3) + 's';
-      lineEl.textContent = line;
-      wobbleEl.appendChild(lineEl);
-    });
-  }
+  let delay = 0;
+  text.split('').forEach(ch=>{
+    if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); return; }
+    const span = document.createElement('span');
+    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.style.animationDelay = (delay * 0.04) + 's';
+    wobbleEl.appendChild(span);
+    delay++;
+  });
 
   // show splash text only after Caveat is fully ready (extra frame on iOS avoids soft glyphs)
   function revealSplashFonts(){
