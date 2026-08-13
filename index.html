@@ -124,17 +124,18 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  /* soft letter fade-in only (no transform — iOS WebView blurs Caveat on transform) */
+  /* soft wave: opacity only (no transform — iOS blurs Caveat) */
   .wobble-line span{
     display: inline-block;
     opacity: 0;
-    animation: letterIn .7s ease forwards;
+    animation: letterWave 1.05s cubic-bezier(.22,.61,.36,1) forwards;
   }
-  @keyframes letterIn{
+  @keyframes letterWave{
     0%{ opacity: 0; }
+    35%{ opacity: .35; }
+    70%{ opacity: 1; }
     100%{ opacity: 1; }
   }
-  .wobble-line.fonts-ready span{ /* delays set inline */ }
   .sign{
     position:absolute; bottom:8%;
     font-family:'Caveat',cursive;
@@ -1173,6 +1174,52 @@
     font-size:13px;
     padding:3px 10px;
   }
+
+
+  .swipe-row{
+    position:relative;
+    overflow:hidden;
+    border-radius:18px;
+    margin-bottom:10px;
+  }
+  .swipe-actions{
+    position:absolute; right:0; top:0; bottom:0;
+    display:flex; align-items:stretch;
+    z-index:0;
+  }
+  .swipe-actions button{
+    border:none; padding:0 16px; font-size:12px; font-weight:700;
+    font-family:inherit; color:#fff;
+  }
+  .swipe-actions .sw-edit{ background:var(--sage-deep); }
+  .swipe-actions .sw-del{ background:var(--rose-deep); }
+  .swipe-content{
+    position:relative; z-index:1;
+    transition:transform .22s cubic-bezier(.22,1,.36,1);
+    background:transparent;
+  }
+  .ux-hint{
+    position:absolute; z-index:12;
+    background:var(--card); color:var(--ink);
+    font-size:12px; line-height:1.35;
+    padding:10px 12px; border-radius:14px;
+    box-shadow:0 10px 24px -8px rgba(58,46,43,.35);
+    max-width:180px;
+    animation:hintIn .35s cubic-bezier(.22,1,.36,1);
+    pointer-events:auto;
+  }
+  .ux-hint::after{
+    content:''; position:absolute; width:10px; height:10px;
+    background:var(--card); transform:rotate(45deg);
+  }
+  .ux-hint.hint-fab{ right:18px; bottom:78px; }
+  .ux-hint.hint-fab::after{ right:18px; bottom:-4px; }
+  .ux-hint.hint-filter{ left:56px; top:18px; }
+  .ux-hint.hint-filter::after{ left:-4px; top:14px; }
+  @keyframes hintIn{
+    from{ opacity:0; transform:translateY(6px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
   .filter-fab-wrap{
     position:absolute; top:12px; left:12px; z-index:8;
     display:flex; flex-direction:column; align-items:flex-start; gap:8px;
@@ -1567,7 +1614,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.43 alpha</div>
+    <div class="app-version">v0.44 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1997,7 +2044,7 @@
     if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); delay += 2; return; }
     const span = document.createElement('span');
     span.textContent = ch === ' ' ? '\u00A0' : ch;
-    span.style.animationDelay = (0.12 + delay * 0.055) + 's';
+    span.style.animationDelay = (0.08 + delay * 0.072) + 's';
     wobbleEl.appendChild(span);
     delay++;
   });
@@ -2024,6 +2071,8 @@
 
   setTimeout(()=>{
     document.getElementById('splash').classList.add('hide');
+    window.__screenReady = true;
+    try{ showUxHints(); }catch(e){}
   }, 2800);
 
 
@@ -2036,6 +2085,17 @@
       return _ac;
     }catch(e){ return null; }
   }
+
+  function haptic(kind){
+    try{
+      if(!tg || !tg.HapticFeedback) return;
+      if(kind === 'success') tg.HapticFeedback.notificationOccurred('success');
+      else if(kind === 'error') tg.HapticFeedback.notificationOccurred('error');
+      else if(kind === 'medium') tg.HapticFeedback.impactOccurred('medium');
+      else tg.HapticFeedback.impactOccurred('light');
+    }catch(e){}
+  }
+
   function sfx(type){
     const ac = getAC();
     if(!ac) return;
@@ -2065,6 +2125,7 @@
 
   // ---------- tab switching ----------
   function showScreen(name){
+    try{ if(window.__screenReady) sfx('whoosh'); }catch(e){}
     const target = document.getElementById('screen-'+name);
     if(!target) return;
     if(target.classList.contains('active') && !target.classList.contains('leaving')) return;
@@ -2103,7 +2164,7 @@
   }
   document.querySelectorAll('.navitem').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      try{sfx('soft')}catch(e){}
+      try{sfx('soft')}catch(e){} try{haptic('light')}catch(e){}
       const name = btn.dataset.screen;
       showScreen(name);
       if(name === 'feed') loadFriendsFeed();
@@ -3144,9 +3205,11 @@
         el.className = 'pin-dot';
         el.style.cssText = 'transform:scale(.65);transform-origin:bottom center;';
         el.innerHTML = '<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>';
+        el.style.opacity = '0';
         const mk = new maplibregl.Marker({ element: el, anchor: 'bottom' })
-          .setLngLat([p.lon, p.lat])
+          .setLngLat([Number(p.lon), Number(p.lat)])
           .addTo(fvMiniMap);
+        requestAnimationFrame(()=>{ el.style.transition='opacity .2s ease'; el.style.opacity='1'; });
         fvMiniMarkers.push(mk);
         bounds.extend([p.lon, p.lat]);
       });
@@ -3715,6 +3778,51 @@
   });
 
 
+
+  // easter egg: 5 taps on title → confetti
+  (function(){
+    let logoTapCount = 0, logoTapTimer = null;
+    const title = document.getElementById('topTitle');
+    if(!title) return;
+    title.style.cursor = 'pointer';
+    title.addEventListener('click', ()=>{
+      logoTapCount++;
+      clearTimeout(logoTapTimer);
+      logoTapTimer = setTimeout(()=> logoTapCount = 0, 1200);
+      if(logoTapCount >= 5){
+        logoTapCount = 0;
+        const r = title.getBoundingClientRect();
+        try{ fireConfetti(r.left + r.width/2, r.top + r.height/2); }catch(e){}
+        try{ sfx('success'); }catch(e){}
+        try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success'); }catch(e){}
+      }
+    });
+  })();
+
+
+  function showUxHints(){
+    csGet('ux_hints_seen').then(seen=>{
+      if(seen === '1') return;
+      const box = document.getElementById('globeBox');
+      if(!box) return;
+      const h1 = document.createElement('div');
+      h1.className = 'ux-hint hint-fab';
+      h1.textContent = 'Добавить место — сюда';
+      const h2 = document.createElement('div');
+      h2.className = 'ux-hint hint-filter';
+      h2.textContent = 'Фильтр поездок и мечт';
+      box.appendChild(h1);
+      box.appendChild(h2);
+      const dismiss = ()=>{
+        h1.remove(); h2.remove();
+        csSet('ux_hints_seen', '1');
+        document.removeEventListener('click', dismiss);
+      };
+      setTimeout(()=> document.addEventListener('click', dismiss), 400);
+      setTimeout(dismiss, 6000);
+    });
+  }
+
   document.getElementById('fabAdd').addEventListener('click', ()=>{ try{sfx('tap')}catch(e){} openAddModal(); });
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
 
@@ -3922,28 +4030,44 @@
     try{
       const cityName = selectedCity ? selectedCity.name : null;
 
-      // strict uniqueness: same user + same country + same city (or both null city)
-      let dupQuery = supabase.from('places').select('id').eq('user_id', myUserId).eq('country', selectedCountry.name);
+      // same country+city → "был ещё раз": update date/note on the same pin (no second pin)
+      let dupQuery = supabase.from('places').select('id,is_wishlist').eq('user_id', myUserId).eq('country', selectedCountry.name);
       dupQuery = cityName ? dupQuery.eq('city', cityName) : dupQuery.is('city', null);
       const { data: existing } = await dupQuery.limit(1);
+
+      const visitDate = document.getElementById('addDate').value || null;
+      const noteVal = document.getElementById('addNote').value.trim() || null;
+      const wishVal = document.getElementById('addWishlist').checked;
+      const latVal = selectedCity ? selectedCity.lat : selectedCountry.lat;
+      const lonVal = selectedCity ? selectedCity.lon : selectedCountry.lon;
+
+      let newPlace = null;
       if(existing && existing.length){
-        alert('Это место уже есть в твоём списке — дубликаты запрещены');
-        return;
+        const upd = {
+          visit_date: visitDate,
+          note: noteVal,
+          is_wishlist: wishVal,
+          lat: latVal,
+          lon: lonVal
+        };
+        const { data: updated, error } = await supabase.from('places').update(upd).eq('id', existing[0].id).eq('user_id', myUserId).select().single();
+        if(error){ alert('Не получилось обновить: '+error.message); return; }
+        newPlace = updated;
+      } else {
+        const place = {
+          user_id: myUserId,
+          country: selectedCountry.name,
+          city: cityName,
+          visit_date: visitDate,
+          note: noteVal,
+          is_wishlist: wishVal,
+          lat: latVal,
+          lon: lonVal
+        };
+        const { data: inserted, error } = await supabase.from('places').insert(place).select().single();
+        if(error){ alert('Не получилось сохранить: '+error.message); return; }
+        newPlace = inserted;
       }
-
-      const place = {
-        user_id: myUserId,
-        country: selectedCountry.name,
-        city: cityName,
-        visit_date: document.getElementById('addDate').value || null,
-        note: document.getElementById('addNote').value.trim() || null,
-        is_wishlist: document.getElementById('addWishlist').checked,
-        lat: selectedCity ? selectedCity.lat : selectedCountry.lat,
-        lon: selectedCity ? selectedCity.lon : selectedCountry.lon
-      };
-
-      const { data: newPlace, error } = await supabase.from('places').insert(place).select().single();
-      if(error){ alert('Не получилось сохранить: '+error.message); return; }
 
       const rawPhotos = Array.from(document.getElementById('addPhoto').files || []).slice(0, 3);
       if(newPlace && rawPhotos.length){
@@ -3965,7 +4089,7 @@
         const r = fab.getBoundingClientRect();
         fireConfetti(r.left + r.width/2, r.top + r.height/2);
       }
-      try{ sfx('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
+      try{ sfx('success'); haptic('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
       closeAddModal();
       loadPlaces();
     } finally {
@@ -4089,11 +4213,38 @@
     trailAnimRaf = requestAnimationFrame(frame);
   }
 
+
+  function cachePlacesLocal(places){
+    try{
+      const slim = (places || []).map(p => ({
+        id: p.id, country: p.country, city: p.city, lat: p.lat, lon: p.lon,
+        is_wishlist: p.is_wishlist, visit_date: p.visit_date, note: p.note
+      }));
+      localStorage.setItem('ml_places_cache', JSON.stringify({ t: Date.now(), places: slim }));
+    }catch(e){}
+  }
+  function readPlacesCache(){
+    try{
+      const raw = JSON.parse(localStorage.getItem('ml_places_cache') || 'null');
+      if(!raw || !raw.places) return null;
+      return raw.places;
+    }catch(e){ return null; }
+  }
+
   async function loadPlaces(){
     if(!myUserId) return;
-    const { data } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
-    const places = data || [];
+    let places = [];
+    try{
+      const { data, error } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
+      if(error) throw error;
+      places = data || [];
+    }catch(e){
+      const cached = readPlacesCache();
+      if(cached && cached.length){ places = cached; }
+      else { places = allPlacesCache || []; }
+    }
     allPlacesCache = places;
+    try{ cachePlacesLocal(places); }catch(e){}
 
     // fetch photos for all these places in one batch
     const ids = places.map(p=>p.id);
@@ -4118,9 +4269,19 @@
       el.innerHTML = p.is_wishlist
         ? `<svg viewBox="0 0 26 34" fill="none"><path d="M13 1.5C6.3 1.5 1.5 6.7 1.5 13c0 8.8 11.5 18.7 11.5 18.7s11.5-9.9 11.5-18.7C24.5 6.7 19.7 1.5 13 1.5z" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3.2 3.2"/><path d="M13 18.2s-4.3-2.7-4.3-5.7c0-1.6 1.3-2.8 2.8-2.8 1 0 2 .6 2.5 1.5.5-.9 1.4-1.5 2.5-1.5 1.5 0 2.8 1.2 2.8 2.8 0 3-4.3 5.7-4.3 5.7z" fill="var(--rose)" opacity=".6"/></svg>`
         : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
+      el.style.opacity = '0';
+      el.style.pointerEvents = 'none';
       const marker = new maplibregl.Marker({element: el, anchor: 'bottom'})
-        .setLngLat([p.lon, p.lat])
+        .setLngLat([Number(p.lon), Number(p.lat)])
         .addTo(map);
+      // wait until MapLibre projects the pin — avoids the "sticks to edge then jumps" glitch
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          el.style.transition = 'opacity .22s ease';
+          el.style.opacity = '1';
+          el.style.pointerEvents = '';
+        });
+      });
 
       const photos = photosByPlace[p.id] || [];
       const photoHtml = photos.length ? `<img src="${photos[0]}" style="width:100%;height:90px;object-fit:cover;border-radius:10px;margin-bottom:8px;">` : '';
@@ -4204,6 +4365,8 @@
     } else {
       document.getElementById('myPlacesList').innerHTML = renderPlaceCards(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
       document.getElementById('myWishlistList').innerHTML = renderPlaceCards(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+      try{ bindSwipeRows(document.getElementById('myPlacesList')); }catch(e){}
+      try{ bindSwipeRows(document.getElementById('myWishlistList')); }catch(e){}
     }
   }
   document.getElementById('viewListBtn').addEventListener('click', ()=>{
@@ -4801,6 +4964,70 @@
     return '';
   }
 
+
+  function bindSwipeRows(root){
+    if(!root) return;
+    root.querySelectorAll('.journal-ticket[data-swipe-id]').forEach(card=>{
+      if(card.dataset.swipeBound) return;
+      card.dataset.swipeBound = '1';
+      const id = card.dataset.swipeId;
+      const wrap = document.createElement('div');
+      wrap.className = 'swipe-row';
+      card.parentNode.insertBefore(wrap, card);
+      const actions = document.createElement('div');
+      actions.className = 'swipe-actions';
+      actions.innerHTML = `<button type="button" class="sw-edit">Ещё раз</button><button type="button" class="sw-del">Удалить</button>`;
+      wrap.appendChild(actions);
+      const content = document.createElement('div');
+      content.className = 'swipe-content';
+      wrap.appendChild(content);
+      content.appendChild(card);
+      let x0 = 0, dx = 0, dragging = false;
+      const max = -120;
+      const onStart = (e)=>{
+        dragging = true; dx = 0;
+        x0 = e.touches ? e.touches[0].clientX : e.clientX;
+      };
+      const onMove = (e)=>{
+        if(!dragging) return;
+        const x = e.touches ? e.touches[0].clientX : e.clientX;
+        dx = Math.min(0, Math.max(max, x - x0));
+        content.style.transition = 'none';
+        content.style.transform = `translateX(${dx}px)`;
+      };
+      const onEnd = ()=>{
+        if(!dragging) return;
+        dragging = false;
+        content.style.transition = '';
+        const open = dx < -56;
+        content.style.transform = open ? `translateX(${max}px)` : 'translateX(0)';
+      };
+      content.addEventListener('touchstart', onStart, {passive:true});
+      content.addEventListener('touchmove', onMove, {passive:true});
+      content.addEventListener('touchend', onEnd);
+      actions.querySelector('.sw-del').addEventListener('click', ()=>{
+        if(confirm('Удалить это место?')) window.__deletePlace(id);
+      });
+      actions.querySelector('.sw-edit').addEventListener('click', ()=>{
+        const p = (allPlacesCache || []).find(x=>x.id===id);
+        if(!p) return;
+        content.style.transform = 'translateX(0)';
+        openAddModal({
+          country: p.country,
+          city: p.city || '',
+          selectedCountry: { name: p.country, code:'', lat:p.lat, lon:p.lon },
+          selectedCity: p.city ? { name:p.city, lat:p.lat, lon:p.lon } : null
+        });
+        if(p.note) document.getElementById('addNote').value = p.note;
+        if(p.visit_date){
+          document.getElementById('dateWrap').classList.add('open');
+          document.getElementById('addDate').value = p.visit_date;
+        }
+        document.getElementById('addWishlist').checked = !!p.is_wishlist;
+      });
+    });
+  }
+
   function renderPlaceCards(list, photosByPlace, emptyText, clickable){
     if(!list.length){
       return `<div class="ig-empty">${emptyText}</div>`;
@@ -4810,7 +5037,7 @@
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
       const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
-      return `<div class="journal-ticket" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
+      return `<div class="journal-ticket" data-swipe-id="${p.id}" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
         <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="jt-body">
           <div class="jt-eyebrow">MAPLINK · BOARDING PASS</div>
@@ -5047,17 +5274,26 @@
   }
 
   
-  window.__saveToWishlist = async function(placeId){
+    window.__saveToWishlist = async function(placeId){
     if(!myUserId) return;
     const p = (window.__feedPlacesCache || []).find(x => x.id === placeId);
     if(!p){ alert('Место не найдено'); return; }
+    const btn = document.querySelector('.wish-save-btn[data-pid="'+placeId+'"]');
     try{
-      // avoid exact dup wishlist
       let q = supabase.from('places').select('id').eq('user_id', myUserId).eq('country', p.country).eq('is_wishlist', true);
       q = p.city ? q.eq('city', p.city) : q.is('city', null);
       const { data: existing } = await q.limit(1);
+      // toggle OFF — undo
       if(existing && existing.length){
-        if(tg && tg.showAlert) tg.showAlert('Уже есть в вишлисте'); else alert('Уже есть в вишлисте');
+        const { error } = await supabase.from('places').delete().eq('id', existing[0].id).eq('user_id', myUserId);
+        if(error){ alert('Не удалось убрать: ' + error.message); return; }
+        if(btn){
+          btn.classList.remove('done');
+          btn.innerHTML = (btn.dataset.icon || '') + ' хочу туда';
+        }
+        try{ sfx('soft'); }catch(e){}
+        try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(e){}
+        loadPlaces();
         return;
       }
       const { error } = await supabase.from('places').insert({
@@ -5071,14 +5307,22 @@
         visit_date: null
       });
       if(error){ alert('Не удалось: ' + error.message); return; }
-      const btn = document.querySelector('.wish-save-btn[data-pid="'+placeId+'"]');
-      if(btn){ btn.classList.add('done'); btn.innerHTML = btn.innerHTML.replace(/В вишлист|хочу туда/i, 'в вишлисте'); }
-      if(tg && tg.showAlert) tg.showAlert('Добавлено в вишлист'); else alert('Добавлено в вишлист');
+      if(btn){
+        if(!btn.dataset.icon){
+          const svg = btn.querySelector('svg');
+          btn.dataset.icon = svg ? svg.outerHTML : '';
+        }
+        btn.classList.add('done');
+        btn.innerHTML = (btn.dataset.icon || '') + ' в вишлисте · убрать';
+      }
+      try{ sfx('select'); }catch(e){}
+      try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); }catch(e){}
       loadPlaces();
     }catch(e){
       alert('Ошибка');
     }
   };
+
 
   window.__toggleReact = async function(placeId, emoji){
     if(!myUserId) return;
