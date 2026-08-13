@@ -812,7 +812,8 @@
   }
 
   /* ---------------- TUTORIAL: spotlight coachmarks ---------------- */
-  /* interactive coachmark tour — points at the real button, touches pass through everywhere except the small card */
+  /* Interactive coachmarks. Overlay is pointer-events:none so globe/UI stay usable;
+     only the tip card captures taps. */
   #tutorial{
     position:fixed; inset:0; z-index:90;
     pointer-events:none;
@@ -820,95 +821,105 @@
   #tutorial.hide{ display:none; }
   .coach-dim{
     position:fixed; inset:0;
-    background:rgba(42,34,31,.25);
+    background:rgba(42,34,31,.22);
     pointer-events:none;
+    transition:opacity .25s ease;
   }
   #coachRing{
     position:fixed; z-index:91;
     border:2.5px solid var(--rose);
-    border-radius:16px;
-    box-shadow:0 0 0 6px rgba(197,123,133,.22), 0 0 22px rgba(197,123,133,.32);
+    border-radius:18px;
+    box-shadow:0 0 0 5px rgba(197,123,133,.2), 0 0 20px rgba(197,123,133,.28);
     pointer-events:none;
-    transition:opacity .15s ease;
+    opacity:0;
+    transition:opacity .22s ease, left .28s cubic-bezier(.22,1,.36,1), top .28s cubic-bezier(.22,1,.36,1),
+               width .28s cubic-bezier(.22,1,.36,1), height .28s cubic-bezier(.22,1,.36,1), border-radius .28s ease;
+    will-change: left, top, width, height;
   }
-  #coachRing.hide-ring{ opacity:0; }
+  #coachRing.show-ring{ opacity:1; }
+  #coachRing.round{ border-radius:50%; }
   #coachRing::after{
-    content:''; position:absolute; inset:-6px; border-radius:inherit;
-    border:2px solid rgba(197,123,133,.55);
-    animation:coachPulse 1.5s ease-out infinite;
+    content:''; position:absolute; inset:-7px; border-radius:inherit;
+    border:2px solid rgba(197,123,133,.5);
+    animation:coachPulse 1.6s ease-out infinite;
   }
   @keyframes coachPulse{
-    0%{ transform:scale(1); opacity:.85; }
-    100%{ transform:scale(1.18); opacity:0; }
+    0%{ transform:scale(1); opacity:.8; }
+    100%{ transform:scale(1.2); opacity:0; }
   }
   #coachTip{
-    position:fixed; z-index:92; width:270px;
+    position:fixed; z-index:92; width:min(290px, calc(100vw - 28px));
     pointer-events:auto;
+    transition:opacity .2s ease;
   }
-  #coachTip.centered{ left:50% !important; top:50% !important; transform:translate(-50%,-50%); }
+  #coachTip.centered{
+    left:50% !important; top:50% !important;
+    transform:translate(-50%,-50%);
+  }
   .coach-card{
     position:relative;
-    background:var(--card); border-radius:24px;
-    padding:20px 20px 16px;
+    background:var(--card); border-radius:22px;
+    padding:18px 18px 14px;
     text-align:center;
-    box-shadow:0 18px 38px -10px rgba(0,0,0,.4);
-    animation:coachPop .3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow:0 16px 36px -10px rgba(0,0,0,.38);
+    animation:coachPop .32s cubic-bezier(.34,1.56,.64,1);
   }
   @keyframes coachPop{
-    0%{ transform:scale(.88); opacity:0; }
+    0%{ transform:scale(.9); opacity:0; }
     100%{ transform:scale(1); opacity:1; }
   }
   .coach-card::before{
-    content:''; position:absolute; width:14px; height:14px;
+    content:''; position:absolute; width:12px; height:12px;
     background:var(--card); transform:rotate(45deg);
-    display:none;
+    display:none; pointer-events:none;
   }
-  .coach-card.arrow-top::before{ display:block; top:-6px; left:50%; margin-left:-7px; }
-  .coach-card.arrow-bottom::before{ display:block; bottom:-6px; left:50%; margin-left:-7px; }
+  .coach-card.arrow-top::before{ display:block; top:-5px; left:50%; margin-left:-6px; }
+  .coach-card.arrow-bottom::before{ display:block; bottom:-5px; left:50%; margin-left:-6px; }
   .coach-icon-wrap{
-    width:56px; height:56px; margin:0 auto 10px;
-    box-shadow:0 12px 24px -10px rgba(197,123,133,.6), 0 0 0 5px rgba(255,255,255,.6);
-    animation:tutIconPop .4s cubic-bezier(.34,1.56,.64,1);
+    width:52px; height:52px; margin:0 auto 8px;
+    box-shadow:0 10px 22px -8px rgba(197,123,133,.55), 0 0 0 4px rgba(255,255,255,.55);
+    animation:tutIconPop .38s cubic-bezier(.34,1.56,.64,1);
   }
   @keyframes tutIconPop{
-    0%{ transform:scale(.5) rotate(-14deg); opacity:0; }
+    0%{ transform:scale(.45) rotate(-12deg); opacity:0; }
     100%{ transform:scale(1) rotate(0deg); opacity:1; }
   }
-  .coach-icon-wrap svg{ width:26px; height:26px; }
+  .coach-icon-wrap svg{ width:24px; height:24px; }
   .tut-icon-wrap{
     border-radius:50%;
     background:linear-gradient(150deg, var(--rose), var(--rose-deep));
     display:flex; align-items:center; justify-content:center;
     color:#fff;
   }
-  .tut-dots{ display:flex; justify-content:center; gap:5px; margin-bottom:8px; }
+  .tut-dots{ display:flex; justify-content:center; gap:5px; margin-bottom:6px; }
   .tut-dots span{
     width:5px; height:5px; border-radius:50%; background:var(--blush);
     transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .25s ease, width .25s ease;
   }
-  .tut-dots span.on{ background:var(--rose); width:16px; border-radius:3px; }
+  .tut-dots span.on{ background:var(--rose); width:15px; border-radius:3px; }
   .tut-title{
-    font-family:'Fraunces',serif; font-style:italic; font-size:18px; margin-bottom:5px;
-    animation:tutTextUp .35s .05s cubic-bezier(.22,1,.36,1) both;
+    font-family:'Fraunces',serif; font-style:italic; font-size:17px; margin-bottom:4px;
+    animation:tutTextUp .32s .04s cubic-bezier(.22,1,.36,1) both;
   }
   .tut-text{
-    font-size:12.5px; color:var(--muted); line-height:1.48; margin-bottom:14px;
-    animation:tutTextUp .35s .1s cubic-bezier(.22,1,.36,1) both;
+    font-size:12.5px; color:var(--muted); line-height:1.5; margin-bottom:12px;
+    animation:tutTextUp .32s .08s cubic-bezier(.22,1,.36,1) both;
   }
   @keyframes tutTextUp{
-    0%{ opacity:0; transform:translateY(8px); }
+    0%{ opacity:0; transform:translateY(6px); }
     100%{ opacity:1; transform:translateY(0); }
   }
-  .coach-actions{ display:flex; align-items:center; justify-content:space-between; }
+  .coach-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
   .tut-next{
     background:linear-gradient(135deg, var(--rose), var(--rose-deep)); color:#fff; border:none;
-    padding:10px 22px; border-radius:18px; font-size:12.5px; font-weight:700; font-family:inherit;
-    box-shadow:0 10px 20px -8px rgba(197,123,133,.55);
+    padding:10px 20px; border-radius:16px; font-size:12.5px; font-weight:700; font-family:inherit;
+    box-shadow:0 8px 18px -6px rgba(197,123,133,.5);
     transition:transform .12s ease;
   }
   .tut-next:active{ transform:scale(.94); }
   .tut-skip{
     background:none; border:none; color:var(--muted); font-size:11.5px; font-family:inherit;
+    padding:8px 4px;
   }
 
   /* ---------------- GLOBE ---------------- */
@@ -1162,7 +1173,7 @@
     <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.34 alpha</div>
+    <div class="app-version">v0.35 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -1423,7 +1434,7 @@
     </div>
   </div>
 
-  <!-- TUTORIAL: bottom sheet, walks through each real section -->
+  <!-- TUTORIAL: interactive coachmarks on real UI (home + navbar) -->
   <div id="tutorial" class="hide">
     <div class="coach-dim"></div>
     <div id="coachRing"></div>
@@ -1879,168 +1890,276 @@
   showQuote();
   setInterval(showQuote, 9000);
 
-  // ---------- tutorial: short welcome carousel, no screen-switching, no element targeting ----------
+  // ---------- tutorial: interactive coachmarks, mostly on home, highlight real UI ----------
+  // Stays on home for globe/FAB; highlights navbar items in place (no disruptive screen hops).
   const coachSteps = [
     {
-      welcome:true, screen:'home',
-      title:'Привет!',
-      text:'MapLink — твоя планета путешествий. Можешь трогать всё прямо во время тура — крути глобус, жми кнопки.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>'
+      welcome: true,
+      title: 'Привет!',
+      text: 'MapLink — твоя планета путешествий. Можно крутить глобус и нажимать кнопки прямо во время тура.',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>'
     },
     {
-      screen:'home', target:'#globeBox', place:'below',
-      title:'Твоя планета',
-      text:'Крути пальцем, приближай щипком. Появятся названия стран и городов — попробуй прямо сейчас.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
+      target: '#globeBox',
+      place: 'below',
+      pad: 4,
+      title: 'Твоя планета',
+      text: 'Крути пальцем, приближай щипком или свайпом по краю экрана. Тапни по стране или городу — появится кнопка «Добавить».',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
     },
     {
-      screen:'home', target:'#fabAdd', place:'above',
-      title:'Добавить место',
-      text:'Тапни сюда или прямо по названию страны на карте — страна и город, до 3 фото, заметка.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>'
+      target: '#fabAdd',
+      place: 'above',
+      round: true,
+      pad: 8,
+      title: 'Добавить место',
+      text: 'Плюс или тап по названию на карте. Страна, город, до 3 фото, заметка и «место мечты».',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>'
     },
     {
-      screen:'feed', target:'#friendsFeed', place:'above', fallbackTarget:'#screen-feed',
-      title:'Лента как доска',
-      text:'Поездки друзей — как на пробковой доске: фото, реакции, комментарии.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>'
+      target: '.navitem[data-screen="feed"]',
+      place: 'above',
+      pad: 6,
+      title: 'Лента',
+      text: 'Поездки друзей — как на пробковой доске: фото, реакции и комментарии.',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>'
     },
     {
-      screen:'friends', target:'#friendSearch', place:'below',
-      title:'Друзья',
-      text:'Ищи по имени в MapLink или скинь личную ссылку — кто откроет, сразу станет другом.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>'
+      target: '.navitem[data-screen="friends"]',
+      place: 'above',
+      pad: 6,
+      title: 'Друзья',
+      text: 'Ищи по имени в MapLink или скинь личную ссылку — кто откроет, сразу станет другом.',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>'
     },
     {
-      screen:'rank', target:'#rankGlobalList', place:'above', fallbackTarget:'#screen-rank',
-      title:'Рейтинг',
-      text:'Топ по числу открытых стран. Тап по человеку — его travel-journal.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>'
+      target: '.navitem[data-screen="rank"]',
+      place: 'above',
+      pad: 6,
+      title: 'Рейтинг',
+      text: 'Топ по числу открытых стран среди друзей и в общем. Тап по человеку — его журнал.',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>'
     },
     {
-      screen:'profile', target:'.profile-toolbar', place:'below', fallbackTarget:'#myPlacesList',
-      title:'Твои места',
-      text:'Сеткой или списком, с сортировкой. Тап по месту — редактировать или добавить фото.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>'
+      target: '.navitem[data-screen="profile"]',
+      place: 'above',
+      pad: 6,
+      title: 'Профиль',
+      text: 'Твои места сеткой или списком. Шестерёнка сверху — тема, приватность и повтор тура.',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1-4 3.8-6 7-6s6 2 7 6"/></svg>'
     },
     {
-      screen:'profile', target:'#gearBtn', place:'below-left',
-      title:'Настройки',
-      text:'Тёмная тема, приватный профиль, повтор тура и удаление всех данных.',
-      icon:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>'
+      welcome: true,
+      title: 'Готово!',
+      text: 'Добавь первое место на планете и зови друзей. Приятных путешествий ✨',
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>'
     }
   ];
   let coachIndex = 0;
+  let coachBusy = false;
 
   function placeCoachTip(rect, place){
     const tip = document.getElementById('coachTip');
     const card = document.getElementById('coachCard');
     tip.classList.remove('centered');
+    tip.style.transform = '';
     card.classList.remove('arrow-top','arrow-bottom');
-    const tipW = 270;
-    const vw = window.innerWidth, vh = window.innerHeight;
-    let left = rect.left + rect.width/2 - tipW/2;
-    left = Math.max(14, Math.min(left, vw - tipW - 14));
-    tip.style.left = left + 'px';
-    tip.style.bottom = ''; tip.style.top = '';
 
+    const tipW = Math.min(290, window.innerWidth - 28);
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const margin = 12;
+    const gap = 14;
+
+    // measure tip height off-screen
     tip.style.visibility = 'hidden';
+    tip.style.left = '0px';
     tip.style.top = '0px';
-    const tipH = tip.getBoundingClientRect().height;
+    const tipH = tip.getBoundingClientRect().height || 180;
     tip.style.visibility = '';
 
-    let above = (place === 'above');
+    let preferAbove = (place === 'above');
+    // if not enough room above, flip
+    if(preferAbove && rect.top - gap - tipH < margin) preferAbove = false;
+    if(!preferAbove && rect.bottom + gap + tipH > vh - margin) preferAbove = true;
+
     let top;
-    if(above){
-      top = rect.top - 16 - tipH;
-      if(top < 12){ above = false; }
+    if(preferAbove){
+      top = rect.top - gap - tipH;
+      if(top < margin) top = margin;
+      card.classList.add('arrow-bottom');
+    } else {
+      top = rect.bottom + gap;
+      if(top + tipH > vh - margin) top = Math.max(margin, vh - margin - tipH);
+      card.classList.add('arrow-top');
     }
-    if(!above){
-      top = rect.bottom + 16;
-      if(top + tipH > vh - 12) top = vh - 12 - tipH;
-      if(top < 12) top = 12;
-    }
+
+    let left = rect.left + rect.width / 2 - tipW / 2;
+    left = Math.max(margin, Math.min(left, vw - tipW - margin));
+
+    tip.style.left = left + 'px';
     tip.style.top = top + 'px';
-    card.classList.add(above ? 'arrow-bottom' : 'arrow-top');
+    tip.style.bottom = '';
   }
 
   function centerCoachTip(){
     const tip = document.getElementById('coachTip');
     tip.classList.add('centered');
-    tip.style.left = ''; tip.style.top = ''; tip.style.bottom = '';
+    tip.style.left = '';
+    tip.style.top = '';
+    tip.style.bottom = '';
+    tip.style.transform = 'translate(-50%,-50%)';
     document.getElementById('coachCard').classList.remove('arrow-top','arrow-bottom');
   }
 
-  async function showCoachStep(i){
-    const s = coachSteps[i];
-    const wasActive = document.getElementById('screen-'+s.screen)?.classList.contains('active');
-    showScreen(s.screen);
-    if(s.screen === 'feed') loadFriendsFeed();
-    if(s.screen === 'rank') loadRankings();
-    await new Promise(r=>setTimeout(r, wasActive ? 90 : 380));
-
+  function hideCoachRing(){
     const ring = document.getElementById('coachRing');
+    ring.classList.remove('show-ring', 'round');
+  }
 
-    if(s.welcome){
-      ring.classList.add('hide-ring');
-      centerCoachTip();
-    } else {
-      let target = document.querySelector(s.target);
-      if((!target || target.offsetParent === null || target.getBoundingClientRect().height < 4) && s.fallbackTarget){
-        target = document.querySelector(s.fallbackTarget);
-      }
-      if(!target){
-        if(i < coachSteps.length-1){ coachIndex++; showCoachStep(coachIndex); }
-        else closeTutorial();
-        return;
-      }
-      const rect = target.getBoundingClientRect();
-      ring.classList.remove('hide-ring');
-      ring.style.left = (rect.left - 6) + 'px';
-      ring.style.top = (rect.top - 6) + 'px';
-      ring.style.width = (rect.width + 12) + 'px';
-      ring.style.height = (rect.height + 12) + 'px';
-      placeCoachTip(rect, s.place);
+  function showCoachRing(rect, opts){
+    const ring = document.getElementById('coachRing');
+    const pad = (opts && opts.pad != null) ? opts.pad : 6;
+    const round = !!(opts && opts.round);
+    let w = rect.width + pad * 2;
+    let h = rect.height + pad * 2;
+    let left = rect.left - pad;
+    let top = rect.top - pad;
+
+    // for very large targets (globe) — soft inset so ring doesn't cover whole screen
+    if(w > window.innerWidth * 0.85 || h > window.innerHeight * 0.55){
+      const inset = 18;
+      left = rect.left + inset;
+      top = rect.top + inset;
+      w = Math.max(80, rect.width - inset * 2);
+      h = Math.max(80, rect.height - inset * 2);
     }
 
-    document.getElementById('tutIcon').innerHTML = s.icon;
-    document.getElementById('tutTitle').textContent = s.title;
-    document.getElementById('tutText').textContent = s.text;
-    document.getElementById('tutNext').textContent = i === coachSteps.length-1 ? 'Начать' : 'Дальше';
-    document.getElementById('tutDots').innerHTML = coachSteps.map((_,idx)=>`<span class="${idx===i?'on':''}"></span>`).join('');
+    // keep on screen
+    left = Math.max(4, Math.min(left, window.innerWidth - w - 4));
+    top = Math.max(4, Math.min(top, window.innerHeight - h - 4));
 
-    const card = document.getElementById('coachCard');
-    card.style.animation = 'none'; void card.offsetWidth; card.style.animation = '';
+    ring.style.left = left + 'px';
+    ring.style.top = top + 'px';
+    ring.style.width = w + 'px';
+    ring.style.height = h + 'px';
+    ring.classList.toggle('round', round || (Math.abs(w - h) < 8 && w < 90));
+    ring.classList.add('show-ring');
+  }
 
-    // reveal only now — position is guaranteed correct, no flash
-    document.getElementById('tutorial').classList.remove('hide');
+  async function showCoachStep(i){
+    if(coachBusy) return;
+    coachBusy = true;
+    try{
+      const s = coachSteps[i];
+      if(!s){ closeTutorial(); return; }
+
+      // always keep home visible — no screen hopping
+      const home = document.getElementById('screen-home');
+      if(!home.classList.contains('active')){
+        showScreen('home');
+        await new Promise(r => setTimeout(r, 320));
+      }
+
+      // close any open modals/bubbles so they don't cover targets
+      document.getElementById('addModal').classList.add('hide');
+      document.getElementById('editModal').classList.add('hide');
+      document.getElementById('igPlaceModal').classList.add('hide');
+      document.getElementById('countryBubble').classList.remove('show');
+
+      const ring = document.getElementById('coachRing');
+      const tip = document.getElementById('coachTip');
+
+      if(s.welcome || !s.target){
+        hideCoachRing();
+        centerCoachTip();
+      } else {
+        let target = document.querySelector(s.target);
+        // navbar items are always in DOM; wait a frame if needed
+        if(!target){
+          await new Promise(r => requestAnimationFrame(r));
+          target = document.querySelector(s.target);
+        }
+        if(!target){
+          // skip broken step
+          coachBusy = false;
+          if(i < coachSteps.length - 1){ coachIndex++; showCoachStep(coachIndex); }
+          else closeTutorial();
+          return;
+        }
+        const rect = target.getBoundingClientRect();
+        if(rect.width < 2 || rect.height < 2){
+          coachBusy = false;
+          if(i < coachSteps.length - 1){ coachIndex++; showCoachStep(coachIndex); }
+          else closeTutorial();
+          return;
+        }
+        showCoachRing(rect, { pad: s.pad, round: s.round });
+        placeCoachTip(rect, s.place || 'above');
+      }
+
+      document.getElementById('tutIcon').innerHTML = s.icon || '';
+      document.getElementById('tutTitle').textContent = s.title;
+      document.getElementById('tutText').textContent = s.text;
+      const isLast = i === coachSteps.length - 1;
+      document.getElementById('tutNext').textContent = isLast ? 'Поехали!' : 'Дальше';
+      document.getElementById('tutDots').innerHTML = coachSteps.map((_, idx) =>
+        `<span class="${idx === i ? 'on' : ''}"></span>`
+      ).join('');
+
+      // restart card animation
+      const card = document.getElementById('coachCard');
+      card.style.animation = 'none';
+      void card.offsetWidth;
+      card.style.animation = '';
+
+      document.getElementById('tutorial').classList.remove('hide');
+    } finally {
+      coachBusy = false;
+    }
   }
 
   function openTutorial(){
     coachIndex = 0;
     document.getElementById('addModal').classList.add('hide');
     document.getElementById('editModal').classList.add('hide');
+    document.getElementById('igPlaceModal').classList.add('hide');
     document.getElementById('countryBubble').classList.remove('show');
     showCoachStep(coachIndex);
   }
+
   function closeTutorial(){
     document.getElementById('tutorial').classList.add('hide');
+    hideCoachRing();
     csSet('tutorial_seen', '1');
     showScreen('home');
   }
+
   document.getElementById('tutNext').addEventListener('click', ()=>{
-    if(coachIndex === coachSteps.length-1){ closeTutorial(); return; }
-    coachIndex++; showCoachStep(coachIndex);
+    if(coachBusy) return;
+    if(coachIndex >= coachSteps.length - 1){ closeTutorial(); return; }
+    coachIndex++;
+    showCoachStep(coachIndex);
   });
-  document.getElementById('tutSkip').addEventListener('click', closeTutorial);
-  document.getElementById('replayTutorialBtn').addEventListener('click', openTutorial);
+  document.getElementById('tutSkip').addEventListener('click', ()=>{
+    if(coachBusy) return;
+    closeTutorial();
+  });
+  document.getElementById('replayTutorialBtn').addEventListener('click', ()=>{
+    showScreen('home');
+    setTimeout(openTutorial, 280);
+  });
+
+  let resizeTimer = null;
   window.addEventListener('resize', ()=>{
-    if(!document.getElementById('tutorial').classList.contains('hide')) showCoachStep(coachIndex);
+    if(document.getElementById('tutorial').classList.contains('hide')) return;
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(()=> showCoachStep(coachIndex), 120);
   });
 
   csGet('tutorial_seen').then(seen=>{
     if(seen !== '1'){
-      setTimeout(openTutorial, 1600); // после сплэша
+      setTimeout(openTutorial, 1800); // после сплэша
     }
   });
 
