@@ -124,17 +124,18 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  /* soft wave: opacity only (no transform — iOS blurs Caveat) */
+  /* smooth wave — opacity + gentle lift (user prefers motion over iOS blur tradeoff) */
   .wobble-line span{
     display: inline-block;
     opacity: 0;
-    animation: letterWave 1.05s cubic-bezier(.22,.61,.36,1) forwards;
+    animation: letterWave 1.15s cubic-bezier(.33,.1,.25,1) forwards;
+    will-change: transform, opacity;
   }
   @keyframes letterWave{
-    0%{ opacity: 0; }
-    35%{ opacity: .35; }
-    70%{ opacity: 1; }
-    100%{ opacity: 1; }
+    0%{ opacity: 0; transform: translateY(14px); }
+    45%{ opacity: 1; transform: translateY(-3px); }
+    70%{ opacity: 1; transform: translateY(1px); }
+    100%{ opacity: 1; transform: translateY(0); }
   }
   .sign{
     position:absolute; bottom:8%;
@@ -158,9 +159,17 @@
     padding:16px 20px 6px;
     flex-shrink:0;
   }
-  .topbar .title{
-    font-family:'Caveat',cursive; font-weight:700; font-size:26px;
-    color:var(--rose-deep);
+  .topbar .title, #topTitle, .brand{
+    font-family:'Caveat',cursive !important; font-weight:700 !important;
+    font-size:28px !important; line-height:1;
+    color:var(--rose-deep) !important;
+    letter-spacing:0.01em;
+    font-style:normal !important;
+    text-transform:none !important;
+  }
+  .brand-inline{
+    font-family:'Caveat',cursive !important; font-weight:700 !important;
+    color:var(--rose-deep) !important; font-size:1.15em;
   }
   .avatar{
     width:32px; height:32px; border-radius:50%;
@@ -802,118 +811,130 @@
     padding:10px 20px; border-radius:20px; font-size:13px; font-weight:700; border:none;
   }
 
-  /* ---------------- TUTORIAL: spotlight coachmarks ---------------- */
-  /* Interactive coachmarks. Overlay is pointer-events:none so globe/UI stay usable;
-     only the tip card captures taps. */
+  /* ---------------- TUTORIAL (real globe, no second map) ---------------- */
   #tutorial{
-    position:fixed; inset:0; z-index:90;
+    position:fixed; inset:0; z-index:200;
     pointer-events:none;
   }
-  #tutorial.hide{ display:none; }
-  .coach-dim{
-    position:fixed; inset:0;
-    background:transparent; /* no dark overlay — keep the app bright */
-    pointer-events:none;
-  }
-  #coachRing{
-    position:fixed; z-index:91;
-    border:2.5px solid var(--rose);
-    border-radius:18px;
-    box-shadow:0 0 0 5px rgba(197,123,133,.2), 0 0 20px rgba(197,123,133,.28);
-    pointer-events:none;
-    opacity:0;
-    transition:opacity .22s ease, left .28s cubic-bezier(.22,1,.36,1), top .28s cubic-bezier(.22,1,.36,1),
-               width .28s cubic-bezier(.22,1,.36,1), height .28s cubic-bezier(.22,1,.36,1), border-radius .28s ease;
-    will-change: left, top, width, height;
-  }
-  #coachRing.show-ring{ opacity:1; }
-  #coachRing.round{ border-radius:50%; }
-  #coachRing::after{
-    content:''; position:absolute; inset:-7px; border-radius:inherit;
-    border:2px solid rgba(197,123,133,.5);
-    animation:coachPulse 1.6s ease-out infinite;
-  }
-  @keyframes coachPulse{
-    0%{ transform:scale(1); opacity:.8; }
-    100%{ transform:scale(1.2); opacity:0; }
-  }
-  #coachTip{
-    position:fixed; z-index:92; width:min(290px, calc(100vw - 28px));
+  #tutorial.hide{ display:none !important; }
+  #tutorial.tut-enter{ animation: tutFadeIn .5s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes tutFadeIn{ from{ opacity:0; } to{ opacity:1; } }
+
+  #tutorial.tut-welcome{
     pointer-events:auto;
-    transition:opacity .2s ease;
+    background:var(--cream);
+    display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+    padding: calc(20px + env(safe-area-inset-top)) 22px calc(20px + env(safe-area-inset-bottom));
   }
-  #coachTip.centered{
-    left:50% !important; top:50% !important;
-    transform:translate(-50%,-50%);
+  #tutorial.tut-welcome .tut-card{
+    position:relative; left:auto; right:auto; bottom:auto;
+    width:min(340px, 100%);
+    animation: tutSlideIn .55s cubic-bezier(.22,1,.36,1) both;
   }
-  .coach-card{
-    position:relative;
-    background:var(--card); border-radius:22px;
-    padding:18px 18px 14px;
-    text-align:center;
-    box-shadow:0 12px 32px -8px rgba(58,46,43,.28), 0 0 0 1px rgba(197,123,133,.12);
-    animation:coachPop .32s cubic-bezier(.34,1.56,.64,1);
+  @keyframes tutSlideIn{
+    from{ opacity:0; transform:translateY(12px); }
+    to{ opacity:1; transform:none; }
   }
-  @keyframes coachPop{
-    0%{ transform:scale(.9); opacity:0; }
-    100%{ transform:scale(1); opacity:1; }
+
+  #tutorial.tut-live{
+    display:block;
+    background:transparent;
   }
-  .coach-card::before{
-    content:''; position:absolute; width:12px; height:12px;
-    background:var(--card); transform:rotate(45deg);
-    display:none; pointer-events:none;
+  #tutorial.tut-live::before{
+    content:'';
+    position:absolute; inset:0;
+    background:rgba(40,32,30,.35);
+    pointer-events:none;
   }
-  .coach-card.arrow-top::before{ display:block; top:-5px; left:50%; margin-left:-6px; }
-  .coach-card.arrow-bottom::before{ display:block; bottom:-5px; left:50%; margin-left:-6px; }
-  .coach-icon-wrap{
-    width:52px; height:52px; margin:0 auto 8px;
-    box-shadow:0 10px 22px -8px rgba(197,123,133,.55), 0 0 0 4px rgba(255,255,255,.55);
-    animation:tutIconPop .38s cubic-bezier(.34,1.56,.64,1);
+  #tutorial.tut-live.tut-nodim::before{ background:transparent; }
+
+  .tut-card{
+    position:fixed; left:12px; right:12px;
+    bottom: calc(12px + env(safe-area-inset-bottom));
+    z-index:201; pointer-events:auto;
+    max-width:400px; margin:0 auto;
+    background:var(--card);
+    border-radius:18px;
+    padding:14px 16px 12px;
+    box-shadow:0 12px 36px -10px rgba(58,46,43,.4);
+    transition: transform .38s cubic-bezier(.22,1,.36,1), opacity .3s ease;
+    transform:translateY(0); opacity:1;
   }
-  @keyframes tutIconPop{
-    0%{ transform:scale(.45) rotate(-12deg); opacity:0; }
-    100%{ transform:scale(1) rotate(0deg); opacity:1; }
+  .tut-card.tut-away{
+    transform:translateY(calc(100% + 24px));
+    opacity:0;
+    pointer-events:none;
   }
-  .coach-icon-wrap svg{ width:24px; height:24px; }
-  .tut-icon-wrap{
-    border-radius:50%;
-    background:linear-gradient(150deg, var(--rose), var(--rose-deep));
-    display:flex; align-items:center; justify-content:center;
-    color:#fff;
+  #tutorial.tut-live .tut-card{
+    bottom: calc(62px + env(safe-area-inset-bottom));
   }
-  .tut-dots{ display:flex; justify-content:center; gap:5px; margin-bottom:6px; }
-  .tut-dots span{
-    width:5px; height:5px; border-radius:50%; background:var(--blush);
-    transition:transform .25s cubic-bezier(.34,1.56,.64,1), background .25s ease, width .25s ease;
+  /* spin: thin strip so globe is almost full */
+  #tutorial.tut-spin .tut-card{
+    padding:10px 12px 8px;
+    bottom: calc(58px + env(safe-area-inset-bottom));
   }
-  .tut-dots span.on{ background:var(--rose); width:15px; border-radius:3px; }
+  #tutorial.tut-spin .tut-progress{ margin-bottom:6px; height:4px; }
+  #tutorial.tut-spin .tut-title{ font-size:15px; margin-bottom:0; }
+  #tutorial.tut-spin .tut-text{ display:none; }
+  #tutorial.tut-spin .tut-hint{ margin:4px 0 6px; font-size:12px; }
+  #tutorial.tut-spin .tut-btn{ padding:10px 12px; font-size:13px; border-radius:12px; }
+  #tutorial.tut-spin .tut-skip{ padding:8px 6px; font-size:12px; }
+
+  .tut-progress{
+    height:5px; background:var(--blush); border-radius:99px; overflow:hidden;
+    margin-bottom:10px;
+  }
+  .tut-progress > i{
+    display:block; height:100%; width:0%;
+    background:linear-gradient(90deg, var(--rose), var(--rose-deep));
+    border-radius:99px; transition:width .3s ease;
+  }
+  .tut-logo{
+    font-family:'Caveat',cursive; font-weight:700;
+    font-size:34px; color:var(--rose-deep); text-align:center;
+    margin:0 0 6px; line-height:1;
+  }
   .tut-title{
-    font-family:'Fraunces',serif; font-style:italic; font-size:17px; margin-bottom:4px;
-    animation:tutTextUp .32s .04s cubic-bezier(.22,1,.36,1) both;
+    font-family:'Fraunces',serif; font-style:italic; font-weight:600;
+    font-size:18px; color:var(--ink); margin:0 0 4px;
   }
+  #tutorial.tut-welcome .tut-title{ text-align:center; font-size:22px; }
   .tut-text{
-    font-size:12.5px; color:var(--muted); line-height:1.5; margin-bottom:12px;
-    animation:tutTextUp .32s .08s cubic-bezier(.22,1,.36,1) both;
+    font-size:13.5px; color:var(--muted); line-height:1.45; margin:0 0 10px;
   }
-  @keyframes tutTextUp{
-    0%{ opacity:0; transform:translateY(6px); }
-    100%{ opacity:1; transform:translateY(0); }
+  #tutorial.tut-welcome .tut-text{ text-align:center; }
+  .tut-hint{
+    font-size:12.5px; font-weight:600; color:var(--rose-deep);
+    margin:0 0 10px; opacity:0;
   }
-  .coach-actions{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .tut-next{
-    background:linear-gradient(135deg, var(--rose), var(--rose-deep)); color:#fff; border:none;
-    padding:10px 20px; border-radius:16px; font-size:12.5px; font-weight:700; font-family:inherit;
-    box-shadow:0 8px 18px -6px rgba(197,123,133,.5);
-    transition:transform .12s ease;
+  .tut-hint.show{ opacity:1; }
+  .tut-hint.ok{ color:var(--sage-deep); }
+  .tut-actions{ display:flex; gap:8px; align-items:center; }
+  .tut-btn{
+    flex:1; border:none; border-radius:14px;
+    background:var(--rose); color:#fff;
+    font-family:inherit; font-weight:700; font-size:14px;
+    padding:12px 14px;
   }
-  .tut-next:active{ transform:scale(.94); }
+  .tut-btn:disabled{ opacity:.4; }
   .tut-skip{
-    background:none; border:none; color:var(--muted); font-size:11.5px; font-family:inherit;
-    padding:8px 4px;
+    border:none; background:transparent;
+    color:var(--muted); font-size:12.5px; font-family:inherit;
+    padding:10px 8px; white-space:nowrap;
+  }
+  .navitem.tut-hl{ color:var(--rose-deep) !important; }
+  .navitem.tut-hl svg{ stroke:var(--rose-deep); }
+  #fabAdd.tut-pulse{
+    animation: fabPulse 1.2s ease-in-out infinite;
+    z-index:202;
+  }
+  @keyframes fabPulse{
+    0%{ box-shadow:0 0 0 0 rgba(197,123,133,.5); }
+    70%{ box-shadow:0 0 0 14px rgba(197,123,133,0); }
+    100%{ box-shadow:0 0 0 0 rgba(197,123,133,0); }
   }
 
-
-  /* ---------------- SECRET LETTER / ENVELOPE ---------------- */
   .settings-envelope{
     display:flex; align-items:center; gap:14px;
     background:var(--card);
@@ -1146,7 +1167,8 @@
     display:inline-flex; align-items:center; gap:5px; font-weight:600;
   }
   .wish-save-btn svg{ width:14px; height:14px; }
-  .wish-save-btn.done{ opacity:.55; pointer-events:none; }
+  .wish-save-btn.done{ opacity:.9; background:var(--rose); color:#fff; pointer-events:auto; cursor:pointer; }
+  .wish-save-btn.done svg{ stroke:#fff; }
 
   /* friend mini-map */
   #fvMiniMapWrap{
@@ -1220,7 +1242,76 @@
     from{ opacity:0; transform:translateY(6px); }
     to{ opacity:1; transform:translateY(0); }
   }
-  .filter-fab-wrap{
+  
+  /* feed notebook month divider */
+  .feed-cal-month{
+    font-family:'Caveat',cursive; font-weight:700; font-size:22px;
+    color:var(--rose-deep); margin:22px 6px 12px;
+    padding:10px 4px 8px;
+    border-bottom:1.5px dashed rgba(197,123,133,.35);
+    letter-spacing:.02em;
+  }
+  .feed-cal-month:first-child{ margin-top:6px; }
+  .feed-empty{
+    text-align:center; padding:36px 20px 28px;
+    background:var(--card); border-radius:22px;
+    box-shadow:0 8px 24px -12px rgba(58,46,43,.2);
+    margin-top:8px;
+  }
+  .feed-empty .fe-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px;
+    color:var(--rose-deep); margin-bottom:8px;
+  }
+  .feed-empty .fe-sub{ font-size:13px; color:var(--muted); line-height:1.5; }
+
+  /* friends notebook rows */
+  .friend-row{
+    display:flex; align-items:center; gap:12px;
+    padding:12px 14px; background:var(--card); border-radius:16px;
+    margin-bottom:8px; box-shadow:0 4px 14px -10px rgba(58,46,43,.28);
+  }
+  .friend-row .fav{
+    width:44px; height:44px; border-radius:50%; flex-shrink:0;
+    background:var(--blush) center/cover; border:1.5px solid rgba(197,123,133,.2);
+  }
+  .friend-row .fname{
+    font-family:'Fraunces',serif; font-style:italic; font-size:15px; font-weight:600;
+    color:var(--ink);
+  }
+  .friend-row .fstat{
+    font-size:11.5px; color:var(--muted); margin-top:2px;
+  }
+  .friend-row .fstat b{ color:var(--rose-deep); font-weight:700; }
+  #friendSearch{
+    font-size:15px; padding:14px 16px; border-radius:16px;
+  }
+  .invite-card{
+    margin-top:8px; padding:18px 16px; text-align:center;
+    background:linear-gradient(160deg, var(--card) 0%, var(--blush) 100%);
+    border-radius:20px; box-shadow:0 8px 22px -12px rgba(58,46,43,.25);
+  }
+  .invite-card p{ font-size:13px; color:var(--muted); line-height:1.45; margin:0 0 14px; }
+  .invite-btn{
+    width:100%; border:none; background:var(--rose); color:#fff;
+    font-family:inherit; font-weight:700; font-size:14px;
+    padding:14px 16px; border-radius:16px;
+  }
+  .ticket-menu-btn{
+    position:absolute; top:8px; right:8px; z-index:2;
+    width:28px; height:28px; border-radius:10px; border:none;
+    background:rgba(251,243,238,.92); color:var(--rose-deep);
+    font-size:16px; line-height:1; font-weight:700;
+    box-shadow:0 2px 8px rgba(58,46,43,.12);
+  }
+  .journal-ticket{ position:relative; }
+  .city-glow-dot{
+    width:14px; height:14px; border-radius:50%;
+    background:rgba(197,123,133,.35);
+    box-shadow:0 0 0 6px rgba(197,123,133,.12), 0 0 16px rgba(197,123,133,.25);
+    transform:translate(-50%,-50%);
+  }
+
+.filter-fab-wrap{
     position:absolute; top:12px; left:12px; z-index:8;
     display:flex; flex-direction:column; align-items:flex-start; gap:8px;
   }
@@ -1339,6 +1430,8 @@
   .stat{ text-align:center; }
   .num{ font-family:'Fraunces',serif; font-size:19px; color:var(--rose-deep); }
   .cap{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .sub-stats .stat:first-child .num{ font-size:24px; }
+  .sub-stats .stat:first-child .cap{ color:var(--rose-deep); font-weight:700; }
   #globeBox{
     position:relative; flex:1; overflow:hidden;
     background:var(--cream); /* exact same as app chrome */
@@ -1474,7 +1567,50 @@
   .maplibregl-popup-tip{ display:none !important; }
 
   /* ---------------- ADD / EDIT PLACE MODAL ---------------- */
-  #addModal, #editModal{
+  
+  .add-step-dots{ display:flex; gap:6px; justify-content:center; margin-bottom:12px; }
+  .add-dot{
+    width:7px; height:7px; border-radius:50%;
+    background:var(--blush); transition: background .25s ease, transform .25s ease;
+  }
+  .add-dot.on{ background:var(--rose); transform:scale(1.2); }
+  .add-step{
+    display:none; opacity:0;
+    animation: none;
+  }
+  .add-step.on{
+    display:block; opacity:1;
+    animation: addStepIn .35s cubic-bezier(.22,1,.36,1);
+  }
+  @keyframes addStepIn{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+  .add-step-actions{
+    display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+  }
+  .add-step-actions .add-save,
+  .add-step-actions .add-cancel{
+    flex:1 1 40%; margin:0; width:auto;
+  }
+  #nameGate{
+    position:fixed; inset:0; z-index:110;
+    background:rgba(58,46,43,.4);
+    display:flex; align-items:center; justify-content:center;
+    padding:20px;
+  }
+  #nameGate.hide{ display:none; }
+  .name-sheet{
+    background:var(--card); border-radius:22px; padding:22px 20px;
+    width:min(340px, 100%); text-align:center;
+    box-shadow:0 20px 40px -12px rgba(58,46,43,.4);
+  }
+  .name-sheet h3{
+    font-family:'Fraunces',serif; font-style:italic;
+    color:var(--rose-deep); margin:0 0 8px; font-size:20px;
+  }
+  .name-sheet p{ font-size:13px; color:var(--muted); line-height:1.45; margin:0 0 14px; }
+#addModal, #editModal{
     position:fixed; inset:0; z-index:80;
     background:rgba(58,46,43,.5);
     display:flex; align-items:center; justify-content:center;
@@ -1516,16 +1652,37 @@
     padding:12px; font-size:13px; color:var(--muted); font-family:inherit;
     margin-bottom:10px; transition:opacity .2s ease;
   }
-  #dateWrap.open .date-toggle{ display:none; }
+  .date-chips{
+    display:flex; flex-direction:column; gap:8px; margin-bottom:4px;
+  }
+  .date-chip{
+    width:100%; border:1.5px solid #EEDDD3; background:var(--cream);
+    border-radius:14px; padding:13px 14px;
+    font-family:inherit; font-size:14px; font-weight:600; color:var(--ink);
+    text-align:left; display:flex; align-items:center; gap:10px;
+  }
+  .date-chip:active{ transform:scale(.98); }
+  .date-chip.on{
+    border-color:var(--rose); background:var(--blush); color:var(--rose-deep);
+  }
+  .date-chip .dc-ico{
+    width:28px; height:28px; border-radius:10px;
+    background:rgba(197,123,133,.15); color:var(--rose-deep);
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .date-chip .dc-ico svg{ width:15px; height:15px; }
+  .date-chip .dc-sub{ display:block; font-size:11.5px; font-weight:500; color:var(--muted); margin-top:2px; }
+  .date-chip.on .dc-sub{ color:var(--rose-deep); opacity:.85; }
   #datePickerBox{
     max-height:0; opacity:0; overflow:hidden;
-    transition:max-height .32s cubic-bezier(.34,1.1,.64,1), opacity .25s ease;
+    transition:max-height .28s ease, opacity .22s ease, margin .22s ease;
+    margin-top:0;
   }
-  #dateWrap.open #datePickerBox{ max-height:140px; opacity:1; }
-  .date-clear{
-    width:100%; background:none; border:none; color:var(--rose-deep);
-    font-size:12px; font-family:inherit; padding:6px 0 10px; text-align:center;
+  #datePickerBox.show{
+    max-height:80px; opacity:1; margin-top:8px;
   }
+  #datePickerBox .add-field{ margin-bottom:0; }
+
   .add-save{
     width:100%; background:var(--rose); color:#fff; border:none;
     padding:13px; border-radius:20px; font-size:14px; font-weight:700; font-family:inherit;
@@ -1611,15 +1768,14 @@
 
   <!-- SPLASH -->
   <div id="splash">
-    <div class="eyebrow">Добро пожаловать</div>
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.44 alpha</div>
+    <div class="app-version">v0.64 alpha</div>
   </div>
 
   <!-- TOP BAR -->
   <div class="topbar">
-    <div class="title" id="topTitle">MapLink</div>
+    <div class="title brand" id="topTitle">MapLink</div>
     <button class="gear-btn" id="gearBtn">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a7.7 7.7 0 000-2l2-1.5-2-3.4-2.4.6a7.8 7.8 0 00-1.7-1L15 3h-4l-.3 2.4a7.8 7.8 0 00-1.7 1l-2.4-.6-2 3.4L6.6 11a7.7 7.7 0 000 2l-2 1.5 2 3.4 2.4-.6a7.8 7.8 0 001.7 1L11 21h4l.3-2.4a7.8 7.8 0 001.7-1l2.4.6 2-3.4-2-1.5z"/></svg>
     </button>
@@ -1669,38 +1825,63 @@
   <!-- ADD PLACE MODAL -->
   <div id="addModal" class="hide">
     <div class="add-sheet">
-      <h3>Новое место</h3>
-      <div class="field-wrap">
-        <input class="add-field" id="addCountry" placeholder="Страна" autocomplete="off">
-        <div class="suggest-list" id="countrySuggest" style="display:none;"></div>
+      <div class="add-step-dots" id="addStepDots">
+        <span class="add-dot on" data-step="1"></span>
+        <span class="add-dot" data-step="2"></span>
+        <span class="add-dot" data-step="3"></span>
       </div>
-      <div class="field-wrap" id="cityWrap">
-        <input class="add-field" id="addCity" placeholder="Город (необязательно)" autocomplete="off">
-        <div class="suggest-list" id="citySuggest" style="display:none;"></div>
+      <h3 id="addStepTitle">Где вы были?</h3>
+      <div class="add-step on" data-add-step="1">
+        <div class="field-wrap">
+          <input class="add-field" id="addCountry" placeholder="Страна" autocomplete="off">
+          <div class="suggest-list" id="countrySuggest" style="display:none;"></div>
+        </div>
+        <div class="field-wrap" id="cityWrap">
+          <input class="add-field" id="addCity" placeholder="Город (необязательно)" autocomplete="off">
+          <div class="suggest-list" id="citySuggest" style="display:none;"></div>
+        </div>
+        <label class="add-toggle">
+          <input type="checkbox" id="addWishlist"> Это место мечты
+        </label>
       </div>
-      <div id="dateWrap">
-        <button type="button" class="date-toggle" id="dateToggleBtn">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
-          <span id="dateToggleText">Добавить дату</span>
-        </button>
+      <div class="add-step" data-add-step="2">
+        <div class="date-chips" id="dateChips">
+          <button type="button" class="date-chip" data-date="today" id="dateChipToday">
+            <span class="dc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 1.5"/></svg></span>
+            <span>Сегодня<span class="dc-sub">поставить текущую дату</span></span>
+          </button>
+          <button type="button" class="date-chip" data-date="pick" id="dateChipPick">
+            <span class="dc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
+            <span>Выбрать дату<span class="dc-sub">день · месяц · год</span></span>
+          </button>
+          <button type="button" class="date-chip on" data-date="none" id="dateChipNone">
+            <span class="dc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12h14"/></svg></span>
+            <span>Без даты<span class="dc-sub">можно указать позже</span></span>
+          </button>
+        </div>
         <div id="datePickerBox">
           <input class="add-field" id="addDate" type="date">
-          <button type="button" class="date-clear" id="dateClearBtn">Убрать дату</button>
         </div>
       </div>
-      <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
-      <label class="add-toggle">
-        <input type="checkbox" id="addWishlist"> Это место мечты (ещё не была)
-      </label>
-      <label class="add-photo-label" for="addPhoto">
-        <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <span>Фото (до 3)</span>
-        </span>
-      </label>
-      <input type="file" accept="image/*" id="addPhoto" multiple style="display:none;">
-      <button class="add-save" id="addSaveBtn">Сохранить</button>
-      <button class="add-cancel" id="addCancelBtn">Отмена</button>
+      <div class="add-step" data-add-step="3">
+        <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
+        <label class="add-photo-label" for="addPhoto">
+          <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
+            <span>Фото (до 3)</span>
+          </span>
+        </label>
+        <input type="file" accept="image/*" id="addPhoto" multiple style="display:none;">
+      </div>
+      <div class="add-step-actions">
+        <button type="button" class="add-cancel" id="addBackBtn" style="display:none;">Назад</button>
+        <button type="button" class="add-save" id="addNextBtn">Далее</button>
+        <button type="button" class="add-save" id="addSaveBtn" style="display:none;">Сохранить</button>
+        <button type="button" class="add-cancel" id="addCancelBtn">Отмена</button>
+      </div>
+      <!-- keep date toggle for legacy listeners -->
+      <button type="button" class="date-toggle" id="dateToggleBtn" style="display:none;"></button>
+      <span id="dateToggleText" style="display:none;"></span>
     </div>
   </div>
 
@@ -1753,8 +1934,8 @@
     <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
     <div class="section-cap">пригласить</div>
     <div class="invite-card">
-      <p>Скинь личную ссылку — человек тапнет и сразу попадёт к тебе в друзья</p>
-      <button class="invite-btn" id="inviteBtn">Поделиться ссылкой</button>
+      <p>Пригласи друга в MapLink — по ссылке он сразу попадёт к тебе в друзья</p>
+      <button class="invite-btn" id="inviteBtn">Пригласить в MapLink</button>
     </div>
     <div style="height:20px;"></div>
   </div>
@@ -1794,7 +1975,7 @@
       </div>
     </div>
 
-    <button class="postcard-btn" id="postcardBtn" style="display:none;">
+    <button class="postcard-btn" id="postcardBtn" hidden style="display:none!important" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9l9 5 9-5"/></svg>
       Собрать открытку маршрута
     </button>
@@ -1905,6 +2086,14 @@
       <span>›</span>
     </div>
 
+    <div class="settings-row" id="soundToggleRow" style="cursor:pointer;">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span id="soundIcon" style="font-size:18px;width:28px;text-align:center;">🔊</span>
+        <span id="soundLabel">Звуки включены</span>
+      </div>
+      <span id="soundState" style="color:var(--muted);font-size:13px;">вкл</span>
+    </div>
+
     <div class="settings-envelope" id="secretEnvelopeBtn">
       <div class="env-icon">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
@@ -1932,6 +2121,16 @@
       <div class="tk-city" id="tkCity">—</div>
       <div class="tk-sub" id="tkSub"></div>
       <div class="tk-code" id="tkCode">✦</div>
+    </div>
+  </div>
+
+  <!-- display name on first launch -->
+  <div id="nameGate" class="hide">
+    <div class="name-sheet">
+      <h3>Как тебя зовут?</h3>
+      <p>Это имя увидят в рейтинге и друзья в MapLink — не обязательно как в Telegram</p>
+      <input class="add-field" id="displayNameInput" placeholder="Твоё имя" maxlength="24" autocomplete="nickname">
+      <button class="add-save" id="displayNameSave" style="margin-top:12px;">Готово</button>
     </div>
   </div>
 
@@ -1989,20 +2188,15 @@
 
   <!-- TUTORIAL: interactive coachmarks on real UI (home + navbar) -->
   <div id="tutorial" class="hide">
-    <div class="coach-dim"></div>
-    <div id="coachRing"></div>
-    <div id="coachTip">
-      <div class="coach-card" id="coachCard">
-        <div class="tut-icon-wrap coach-icon-wrap">
-          <div class="tut-icon" id="tutIcon"></div>
-        </div>
-        <div class="tut-dots" id="tutDots"></div>
-        <div class="tut-title" id="tutTitle">Привет!</div>
-        <div class="tut-text" id="tutText">MapLink — твоя личная планета путешествий.</div>
-        <div class="coach-actions">
-          <button class="tut-skip" id="tutSkip">Пропустить</button>
-          <button class="tut-next" id="tutNext">Дальше</button>
-        </div>
+    <div class="tut-card" id="tutCard">
+      <div class="tut-progress"><i id="duoBar"></i></div>
+      <div class="tut-logo" id="duoLogo">MapLink</div>
+      <div class="tut-title" id="duoTitle">Добро пожаловать</div>
+      <div class="tut-text" id="duoText"></div>
+      <div class="tut-hint" id="duoHint"></div>
+      <div class="tut-actions">
+        <button type="button" class="tut-btn" id="tutNext">Продолжить</button>
+        <button type="button" class="tut-skip" id="tutSkip">Пропустить</button>
       </div>
     </div>
   </div>
@@ -2044,7 +2238,7 @@
     if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); delay += 2; return; }
     const span = document.createElement('span');
     span.textContent = ch === ' ' ? '\u00A0' : ch;
-    span.style.animationDelay = (0.08 + delay * 0.072) + 's';
+    span.style.animationDelay = (0.15 + delay * 0.065) + 's';
     wobbleEl.appendChild(span);
     delay++;
   });
@@ -2073,7 +2267,7 @@
     document.getElementById('splash').classList.add('hide');
     window.__screenReady = true;
     try{ showUxHints(); }catch(e){}
-  }, 2800);
+  }, 3200);
 
 
   // ---------- soft SFX (Web Audio, no external files) ----------
@@ -2096,7 +2290,10 @@
     }catch(e){}
   }
 
+  let soundMuted = false;
+  try{ soundMuted = localStorage.getItem('ml_sound_muted') === '1'; }catch(e){}
   function sfx(type){
+    if(soundMuted) return;
     const ac = getAC();
     if(!ac) return;
     const t0 = ac.currentTime;
@@ -2126,6 +2323,13 @@
   // ---------- tab switching ----------
   function showScreen(name){
     try{ if(window.__screenReady) sfx('whoosh'); }catch(e){}
+    // GPU: pause map rendering when not looking at the globe
+    try{
+      if(window.__mlMap){
+        if(name==='home') window.__mlMap.triggerRepaint();
+        else if(window.__mlMap.stop) { /* keep alive */ }
+      }
+    }catch(e){}
     const target = document.getElementById('screen-'+name);
     if(!target) return;
     if(target.classList.contains('active') && !target.classList.contains('leaving')) return;
@@ -2352,6 +2556,36 @@
     applyMapPalette(isDark);
   }
   csGet('theme_dark').then(v=> applyTheme(v === '1'));
+
+  function applySoundUI(){
+    const icon = document.getElementById('soundIcon');
+    const label = document.getElementById('soundLabel');
+    const state = document.getElementById('soundState');
+    if(!icon) return;
+    if(soundMuted){
+      icon.textContent = '🔇';
+      icon.style.opacity = '0.45';
+      if(label) label.textContent = 'Звуки выключены';
+      if(state) state.textContent = 'выкл';
+    } else {
+      icon.textContent = '🔊';
+      icon.style.opacity = '1';
+      if(label) label.textContent = 'Звуки включены';
+      if(state) state.textContent = 'вкл';
+    }
+  }
+  applySoundUI();
+  (function(){
+    const soundRow = document.getElementById('soundToggleRow');
+    if(!soundRow) return;
+    soundRow.addEventListener('click', ()=>{
+      soundMuted = !soundMuted;
+      try{ localStorage.setItem('ml_sound_muted', soundMuted ? '1' : '0'); }catch(e){}
+      applySoundUI();
+      if(!soundMuted){ try{ sfx('tap'); }catch(e){} }
+    });
+  })();
+
   document.getElementById('themeSwitch').addEventListener('click', ()=>{
     const isDark = !document.documentElement.classList.contains('theme-dark');
     applyTheme(isDark);
@@ -2718,277 +2952,284 @@
   showQuote();
   setInterval(showQuote, 9000);
 
-  // ---------- tutorial: interactive coachmarks, mostly on home, highlight real UI ----------
-  // Stays on home for globe/FAB; highlights navbar items in place (no disruptive screen hops).
-  const coachSteps = [
+  // ---------- Tutorial on REAL globe (no second MapLibre) ----------
+  const tutSteps = [
     {
-      welcome: true,
-      title: 'Привет!',
-      text: 'MapLink — твоя планета путешествий. Можно крутить глобус и нажимать кнопки прямо во время тура.',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 6 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-6-3.8-9s1.3-6.3 3.8-9z"/></svg>'
+      id: 'welcome',
+      mode: 'welcome',
+      logo: true,
+      title: 'Добро пожаловать',
+      text: 'MapLink — карта ваших путешествий. Сейчас коротко покажем главное.',
+      btn: 'Продолжить'
     },
     {
-      target: '#globeBox',
-      place: 'below',
-      pad: 4,
-      title: 'Твоя планета',
-      text: 'Крути пальцем, приближай щипком или свайпом по краю экрана. Тапни по стране или городу — появится кнопка «Добавить».',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>'
+      id: 'spin',
+      mode: 'live',
+      nodim: true,
+      logo: false,
+      title: 'Планета',
+      text: 'Покрутите глобус пальцем. Можно приблизить щипком.',
+      hint: 'Проведите по карте',
+      btn: 'Далее',
+      need: 'spin',
+      screen: 'home'
     },
     {
-      target: '#fabAdd',
-      place: 'above',
-      round: true,
-      pad: 8,
-      title: 'Добавить место',
-      text: 'Плюс или тап по названию на карте. Страна, город, до 3 фото, заметка и «место мечты».',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 5v14M5 12h14"/></svg>'
+      id: 'pin',
+      mode: 'live',
+      nodim: true,
+      logo: false,
+      title: 'Добавьте место',
+      text: 'Нажмите на название страны или города — появится пузырёк. Нажмите «Добавить» и сохраните.',
+      hint: 'Пузырёк → Добавить → Сохранить',
+      btn: 'Далее',
+      need: 'place',
+      screen: 'home'
     },
     {
-      target: '.navitem[data-screen="feed"]',
-      place: 'above',
-      pad: 6,
+      id: 'feed',
+      mode: 'live',
+      logo: false,
       title: 'Лента',
-      text: 'Поездки друзей — как на пробковой доске: фото, реакции и комментарии.',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 8h10M7 12h6"/><circle cx="16.5" cy="15.5" r="1.2"/></svg>'
+      text: 'Поездки друзей, фото и реакции.',
+      btn: 'Далее',
+      screen: 'feed',
+      nav: 'feed'
     },
     {
-      target: '.navitem[data-screen="friends"]',
-      place: 'above',
-      pad: 6,
+      id: 'friends',
+      mode: 'live',
+      logo: false,
       title: 'Друзья',
-      text: 'Ищи по имени в MapLink или скинь личную ссылку — кто откроет, сразу станет другом.',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="8.5" cy="9" r="3"/><circle cx="16" cy="10.5" r="2.3"/><path d="M2.5 19c.6-3.2 3-5 6-5s5.4 1.8 6 5"/><path d="M14.3 14.3c2.2.2 4 1.8 4.5 4.7"/></svg>'
+      text: 'Поиск по имени и приглашение по ссылке.',
+      btn: 'Далее',
+      screen: 'friends',
+      nav: 'friends'
     },
     {
-      target: '.navitem[data-screen="rank"]',
-      place: 'above',
-      pad: 6,
+      id: 'rank',
+      mode: 'live',
+      logo: false,
       title: 'Рейтинг',
-      text: 'Топ по числу открытых стран среди друзей и в общем. Тап по человеку — его журнал.',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M7 20V12M12 20V6M17 20v-8"/><path d="M5 20h14"/></svg>'
+      text: 'Кто сколько мира открыл — среди друзей и общий список.',
+      btn: 'Далее',
+      screen: 'rank',
+      nav: 'rank'
     },
     {
-      target: '.navitem[data-screen="profile"]',
-      place: 'above',
-      pad: 6,
+      id: 'profile',
+      mode: 'live',
+      logo: false,
       title: 'Профиль',
-      text: 'Твои места сеткой или списком. Шестерёнка сверху — тема, приватность и повтор тура.',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="8" r="3.4"/><path d="M5 20c1-4 3.8-6 7-6s6 2 7 6"/></svg>'
+      text: 'Ваши места, мечты и статистика.',
+      btn: 'Далее',
+      screen: 'profile',
+      nav: 'profile'
     },
     {
-      welcome: true,
-      title: 'Готово!',
-      text: 'Добавь первое место на планете и зови друзей. Приятных путешествий ✨',
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>'
+      id: 'done',
+      mode: 'welcome',
+      logo: true,
+      title: 'Готово',
+      text: 'Новые места — через «+» или пузырёк на планете.',
+      btn: 'На главную'
     }
   ];
-  let coachIndex = 0;
-  let coachBusy = false;
 
-  function placeCoachTip(rect, place){
-    const tip = document.getElementById('coachTip');
-    const card = document.getElementById('coachCard');
-    tip.classList.remove('centered');
-    tip.style.transform = '';
-    card.classList.remove('arrow-top','arrow-bottom');
+  let tutIndex = 0;
+  let tutReady = false;
+  let tutMoveH = null;
+  let tutPlaceT = null;
+  let tutPlaces0 = 0;
+  let tutPlaceName = '';
 
-    const tipW = Math.min(290, window.innerWidth - 28);
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const margin = 12;
-    const gap = 14;
+  function tutClear(){
+    if(tutMoveH && window.__mlMap){
+      try{ window.__mlMap.off('move', tutMoveH); }catch(e){}
+      tutMoveH = null;
+    }
+    if(tutPlaceT){ clearInterval(tutPlaceT); tutPlaceT = null; }
+    document.querySelectorAll('.navitem.tut-hl').forEach(el=>el.classList.remove('tut-hl'));
+    const fab = document.getElementById('fabAdd');
+    if(fab) fab.classList.remove('tut-pulse');
+  }
 
-    // measure tip height off-screen
-    tip.style.visibility = 'hidden';
-    tip.style.left = '0px';
-    tip.style.top = '0px';
-    const tipH = tip.getBoundingClientRect().height || 180;
-    tip.style.visibility = '';
+  function tutHint(msg, ok){
+    const h = document.getElementById('duoHint');
+    if(!h) return;
+    h.textContent = msg || '';
+    h.classList.toggle('show', !!msg);
+    h.classList.toggle('ok', !!ok);
+  }
 
-    let preferAbove = (place === 'above');
-    // if not enough room above, flip
-    if(preferAbove && rect.top - gap - tipH < margin) preferAbove = false;
-    if(!preferAbove && rect.bottom + gap + tipH > vh - margin) preferAbove = true;
+  function tutShow(i){
+    const s = tutSteps[i];
+    if(!s) return;
+    tutClear();
+    tutReady = !s.need;
 
-    let top;
-    if(preferAbove){
-      top = rect.top - gap - tipH;
-      if(top < margin) top = margin;
-      card.classList.add('arrow-bottom');
+    // close leftover UI
+    try{ document.getElementById('addModal').classList.add('hide'); }catch(e){}
+
+    const root = document.getElementById('tutorial');
+    root.classList.remove('tut-welcome', 'tut-live', 'tut-nodim', 'tut-spin');
+    if(s.mode === 'welcome') root.classList.add('tut-welcome');
+    else {
+      root.classList.add('tut-live');
+      if(s.nodim) root.classList.add('tut-nodim');
+      if(s.need === 'spin') root.classList.add('tut-spin');
+    }
+
+    if(s.screen) showScreen(s.screen);
+
+    // bubbles locked by default; unlocked only on place step below
+    window.__tutLockUI = true;
+    try{ document.getElementById('countryBubble').classList.remove('show'); }catch(e){}
+
+    const bar = document.getElementById('duoBar');
+    if(bar) bar.style.width = Math.round(((i+1)/tutSteps.length)*100) + '%';
+
+    const logo = document.getElementById('duoLogo');
+    if(logo) logo.style.display = s.logo ? '' : 'none';
+
+    document.getElementById('duoTitle').textContent = s.title;
+    let text = s.text;
+    if(s.id === 'done' && tutPlaceName){
+      text = 'На карте: ' + tutPlaceName + '. Дальше можно добавлять через «+».';
+    }
+    document.getElementById('duoText').textContent = text;
+    tutHint(s.hint || '', false);
+
+    const next = document.getElementById('tutNext');
+    if(next){
+      next.textContent = s.btn || 'Далее';
+      next.disabled = !!s.need;
+    }
+
+    if(s.nav){
+      const nav = document.querySelector('.navitem[data-screen="'+s.nav+'"]');
+      if(nav) nav.classList.add('tut-hl');
+    }
+
+    // spin: lock bubbles
+    if(s.need === 'spin'){
+      window.__tutLockUI = true;
+      try{ document.getElementById('countryBubble').classList.remove('show'); }catch(e){}
+      const arm = ()=>{
+        const map = window.__mlMap;
+        if(!map){ setTimeout(arm, 120); return; }
+        let done=false, hold=false;
+        const cnv = map.getCanvas();
+        const dn=()=>{ hold=true; };
+        const up=()=>{ setTimeout(()=>{ hold=false; }, 50); };
+        cnv.addEventListener('touchstart', dn, {passive:true});
+        cnv.addEventListener('mousedown', dn);
+        cnv.addEventListener('touchend', up);
+        cnv.addEventListener('mouseup', up);
+        tutMoveH = ()=>{
+          if(done || !hold) return;
+          done = true; tutReady = true;
+          tutHint('Хорошо', true);
+          if(next) next.disabled = false;
+          try{ sfx('select'); haptic('light'); }catch(e){}
+          try{ map.off('move', tutMoveH); }catch(e){}
+          tutMoveH = null;
+        };
+        map.on('move', tutMoveH);
+      };
+      arm();
+    }
+
+    // place: bubble + save; wait until ticket animation ends
+    if(s.need === 'place'){
+      window.__tutLockUI = false;
+      const fab = document.getElementById('fabAdd');
+      if(fab) fab.classList.add('tut-pulse');
+      tutPlaces0 = (allPlacesCache||[]).filter(p=>!p.is_wishlist).length;
+      const finishPlace = ()=>{
+        if(tutReady) return;
+        const v = (allPlacesCache||[]).filter(p=>!p.is_wishlist);
+        const last = v.length ? v[v.length-1] : null;
+        if(last) tutPlaceName = last.city ? (last.city+', '+last.country) : last.country;
+        tutReady = true;
+        tutHint(tutPlaceName ? ('Добавлено: ' + tutPlaceName) : 'Место сохранено', true);
+        if(next) next.disabled = false;
+        if(fab) fab.classList.remove('tut-pulse');
+        if(tutPlaceT){ clearInterval(tutPlaceT); tutPlaceT = null; }
+        window.__onTutPlaceSaved = null;
+        tutSyncCardWithModal(true);
+      };
+      window.__onTutPlaceSaved = finishPlace;
+      tutPlaceT = setInterval(()=>{ tutSyncCardWithModal(); }, 400);
+      // safety: if save happened but callback lost
+      setTimeout(()=>{
+        const v = (allPlacesCache||[]).filter(p=>!p.is_wishlist);
+        if(v.length > tutPlaces0) finishPlace();
+      }, 5000);
     } else {
-      top = rect.bottom + gap;
-      if(top + tipH > vh - margin) top = Math.max(margin, vh - margin - tipH);
-      card.classList.add('arrow-top');
+      window.__onTutPlaceSaved = null;
+      tutSyncCardWithModal(true);
     }
-
-    let left = rect.left + rect.width / 2 - tipW / 2;
-    left = Math.max(margin, Math.min(left, vw - tipW - margin));
-
-    tip.style.left = left + 'px';
-    tip.style.top = top + 'px';
-    tip.style.bottom = '';
   }
 
-  function centerCoachTip(){
-    const tip = document.getElementById('coachTip');
-    tip.classList.add('centered');
-    tip.style.left = '';
-    tip.style.top = '';
-    tip.style.bottom = '';
-    tip.style.transform = 'translate(-50%,-50%)';
-    document.getElementById('coachCard').classList.remove('arrow-top','arrow-bottom');
-  }
-
-  function hideCoachRing(){
-    const ring = document.getElementById('coachRing');
-    ring.classList.remove('show-ring', 'round');
-  }
-
-  function showCoachRing(rect, opts){
-    const ring = document.getElementById('coachRing');
-    const pad = (opts && opts.pad != null) ? opts.pad : 6;
-    const round = !!(opts && opts.round);
-    let w = rect.width + pad * 2;
-    let h = rect.height + pad * 2;
-    let left = rect.left - pad;
-    let top = rect.top - pad;
-
-    // for very large targets (globe) — soft inset so ring doesn't cover whole screen
-    if(w > window.innerWidth * 0.85 || h > window.innerHeight * 0.55){
-      const inset = 18;
-      left = rect.left + inset;
-      top = rect.top + inset;
-      w = Math.max(80, rect.width - inset * 2);
-      h = Math.max(80, rect.height - inset * 2);
-    }
-
-    // keep on screen
-    left = Math.max(4, Math.min(left, window.innerWidth - w - 4));
-    top = Math.max(4, Math.min(top, window.innerHeight - h - 4));
-
-    ring.style.left = left + 'px';
-    ring.style.top = top + 'px';
-    ring.style.width = w + 'px';
-    ring.style.height = h + 'px';
-    ring.classList.toggle('round', round || (Math.abs(w - h) < 8 && w < 90));
-    ring.classList.add('show-ring');
-  }
-
-  async function showCoachStep(i){
-    if(coachBusy) return;
-    coachBusy = true;
-    try{
-      const s = coachSteps[i];
-      if(!s){ closeTutorial(); return; }
-
-      // always keep home visible — no screen hopping
-      const home = document.getElementById('screen-home');
-      if(!home.classList.contains('active')){
-        showScreen('home');
-        await new Promise(r => setTimeout(r, 320));
-      }
-
-      // close any open modals/bubbles so they don't cover targets
-      document.getElementById('addModal').classList.add('hide');
-      document.getElementById('editModal').classList.add('hide');
-      document.getElementById('igPlaceModal').classList.add('hide');
-      document.getElementById('countryBubble').classList.remove('show');
-
-      const ring = document.getElementById('coachRing');
-      const tip = document.getElementById('coachTip');
-
-      if(s.welcome || !s.target){
-        hideCoachRing();
-        centerCoachTip();
-      } else {
-        let target = document.querySelector(s.target);
-        // navbar items are always in DOM; wait a frame if needed
-        if(!target){
-          await new Promise(r => requestAnimationFrame(r));
-          target = document.querySelector(s.target);
-        }
-        if(!target){
-          // skip broken step
-          coachBusy = false;
-          if(i < coachSteps.length - 1){ coachIndex++; showCoachStep(coachIndex); }
-          else closeTutorial();
-          return;
-        }
-        const rect = target.getBoundingClientRect();
-        if(rect.width < 2 || rect.height < 2){
-          coachBusy = false;
-          if(i < coachSteps.length - 1){ coachIndex++; showCoachStep(coachIndex); }
-          else closeTutorial();
-          return;
-        }
-        showCoachRing(rect, { pad: s.pad, round: s.round });
-        placeCoachTip(rect, s.place || 'above');
-      }
-
-      document.getElementById('tutIcon').innerHTML = s.icon || '';
-      document.getElementById('tutTitle').textContent = s.title;
-      document.getElementById('tutText').textContent = s.text;
-      const isLast = i === coachSteps.length - 1;
-      document.getElementById('tutNext').textContent = isLast ? 'Поехали!' : 'Дальше';
-      document.getElementById('tutDots').innerHTML = coachSteps.map((_, idx) =>
-        `<span class="${idx === i ? 'on' : ''}"></span>`
-      ).join('');
-
-      // restart card animation
-      const card = document.getElementById('coachCard');
-      card.style.animation = 'none';
-      void card.offsetWidth;
-      card.style.animation = '';
-
-      document.getElementById('tutorial').classList.remove('hide');
-    } finally {
-      coachBusy = false;
-    }
+  function tutSyncCardWithModal(forceShow){
+    const card = document.getElementById('tutCard');
+    if(!card) return;
+    if(forceShow){ card.classList.remove('tut-away'); return; }
+    const add = document.getElementById('addModal');
+    const edit = document.getElementById('editModal');
+    const open = (add && !add.classList.contains('hide')) || (edit && !edit.classList.contains('hide'));
+    card.classList.toggle('tut-away', !!open);
   }
 
   function openTutorial(){
-    coachIndex = 0;
-    document.getElementById('addModal').classList.add('hide');
-    document.getElementById('editModal').classList.add('hide');
-    document.getElementById('igPlaceModal').classList.add('hide');
-    document.getElementById('countryBubble').classList.remove('show');
-    showCoachStep(coachIndex);
+    tutIndex = 0;
+    tutReady = false;
+    tutPlaceName = '';
+    tutClear();
+    window.__tutLockUI = true;
+    try{ document.getElementById('addModal').classList.add('hide'); }catch(e){}
+    const root = document.getElementById('tutorial');
+    root.classList.remove('hide', 'tut-enter');
+    void root.offsetWidth;
+    root.classList.add('tut-enter');
+    tutShow(0);
+    try{ sfx('soft'); }catch(e){}
   }
 
   function closeTutorial(){
-    document.getElementById('tutorial').classList.add('hide');
-    hideCoachRing();
+    tutClear();
+    window.__tutLockUI = false;
+    const root = document.getElementById('tutorial');
+    root.classList.add('hide');
+    root.classList.remove('tut-welcome','tut-live','tut-nodim','tut-enter');
     csSet('tutorial_seen', '1');
     showScreen('home');
+    try{ loadPlaces(); }catch(e){}
   }
 
   document.getElementById('tutNext').addEventListener('click', ()=>{
-    if(coachBusy) return;
-    if(coachIndex >= coachSteps.length - 1){ closeTutorial(); return; }
-    coachIndex++;
-    showCoachStep(coachIndex);
+    const s = tutSteps[tutIndex];
+    if(s && s.need && !tutReady) return;
+    try{ sfx('tap'); }catch(e){}
+    if(tutIndex >= tutSteps.length-1){ closeTutorial(); return; }
+    tutIndex++;
+    tutShow(tutIndex);
   });
   document.getElementById('tutSkip').addEventListener('click', ()=>{
-    if(coachBusy) return;
+    try{ sfx('soft'); }catch(e){}
     closeTutorial();
   });
-  document.getElementById('replayTutorialBtn').addEventListener('click', ()=>{
-    showScreen('home');
-    setTimeout(openTutorial, 280);
-  });
-
-  let resizeTimer = null;
-  window.addEventListener('resize', ()=>{
-    if(document.getElementById('tutorial').classList.contains('hide')) return;
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(()=> showCoachStep(coachIndex), 120);
-  });
+  const replayBtn = document.getElementById('replayTutorialBtn');
+  if(replayBtn){
+    replayBtn.addEventListener('click', ()=>{
+      showScreen('home');
+      setTimeout(openTutorial, 200);
+    });
+  }
 
   csGet('tutorial_seen').then(seen=>{
-    if(seen !== '1'){
-      setTimeout(openTutorial, 1800); // после сплэша
-    }
+    if(seen !== '1') setTimeout(openTutorial, 3400);
   });
 
   // ---------- Supabase ----------
@@ -3038,6 +3279,38 @@
       statusEl.textContent = 'ошибка подключения';
     }
   }
+
+  function maybeAskDisplayName(){
+    try{
+      if(localStorage.getItem('ml_display_name_set') === '1') return;
+    }catch(e){}
+    const gate = document.getElementById('nameGate');
+    if(!gate) return;
+    const input = document.getElementById('displayNameInput');
+    if(input && tgUser){
+      input.value = (tgUser.first_name || '').slice(0, 24);
+    }
+    gate.classList.remove('hide');
+  }
+  document.getElementById('displayNameSave').addEventListener('click', async ()=>{
+    const input = document.getElementById('displayNameInput');
+    let name = (input && input.value || '').trim().replace(/\s+/g, ' ');
+    if(name.length < 2){ alert('Имя слишком короткое'); return; }
+    if(name.length > 24) name = name.slice(0, 24);
+    try{
+      if(myUserId){
+        const { error } = await supabase.from('users').update({ username: name }).eq('id', myUserId);
+        if(error){ console.warn(error); }
+      }
+      document.getElementById('profileName').textContent = name;
+      try{ localStorage.setItem('ml_display_name_set', '1'); }catch(e){}
+      document.getElementById('nameGate').classList.add('hide');
+      try{ sfx('success'); haptic('success'); }catch(e){}
+    }catch(e){
+      alert('Не удалось сохранить имя');
+    }
+  });
+
   initUser();
 
   // ---------- invite button ----------
@@ -3062,9 +3335,9 @@
       box.innerHTML = (data||[]).map(u=>`
         <div class="friend-row">
           <div class="fav" style="${u.avatar_url ? `background-image:url(${u.avatar_url})` : ''}"></div>
-          <div><div class="fname">${u.username}</div></div>
+          <div style="flex:1;min-width:0"><div class="fname">${u.username}</div><div class="fstat">в MapLink</div></div>
           <button class="mini-btn" onclick="window.__sendReq('${u.id}')">Добавить</button>
-        </div>`).join('') || '<div class="placeholder-box" style="margin-top:0;">никого не нашлось</div>';
+        </div>`).join('') || '<div class="placeholder-box" style="margin-top:0;">никого не нашлось — проверь имя в MapLink</div>';
     }, 350);
   });
 
@@ -3118,15 +3391,37 @@
     ];
 
     const list = document.getElementById('friendsList');
+    // notebook rows: name + countries/cities stats
+    let statsByUser = {};
+    if(friends.length){
+      try{
+        const ids = friends.map(f=>f.id);
+        const { data: pl } = await supabase.from('places').select('user_id,country,city,is_wishlist').in('user_id', ids);
+        (pl||[]).forEach(p=>{
+          if(p.is_wishlist) return;
+          if(!statsByUser[p.user_id]) statsByUser[p.user_id] = { countries: new Set(), cities: 0 };
+          if(p.country) statsByUser[p.user_id].countries.add(p.country);
+          statsByUser[p.user_id].cities += 1;
+        });
+      }catch(e){}
+    }
     list.innerHTML = friends.length ? friends.map((f,i)=>{
       const safeName = (f.username||'').replace(/'/g,"\\'");
+      const st = statsByUser[f.id];
+      const nc = st ? st.countries.size : 0;
+      const nci = st ? st.cities : 0;
+      const pct = Math.round(nc / 195 * 100);
+      const statLine = st
+        ? `<div class="fstat"><b>${nc}</b> стран · <b>${nci}</b> город. · ${pct}%</div>`
+        : `<div class="fstat">пока без поездок</div>`;
       return `
       <div class="friend-row" style="animation-delay:${Math.min(i*0.05,0.3)}s">
         <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''};cursor:pointer" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')"></div>
         <div style="cursor:pointer;flex:1;min-width:0" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')">
           <div class="fname">${f.username}</div>
+          ${statLine}
         </div>
-        <button class="mini-btn ghost" style="margin-left:6px" onclick="event.stopPropagation();window.__removeFriend('${f.friendshipId}')">Удалить</button>
+        <button class="mini-btn ghost" style="margin-left:6px;flex-shrink:0" onclick="event.stopPropagation();window.__removeFriend('${f.friendshipId}')">Удалить</button>
       </div>`;
     }).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
   }
@@ -3437,6 +3732,20 @@
   }
 
   // works for BOTH your own places and a friend's — looks up whichever cache has it
+  window.__editOwnPlace = function(placeId){
+    const p = (allPlacesCache || []).find(x => x.id === placeId);
+    if(!p) return;
+    openAddModal({
+      country: p.country,
+      city: p.city || '',
+      note: p.note || '',
+      date: p.visit_date || '',
+      wishlist: !!p.is_wishlist,
+      selectedCountry: { name: p.country, code:'', lat:p.lat, lon:p.lon },
+      selectedCity: p.city ? { name:p.city, lat:p.lat, lon:p.lon } : null
+    });
+  };
+
   window.__openPlaceView = function(placeId){
     let p = allPlacesCache.find(x=>x.id === placeId);
     let photosByPlace = window.__ownPhotosCache || {};
@@ -3567,7 +3876,9 @@
     attributionControl: false,
     refreshExpiredTiles: false,
     maxPitch: 60,
-    fadeDuration: 0
+    fadeDuration: 180,
+    maxTileCacheSize: 80,
+    collectResourceTiming: false
   });
 
   // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom ----------
@@ -3653,15 +3964,18 @@
         if(l.type === 'symbol'){
           if(sl === 'place'){
             placeLabelLayers.push(l.id);
-            if(l.id.toLowerCase().includes('country') || l.id.toLowerCase().includes('continent')){
+            const id = l.id.toLowerCase();
+            if(id.includes('country') || id.includes('continent')){
               map.setLayerZoomRange(l.id, 0, l.maxzoom || 24);
+            } else if(id.includes('city') || id.includes('town')){
+              try{ map.setLayerZoomRange(l.id, 3, l.maxzoom || 24); }catch(e){}
             }
           }
           const layout = map.getLayoutProperty(l.id, 'text-field');
           if(layout){
             map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
           }
-          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.3); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.15); }catch(e){}
         }
       }catch(e){}
     });
@@ -3671,23 +3985,124 @@
     try{ buildGlobeStars(); }catch(e){}
   });
 
+
+  // soft planet hum while rotating/dragging
+  (function setupPlanetHum(){
+    let humOsc = null, humGain = null, humTimer = null;
+    function startHum(){
+      if(typeof soundMuted !== 'undefined' && soundMuted) return;
+      const ac = getAC && getAC();
+      if(!ac) return;
+      if(humOsc) return;
+      try{
+        humOsc = ac.createOscillator();
+        humGain = ac.createGain();
+        humOsc.type = 'sine';
+        humOsc.frequency.value = 55;
+        humGain.gain.value = 0.0001;
+        humOsc.connect(humGain); humGain.connect(ac.destination);
+        humOsc.start();
+        humGain.gain.linearRampToValueAtTime(0.012, ac.currentTime + 0.15);
+      }catch(e){ humOsc = null; }
+    }
+    function stopHum(){
+      const ac = getAC && getAC();
+      if(!humOsc || !humGain) return;
+      try{
+        const t = ac ? ac.currentTime : 0;
+        humGain.gain.linearRampToValueAtTime(0.0001, t + 0.2);
+        const o = humOsc, g = humGain;
+        humOsc = null; humGain = null;
+        setTimeout(()=>{ try{ o.stop(); o.disconnect(); g.disconnect(); }catch(e){} }, 280);
+      }catch(e){}
+    }
+    function onMove(){
+      startHum();
+      clearTimeout(humTimer);
+      humTimer = setTimeout(stopHum, 280);
+    }
+    if(window.__mlMap){
+      window.__mlMap.on('move', onMove);
+    } else {
+      const t = setInterval(()=>{
+        if(window.__mlMap){ window.__mlMap.on('move', onMove); clearInterval(t); }
+      }, 400);
+    }
+  })();
+
   let placeMarkers = [];
   let selectedCountry = null; // {name, code, lat, lon}
   let selectedCity = null;    // {name, lat, lon}
 
+
+  function setDateChipMode(mode){
+    const today = document.getElementById('dateChipToday');
+    const pick = document.getElementById('dateChipPick');
+    const none = document.getElementById('dateChipNone');
+    const box = document.getElementById('datePickerBox');
+    const input = document.getElementById('addDate');
+    [today, pick, none].forEach(b=>{ if(b) b.classList.remove('on'); });
+    if(mode === 'today'){
+      if(today) today.classList.add('on');
+      if(box) box.classList.remove('show');
+      if(input) input.value = new Date().toISOString().slice(0,10);
+    } else if(mode === 'pick'){
+      if(pick) pick.classList.add('on');
+      if(box) box.classList.add('show');
+      if(input && !input.value) input.value = new Date().toISOString().slice(0,10);
+      try{ input.showPicker && input.showPicker(); }catch(e){}
+    } else {
+      if(none) none.classList.add('on');
+      if(box) box.classList.remove('show');
+      if(input) input.value = '';
+    }
+  }
+  ['dateChipToday','dateChipPick','dateChipNone'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('click', ()=>{
+      setDateChipMode(el.dataset.date);
+      try{ sfx('tap'); }catch(e){}
+    });
+  });
+
+  let addStep = 1;
+  function setAddStep(n){
+    addStep = Math.max(1, Math.min(3, n));
+    document.querySelectorAll('.add-step').forEach(el=>{
+      el.classList.toggle('on', Number(el.dataset.addStep) === addStep);
+    });
+    document.querySelectorAll('.add-dot').forEach(el=>{
+      el.classList.toggle('on', Number(el.dataset.step) === addStep);
+    });
+    const titles = { 1:'Где вы были?', 2:'Когда это было?', 3:'Детали' };
+    const t = document.getElementById('addStepTitle');
+    if(t) t.textContent = titles[addStep] || 'Новое место';
+    const back = document.getElementById('addBackBtn');
+    const next = document.getElementById('addNextBtn');
+    const save = document.getElementById('addSaveBtn');
+    if(back) back.style.display = addStep > 1 ? '' : 'none';
+    if(next) next.style.display = addStep < 3 ? '' : 'none';
+    if(save) save.style.display = addStep === 3 ? '' : 'none';
+  }
   function openAddModal(prefill){
     document.getElementById('addCountry').value = (prefill && prefill.country) || '';
     document.getElementById('addCity').value = (prefill && prefill.city) || '';
-    document.getElementById('addNote').value = '';
-    document.getElementById('addWishlist').checked = false;
-    document.getElementById('addDate').value = '';
-    document.getElementById('dateWrap').classList.remove('open');
+    document.getElementById('addNote').value = (prefill && prefill.note) || '';
+    document.getElementById('addWishlist').checked = !!(prefill && prefill.wishlist);
+    document.getElementById('addDate').value = (prefill && prefill.date) || '';
+    try{
+      if(prefill && prefill.date) setDateChipMode('pick');
+      else setDateChipMode('none');
+    }catch(e){}
     document.getElementById('addPhoto').value = '';
-    document.getElementById('addPhotoText').querySelector('span:last-child').textContent = 'Добавить фото';
+    const ph = document.getElementById('addPhotoText');
+    if(ph){ const s = ph.querySelector('span:last-child'); if(s) s.textContent = 'Фото (до 3)'; }
     selectedCountry = (prefill && prefill.selectedCountry) || null;
     selectedCity = (prefill && prefill.selectedCity) || null;
     document.getElementById('countrySuggest').style.display = 'none';
     document.getElementById('citySuggest').style.display = 'none';
+    setAddStep(1);
     document.getElementById('addModal').classList.remove('hide');
   }
   // little celebratory burst — no library, just a handful of DOM particles
@@ -3709,7 +4124,7 @@
     const box = document.createElement('div');
     box.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;z-index:500;pointer-events:none;';
     document.body.appendChild(box);
-    const n = 10;
+    const n = 7;
     for(let i=0;i<n;i++){
       const p = document.createElement('div');
       const angle = (Math.PI*2*i/n) + (Math.random()*0.6-0.3);
@@ -3824,17 +4239,35 @@
   }
 
   document.getElementById('fabAdd').addEventListener('click', ()=>{ try{sfx('tap')}catch(e){} openAddModal(); });
+
+  document.getElementById('addNextBtn').addEventListener('click', ()=>{
+    if(addStep === 1){
+      if(!selectedCountry && !document.getElementById('addCountry').value.trim()){
+        alert('Укажи страну'); return;
+      }
+      // if typed but not selected from suggest, still allow text as country name
+      if(!selectedCountry){
+        const name = document.getElementById('addCountry').value.trim();
+        if(name) selectedCountry = { name: name, code: '', lat: null, lon: null };
+      }
+      try{ sfx('tap'); }catch(e){}
+      setAddStep(2);
+      return;
+    }
+    if(addStep === 2){
+      try{ sfx('tap'); }catch(e){}
+      setAddStep(3);
+    }
+  });
+  document.getElementById('addBackBtn').addEventListener('click', ()=>{
+    try{ sfx('soft'); }catch(e){}
+    setAddStep(addStep - 1);
+  });
+
+
   document.getElementById('addCancelBtn').addEventListener('click', closeAddModal);
 
-  document.getElementById('dateToggleBtn').addEventListener('click', ()=>{
-    document.getElementById('dateWrap').classList.add('open');
-    document.getElementById('addDate').value = document.getElementById('addDate').value || new Date().toISOString().slice(0,10);
-    document.getElementById('addDate').focus();
-  });
-  document.getElementById('dateClearBtn').addEventListener('click', ()=>{
-    document.getElementById('addDate').value = '';
-    document.getElementById('dateWrap').classList.remove('open');
-  });
+  // date UI: chips (setDateChipMode)
 
   // ---------- Plague-Inc style tap bubble on country/city labels ----------
   const bubbleEl = document.getElementById('countryBubble');
@@ -3847,6 +4280,7 @@
   map.on('pitchstart', hideBubble);
 
   map.on('click', (e)=>{
+    if(window.__tutLockUI){ bubbleEl.classList.remove('show'); return; }
     const features = map.queryRenderedFeatures(e.point, { layers: placeLabelLayers });
     if(!features.length){ bubbleEl.classList.remove('show'); return; }
     const f = features[0];
@@ -4038,8 +4472,18 @@
       const visitDate = document.getElementById('addDate').value || null;
       const noteVal = document.getElementById('addNote').value.trim() || null;
       const wishVal = document.getElementById('addWishlist').checked;
-      const latVal = selectedCity ? selectedCity.lat : selectedCountry.lat;
-      const lonVal = selectedCity ? selectedCity.lon : selectedCountry.lon;
+      let latVal = selectedCity ? selectedCity.lat : selectedCountry.lat;
+      let lonVal = selectedCity ? selectedCity.lon : selectedCountry.lon;
+      if((latVal == null || lonVal == null) && selectedCountry && selectedCountry.name){
+        try{
+          const q = selectedCity && selectedCity.name
+            ? (selectedCity.name + ', ' + selectedCountry.name)
+            : selectedCountry.name;
+          const rr = await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&accept-language=ru&q='+encodeURIComponent(q));
+          const jj = await rr.json();
+          if(jj && jj[0]){ latVal = parseFloat(jj[0].lat); lonVal = parseFloat(jj[0].lon); }
+        }catch(e){}
+      }
 
       let newPlace = null;
       if(existing && existing.length){
@@ -4092,6 +4536,11 @@
       try{ sfx('success'); haptic('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
       closeAddModal();
       loadPlaces();
+      // after ticket burst finishes — notify tutorial
+      clearTimeout(window.__tutAfterAddTimer);
+      window.__tutAfterAddTimer = setTimeout(()=>{
+        try{ if(typeof window.__onTutPlaceSaved === 'function') window.__onTutPlaceSaved(); }catch(e){}
+      }, 1700);
     } finally {
       saveBtn.classList.remove('loading');
     }
@@ -4134,6 +4583,15 @@
       }catch(e){}
     });
     try{ updateTravelTrail(allPlacesCache || [], true); }catch(e){}
+  }
+
+
+  function updateCityFills(places){
+    try{
+      if(map && map.getLayer('city-fills-glow')) map.removeLayer('city-fills-glow');
+      if(map && map.getLayer('city-fills-core')) map.removeLayer('city-fills-core');
+      if(map && map.getSource('city-fills')) map.removeSource('city-fills');
+    }catch(e){}
   }
 
   function updateTravelTrail(places, animate){
@@ -4258,34 +4716,30 @@
     }
     window.__ownPhotosCache = photosByPlace;
 
-    placeMarkers.forEach(m=>m.remove());
-    placeMarkers = [];
+    // stable marker update — never mass-remove (that caused edge flash on globe)
+    const prevById = new Map();
+    placeMarkers.forEach(m=>{
+      try{
+        const id = m.getElement() && m.getElement().dataset.placeId;
+        if(id) prevById.set(id, m);
+      }catch(e){}
+    });
+    const nextMarkers = [];
+    const seen = new Set();
+
+    function pinHtml(isWish){
+      return isWish
+        ? `<svg viewBox="0 0 26 34" fill="none"><path d="M13 1.5C6.3 1.5 1.5 6.7 1.5 13c0 8.8 11.5 18.7 11.5 18.7s11.5-9.9 11.5-18.7C24.5 6.7 19.7 1.5 13 1.5z" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3.2 3.2"/><path d="M13 18.2s-4.3-2.7-4.3-5.7c0-1.6 1.3-2.8 2.8-2.8 1 0 2 .6 2.5 1.5.5-.9 1.4-1.5 2.5-1.5 1.5 0 2.8 1.2 2.8 2.8 0 3-4.3 5.7-4.3 5.7z" fill="var(--rose)" opacity=".6"/></svg>`
+        : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
+    }
 
     places.forEach(p=>{
       if(p.lat == null || p.lon == null) return;
-      const el = document.createElement('div');
-      el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
-      el.dataset.placeId = p.id;
-      el.innerHTML = p.is_wishlist
-        ? `<svg viewBox="0 0 26 34" fill="none"><path d="M13 1.5C6.3 1.5 1.5 6.7 1.5 13c0 8.8 11.5 18.7 11.5 18.7s11.5-9.9 11.5-18.7C24.5 6.7 19.7 1.5 13 1.5z" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3.2 3.2"/><path d="M13 18.2s-4.3-2.7-4.3-5.7c0-1.6 1.3-2.8 2.8-2.8 1 0 2 .6 2.5 1.5.5-.9 1.4-1.5 2.5-1.5 1.5 0 2.8 1.2 2.8 2.8 0 3-4.3 5.7-4.3 5.7z" fill="var(--rose)" opacity=".6"/></svg>`
-        : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
-      el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
-      const marker = new maplibregl.Marker({element: el, anchor: 'bottom'})
-        .setLngLat([Number(p.lon), Number(p.lat)])
-        .addTo(map);
-      // wait until MapLibre projects the pin — avoids the "sticks to edge then jumps" glitch
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          el.style.transition = 'opacity .22s ease';
-          el.style.opacity = '1';
-          el.style.pointerEvents = '';
-        });
-      });
-
+      const lon = Number(p.lon), lat = Number(p.lat);
+      if(!isFinite(lon) || !isFinite(lat)) return;
+      seen.add(p.id);
       const photos = photosByPlace[p.id] || [];
       const photoHtml = photos.length ? `<img src="${photos[0]}" style="width:100%;height:90px;object-fit:cover;border-radius:10px;margin-bottom:8px;">` : '';
-
       const popupHtml = `
         <div class="map-popup">
           ${photoHtml}
@@ -4293,10 +4747,37 @@
           <div class="mp-note">${p.note ? p.note : (p.is_wishlist ? 'место мечты' : (p.visit_date || ''))}</div>
           <button class="mp-btn" onclick="window.__deletePlace('${p.id}')">Удалить</button>
         </div>`;
-      const popup = new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml);
-      marker.setPopup(popup);
-      placeMarkers.push(marker);
+
+      let marker = prevById.get(p.id);
+      if(marker){
+        try{
+          marker.setLngLat([lon, lat]);
+          const el = marker.getElement();
+          if(el){
+            el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
+            el.innerHTML = pinHtml(!!p.is_wishlist);
+          }
+          marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml));
+        }catch(e){}
+        nextMarkers.push(marker);
+        prevById.delete(p.id);
+      } else {
+        const el = document.createElement('div');
+        el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
+        el.dataset.placeId = p.id;
+        el.innerHTML = pinHtml(!!p.is_wishlist);
+        // create off-map first, then set coords, then add — reduces first-frame glitch
+        marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
+        marker.setLngLat([lon, lat]);
+        marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml));
+        marker.addTo(map);
+        nextMarkers.push(marker);
+      }
     });
+    // remove stale
+    prevById.forEach(m=>{ try{ m.remove(); }catch(e){} });
+    placeMarkers = nextMarkers;
+
 
     // travel traces: dashed route between visited places by date
     try{ updateTravelTrail(places, true); }catch(e){}
@@ -4355,10 +4836,7 @@
     const v = sortPlacesList(visited);
     const w = sortPlacesList(wishlist);
     const pcBtn = document.getElementById('postcardBtn');
-    if(pcBtn){
-      const n = new Set(visited.map(p=>p.country).filter(Boolean)).size;
-      pcBtn.style.display = n >= 1 ? '' : 'none';
-    }
+    if(pcBtn) pcBtn.style.display = 'none';
     if(profileViewMode === 'grid'){
       document.getElementById('myPlacesList').innerHTML = renderGrid(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
       document.getElementById('myWishlistList').innerHTML = renderGrid(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
@@ -4397,14 +4875,33 @@
     return url.replace(/\/\d+px-/, '/240px-');
   }
   async function fetchWikiThumb(lang, name){
+    if(!name) return null;
     const ctrl = new AbortController();
-    const timer = setTimeout(()=> ctrl.abort(), 4000);
+    const timer = setTimeout(()=> ctrl.abort(), 4500);
     try{
-      const res = await fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name), { signal: ctrl.signal });
+      // 1) direct summary
+      let res = await fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name), { signal: ctrl.signal });
+      if(res.ok){
+        const data = await res.json();
+        if(data.thumbnail && data.thumbnail.source){ clearTimeout(timer); return data.thumbnail.source; }
+      }
+      // 2) search → first hit summary (helps when exact title missing)
+      const qs = 'https://'+lang+'.wikipedia.org/w/api.php?action=query&list=search&srsearch='
+        + encodeURIComponent(name) + '&srlimit=1&format=json&origin=*';
+      res = await fetch(qs, { signal: ctrl.signal });
+      if(res.ok){
+        const data = await res.json();
+        const title = data && data.query && data.query.search && data.query.search[0] && data.query.search[0].title;
+        if(title){
+          const res2 = await fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(title), { signal: ctrl.signal });
+          if(res2.ok){
+            const d2 = await res2.json();
+            if(d2.thumbnail && d2.thumbnail.source){ clearTimeout(timer); return d2.thumbnail.source; }
+          }
+        }
+      }
       clearTimeout(timer);
-      if(!res.ok) return null;
-      const data = await res.json();
-      return (data.thumbnail && data.thumbnail.source) ? data.thumbnail.source : null;
+      return null;
     }catch(e){
       clearTimeout(timer);
       return null;
@@ -4669,17 +5166,23 @@
   }
 
   // preload image into browser cache, then apply
-  function applyBg(el, url){
-    if(!el || !url) return;
+  function applyBg(el, url, fallbackName){
+    if(!el) return;
+    if(!url){
+      url = generatePlaceholderPattern(fallbackName || 'place');
+    }
     const img = new Image();
     img.decoding = 'async';
     img.onload = ()=>{
-      el.style.backgroundImage = `url(${url})`;
-      if(el.classList.contains('thumb')) el.innerHTML = '';
+      el.style.backgroundImage = `url("${url}")`;
+      el.innerHTML = '';
       el.classList.add('bg-ready');
     };
     img.onerror = ()=>{
-      // broken/blocked image url — leave the icon fallback in place instead of a blank box
+      const fb = generatePlaceholderPattern(fallbackName || 'place');
+      el.style.backgroundImage = `url("${fb}")`;
+      el.innerHTML = '';
+      el.classList.add('bg-ready');
     };
     img.src = url;
   }
@@ -4749,17 +5252,19 @@
         // real uploaded photo: fine to lazy-load, it's guaranteed to exist
         els.forEach(el=> scheduleBg(el, own[0]));
       } else if(els.length){
+        // show pattern immediately so polaroid is never empty while wiki loads
+        const instant = generatePlaceholderPattern(p.city || p.country || 'place');
+        els.forEach(el=> applyBg(el, instant, p.city || p.country));
         tasks.push(async ()=>{
-          const url = await fetchDefaultPhoto(p.city || p.country, p.country);
-          if(!url) return;
-          // apply immediately (not lazy) — a screen can be display:none when this
-          // resolves, and some WebViews never re-fire IntersectionObserver after that
+          let url = null;
+          try{ url = await fetchDefaultPhoto(p.city || p.country, p.country); }catch(e){}
+          if(!url) url = generatePlaceholderPattern(p.city || p.country || 'place');
           document.querySelectorAll(sel).forEach(el=>{
             if(url.indexOf('flagcdn.com') !== -1){
               el.style.backgroundSize = 'cover';
               el.style.backgroundPosition = 'center';
             }
-            applyBg(el, url);
+            applyBg(el, url, p.city || p.country);
           });
         });
       }
@@ -4966,6 +5471,7 @@
 
 
   function bindSwipeRows(root){
+    return; // replaced by ··· menu — swipe conflicted with scroll
     if(!root) return;
     root.querySelectorAll('.journal-ticket[data-swipe-id]').forEach(card=>{
       if(card.dataset.swipeBound) return;
@@ -5020,8 +5526,8 @@
         });
         if(p.note) document.getElementById('addNote').value = p.note;
         if(p.visit_date){
-          document.getElementById('dateWrap').classList.add('open');
           document.getElementById('addDate').value = p.visit_date;
+          try{ setDateChipMode('pick'); }catch(e){}
         }
         document.getElementById('addWishlist').checked = !!p.is_wishlist;
       });
@@ -5037,7 +5543,7 @@
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
       const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
-      return `<div class="journal-ticket" data-swipe-id="${p.id}" ${tap} style="animation-delay:${Math.min(i*0.04,0.35)}s">
+      return `<div class="journal-ticket" data-swipe-id="${p.id}" onclick="window.__editOwnPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s;cursor:pointer;">
         <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="jt-body">
           <div class="jt-eyebrow">MAPLINK · BOARDING PASS</div>
@@ -5146,7 +5652,10 @@
     const box = document.getElementById('friendsFeed');
     if(!myUserId){ box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">подключение…</div>'; return; }
     if(!cachedFriendIds.length){
-      box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">добавь друзей — здесь появятся их поездки</div>';
+      box.innerHTML = `<div class="feed-empty">
+        <div class="fe-title">Пока тихо</div>
+        <div class="fe-sub">Добавь друзей — здесь появятся их поездки.<br>Можно пригласить по ссылке во вкладке «Друзья».</div>
+      </div>`;
       return;
     }
     const { data: places } = await supabase.from('places')
@@ -5156,7 +5665,10 @@
       .order('created_at', { ascending: false })
       .limit(30);
     if(!places || !places.length){
-      box.innerHTML = '<div class="placeholder-box" style="margin-top:0;">у друзей пока нет поездок</div>';
+      box.innerHTML = `<div class="feed-empty">
+        <div class="fe-title">У друзей пока тихо</div>
+        <div class="fe-sub">Как только они отметят поездки — они появятся здесь, как страницы дневника.</div>
+      </div>`;
       return;
     }
     const userIds = [...new Set(places.map(p=>p.user_id))];
@@ -5206,7 +5718,7 @@
       const iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>';
       const iconChat = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6A2.5 2.5 0 0116.5 15H11l-4 3.5V15H7.5A2.5 2.5 0 015 12.5v-6z"/></svg>';
       const iconWish = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
-      const wishBtn = `<button class="wish-save-btn" data-pid="${p.id}" onclick="window.__saveToWishlist('${p.id}')">${iconWish} хочу туда</button>`;
+      const wishBtn = `<button type="button" class="wish-save-btn" data-pid="${p.id}" onclick="event.stopPropagation();window.__saveToWishlist('${p.id}')">${iconWish} хочу туда</button>`;
       const iconPin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>';
       const reactsMeta = [
         { em:'heart', icon: iconHeart, label:'' },
@@ -5278,7 +5790,8 @@
     if(!myUserId) return;
     const p = (window.__feedPlacesCache || []).find(x => x.id === placeId);
     if(!p){ alert('Место не найдено'); return; }
-    const btn = document.querySelector('.wish-save-btn[data-pid="'+placeId+'"]');
+    const btns = document.querySelectorAll('.wish-save-btn[data-pid="'+placeId+'"]');
+    const btn = btns[0];
     try{
       let q = supabase.from('places').select('id').eq('user_id', myUserId).eq('country', p.country).eq('is_wishlist', true);
       q = p.city ? q.eq('city', p.city) : q.is('city', null);
@@ -5287,10 +5800,11 @@
       if(existing && existing.length){
         const { error } = await supabase.from('places').delete().eq('id', existing[0].id).eq('user_id', myUserId);
         if(error){ alert('Не удалось убрать: ' + error.message); return; }
-        if(btn){
-          btn.classList.remove('done');
-          btn.innerHTML = (btn.dataset.icon || '') + ' хочу туда';
-        }
+        btns.forEach(b=>{
+          b.classList.remove('done');
+          const ic = b.dataset.icon || '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
+          b.innerHTML = ic + ' хочу туда';
+        });
         try{ sfx('soft'); }catch(e){}
         try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('light'); }catch(e){}
         loadPlaces();
@@ -5307,14 +5821,14 @@
         visit_date: null
       });
       if(error){ alert('Не удалось: ' + error.message); return; }
-      if(btn){
-        if(!btn.dataset.icon){
-          const svg = btn.querySelector('svg');
-          btn.dataset.icon = svg ? svg.outerHTML : '';
+      btns.forEach(b=>{
+        if(!b.dataset.icon){
+          const svg = b.querySelector('svg');
+          b.dataset.icon = svg ? svg.outerHTML : '';
         }
-        btn.classList.add('done');
-        btn.innerHTML = (btn.dataset.icon || '') + ' в вишлисте · убрать';
-      }
+        b.classList.add('done');
+        b.innerHTML = (b.dataset.icon || '') + ' убрать';
+      });
       try{ sfx('select'); }catch(e){}
       try{ if(tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium'); }catch(e){}
       loadPlaces();
