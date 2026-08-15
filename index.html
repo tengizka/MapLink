@@ -1853,13 +1853,14 @@
     box-shadow:0 0 0 2px rgba(197,123,133,.2);
   }
   .trail-mode-marker{
-    width:28px; height:28px; border-radius:50%;
-    background:var(--card);
-    border:2px solid var(--rose);
+    width:22px; height:22px; border-radius:50%;
+    background:rgba(255,253,251,.95);
+    border:1.5px solid rgba(197,123,133,.55);
     display:flex; align-items:center; justify-content:center;
-    font-size:14px;
-    box-shadow:0 2px 8px rgba(58,46,43,.25);
+    font-size:12px;
+    box-shadow:0 1px 4px rgba(58,46,43,.18);
     pointer-events:none;
+    will-change: transform;
   }
 
   .date-toggle{
@@ -1986,7 +1987,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.71 alpha</div>
+    <div class="app-version">v0.72 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2092,9 +2093,10 @@
             <button type="button" class="tr-chip on" data-tr="" title="Не указывать">—</button>
           </div>
           <div class="route-label" style="margin-top:10px;">Откуда приехали</div>
-          <select class="add-field" id="addFromPlace" style="margin-bottom:10px;">
-            <option value="">— не указывать —</option>
-          </select>
+          <div class="field-wrap" style="margin-bottom:10px;">
+            <input class="add-field" id="addFromPlace" placeholder="Страна или город" autocomplete="off">
+            <div class="suggest-list" id="fromSuggest" style="display:none;"></div>
+          </div>
         </div>
         <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
         <label class="add-photo-label" for="addPhoto">
@@ -4640,7 +4642,10 @@
   // ---------- route meta (transport + from) ----------
   const TR_ICON = { plane:'✈️', train:'🚂', car:'🚗', bus:'🚌', ship:'🚢', walk:'🚶' };
   let selectedTransport = '';
+  let selectedFrom = null;
   let trailModeMarkers = [];
+  let trailAnimMarker = null;
+  let trailAnimRaf2 = null;
 
   function getRouteMeta(placeId){
     try{ return JSON.parse(localStorage.getItem('ml_route_'+placeId) || 'null'); }catch(e){ return null; }
@@ -4677,6 +4682,46 @@
       try{ sfx('tap'); }catch(e){}
     });
   });
+
+  // from-place search (like country/city)
+  const fromInput = document.getElementById('addFromPlace');
+  const fromSuggest = document.getElementById('fromSuggest');
+  if(fromInput){
+    let fromTimer = null;
+    fromInput.addEventListener('input', ()=>{
+      selectedFrom = null;
+      const q = fromInput.value.trim();
+      if(fromTimer) clearTimeout(fromTimer);
+      if(q.length < 2){ if(fromSuggest) fromSuggest.style.display='none'; return; }
+      fromTimer = setTimeout(async ()=>{
+        try{
+          const url = 'https://nominatim.openstreetmap.org/search?format=json&limit=6&accept-language=ru&q='+encodeURIComponent(q);
+          const rr = await fetch(url, { headers:{ 'Accept':'application/json' } });
+          const jj = await rr.json();
+          if(!fromSuggest) return;
+          if(!jj || !jj.length){ fromSuggest.style.display='none'; return; }
+          fromSuggest.innerHTML = jj.map(item=>{
+            const label = item.display_name.split(',').slice(0,2).join(',').trim();
+            return `<div class="suggest-item" data-lat="${item.lat}" data-lon="${item.lon}" data-label="${label.replace(/"/g,'&quot;')}">${label}</div>`;
+          }).join('');
+          fromSuggest.style.display = '';
+          fromSuggest.querySelectorAll('.suggest-item').forEach(el=>{
+            el.addEventListener('click', ()=>{
+              selectedFrom = {
+                label: el.dataset.label,
+                lat: parseFloat(el.dataset.lat),
+                lon: parseFloat(el.dataset.lon)
+              };
+              fromInput.value = selectedFrom.label;
+              fromSuggest.style.display = 'none';
+              try{ sfx('select'); }catch(e){}
+            });
+          });
+        }catch(e){ if(fromSuggest) fromSuggest.style.display='none'; }
+      }, 320);
+    });
+  }
+
 
   let addStep = 1;
   function setAddStep(n){
@@ -4716,7 +4761,8 @@
     document.querySelectorAll('#transportChips .tr-chip').forEach(b=>{
       b.classList.toggle('on', (b.dataset.tr || '') === '');
     });
-    try{ fillFromPlaceSelect(); }catch(e){}
+    selectedFrom = null;
+    try{ const fi=document.getElementById('addFromPlace'); if(fi) fi.value=''; const fs=document.getElementById('fromSuggest'); if(fs) fs.style.display='none'; }catch(e){}
     document.getElementById('countrySuggest').style.display = 'none';
     document.getElementById('citySuggest').style.display = 'none';
     setAddStep(1);
@@ -5154,8 +5200,12 @@
       // route meta for trail
       try{
         if(newPlace && newPlace.id){
-          const fromId = (document.getElementById('addFromPlace') || {}).value || '';
-          setRouteMeta(newPlace.id, { transport: selectedTransport || '', fromId: fromId || '' });
+          setRouteMeta(newPlace.id, {
+            transport: selectedTransport || '',
+            fromLabel: selectedFrom ? selectedFrom.label : '',
+            fromLat: selectedFrom ? selectedFrom.lat : null,
+            fromLon: selectedFrom ? selectedFrom.lon : null
+          });
         }
       }catch(e){}
       closeAddModal();
@@ -5210,7 +5260,10 @@
         el.style.display = show ? '' : 'none';
       }catch(e){}
     });
-    try{ updateTravelTrail(allPlacesCache || [], true); }catch(e){}
+    clearTimeout(window.__trailDebounce);
+    window.__trailDebounce = setTimeout(()=>{
+      try{ updateTravelTrail(allPlacesCache || [], false); }catch(e){}
+    }, 120);
   }
 
 
@@ -5225,102 +5278,140 @@
   function updateTravelTrail(places, animate){
     if(!map || !map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
     if(trailAnimRaf){ cancelAnimationFrame(trailAnimRaf); trailAnimRaf = null; }
+    if(trailAnimRaf2){ cancelAnimationFrame(trailAnimRaf2); trailAnimRaf2 = null; }
 
-    // clear mode markers
+    // remove ONLY route markers (never touch placeMarkers)
     try{ trailModeMarkers.forEach(m=>{ try{ m.remove(); }catch(e){} }); }catch(e){}
     trailModeMarkers = [];
+    if(trailAnimMarker){ try{ trailAnimMarker.remove(); }catch(e){} trailAnimMarker = null; }
 
     let pts = (places || [])
-      .filter(p => !p.is_wishlist && p.lat != null && p.lon != null)
-      .slice()
-      .sort((a,b) => String(a.visit_date || a.created_at || '').localeCompare(String(b.visit_date || b.created_at || '')));
+      .filter(p => !p.is_wishlist && p.lat != null && p.lon != null);
 
-    if(globeFilter === 'wish'){ pts = []; }
+    if(globeFilter === 'wish') pts = [];
     else if(globeFilter === 'photo'){
       const photos = window.__ownPhotosCache || {};
       pts = pts.filter(p => (photos[p.id] || []).length > 0);
     }
 
-    const byId = {};
-    pts.forEach(p=>{ byId[p.id] = p; });
-
-    // segments: only if route meta says from+transport, else sequential fallback only when transport set
     const lineFeatures = [];
-    const iconPoints = [];
+    const animSegs = [];
 
     pts.forEach((p)=>{
       const meta = getRouteMeta(p.id) || {};
-      let from = meta.fromId ? byId[meta.fromId] : null;
-      // if from not in filtered set, try allPlacesCache
-      if(meta.fromId && !from){
-        from = (allPlacesCache||[]).find(x=>x.id===meta.fromId && x.lat!=null);
-      }
       const tr = meta.transport || '';
-      if(from && from.lat != null && from.lon != null && (tr || meta.fromId)){
-        const a = [from.lon, from.lat];
-        const b = [p.lon, p.lat];
+      let a = null;
+      if(meta.fromLat != null && meta.fromLon != null){
+        a = [Number(meta.fromLon), Number(meta.fromLat)];
+      }
+      if(a && p.lat != null && p.lon != null && isFinite(a[0]) && isFinite(a[1])){
+        const b = [Number(p.lon), Number(p.lat)];
+        if(!isFinite(b[0]) || !isFinite(b[1])) return;
         lineFeatures.push({
           type:'Feature',
           properties:{ transport: tr },
           geometry:{ type:'LineString', coordinates:[a,b] }
         });
-        if(tr && TR_ICON[tr]){
-          iconPoints.push({
-            lon: (a[0]+b[0])/2,
-            lat: (a[1]+b[1])/2,
-            icon: TR_ICON[tr]
-          });
-        }
+        if(tr) animSegs.push({ a, b, icon: TR_ICON[tr] || '✈️' });
       }
     });
-
-    // if no explicit routes at all — light sequential trail (no icons) so map not empty
-    if(!lineFeatures.length && pts.length >= 2){
-      for(let i=1;i<pts.length;i++){
-        lineFeatures.push({
-          type:'Feature',
-          properties:{ transport:'' },
-          geometry:{ type:'LineString', coordinates:[[pts[i-1].lon,pts[i-1].lat],[pts[i].lon,pts[i].lat]] }
-        });
-      }
-    }
 
     const fc = { type:'FeatureCollection', features: lineFeatures };
     const empty = { type:'FeatureCollection', features: [] };
 
-    if(!map.getSource('travel-trail')){
-      map.addSource('travel-trail', { type:'geojson', data: empty });
-      map.addLayer({
-        id: 'travel-trail-line',
-        type: 'line',
-        source: 'travel-trail',
-        layout: { 'line-cap':'round', 'line-join':'round' },
-        paint: {
-          'line-color': '#C57B85',
-          'line-width': 2.2,
-          'line-opacity': 0.75
-        }
-      });
-    }
-    map.getSource('travel-trail').setData(fc);
+    try{
+      if(!map.getSource('travel-trail')){
+        map.addSource('travel-trail', { type:'geojson', data: empty });
+        map.addLayer({
+          id: 'travel-trail-line',
+          type: 'line',
+          source: 'travel-trail',
+          layout: { 'line-cap':'round', 'line-join':'round' },
+          paint: {
+            'line-color': '#C57B85',
+            'line-width': 1.4,
+            'line-opacity': 0.35,
+            'line-dasharray': [1.5, 2.8]
+          }
+        });
+      } else {
+        try{
+          map.setPaintProperty('travel-trail-line', 'line-opacity', 0.35);
+          map.setPaintProperty('travel-trail-line', 'line-width', 1.4);
+          map.setPaintProperty('travel-trail-line', 'line-dasharray', [1.5, 2.8]);
+        }catch(e){}
+      }
+      map.getSource('travel-trail').setData(fc);
+    }catch(e){}
 
-    // transport icons at midpoints
-    iconPoints.forEach(pt=>{
+    // one soft moving icon on the newest segment
+    if(animSegs.length){
+      const seg = animSegs[animSegs.length-1];
       try{
         const el = document.createElement('div');
         el.className = 'trail-mode-marker';
-        el.textContent = pt.icon;
-        const mk = new maplibregl.Marker({ element: el, anchor:'center' })
-          .setLngLat([pt.lon, pt.lat])
+        el.textContent = seg.icon;
+        trailAnimMarker = new maplibregl.Marker({ element: el, anchor:'center' })
+          .setLngLat(seg.a)
           .addTo(map);
-        trailModeMarkers.push(mk);
+        const t0 = performance.now();
+        const dur = 4200;
+        const step = (now)=>{
+          if(!trailAnimMarker) return;
+          const t = ((now - t0) % dur) / dur;
+          // ease in-out
+          const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+          const lng = seg.a[0] + (seg.b[0]-seg.a[0])*e;
+          const lat = seg.a[1] + (seg.b[1]-seg.a[1])*e;
+          try{ trailAnimMarker.setLngLat([lng, lat]); }catch(err){}
+          trailAnimRaf2 = requestAnimationFrame(step);
+        };
+        trailAnimRaf2 = requestAnimationFrame(step);
       }catch(e){}
-    });
+    }
+  }
+
+
+
+  function cachePlacesLocal(places){
+    try{ localStorage.setItem('ml_places_cache', JSON.stringify({ t: Date.now(), places: places || [] })); }catch(e){}
+  }
+  function readPlacesCache(){
+    try{
+      const raw = localStorage.getItem('ml_places_cache');
+      if(!raw) return null;
+      const o = JSON.parse(raw);
+      return (o && o.places) || null;
+    }catch(e){ return null; }
+  }
+  function cacheJson(key, data){
+    try{ localStorage.setItem('ml_cache_'+key, JSON.stringify({ t: Date.now(), data })); }catch(e){}
+  }
+  function readJsonCache(key, maxAgeMs){
+    try{
+      const raw = localStorage.getItem('ml_cache_'+key);
+      if(!raw) return null;
+      const o = JSON.parse(raw);
+      if(maxAgeMs && o.t && (Date.now()-o.t) > maxAgeMs) return o.data; // still return stale
+      return o.data;
+    }catch(e){ return null; }
   }
 
 
   async function loadPlaces(){
     if(!myUserId) return;
+    // paint from cache immediately to avoid empty lag
+    if(!allPlacesCache || !allPlacesCache.length){
+      const cached0 = readPlacesCache();
+      if(cached0 && cached0.length){
+        allPlacesCache = cached0;
+        try{ renderProfilePlaces(
+          cached0.filter(p=>!p.is_wishlist),
+          cached0.filter(p=>p.is_wishlist),
+          window.__ownPhotosCache || {}
+        ); }catch(e){}
+      }
+    }
     let places = [];
     try{
       const { data, error } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
@@ -6520,6 +6611,17 @@
     </div>`;
   }
   async function loadRankings(){
+    // instant paint from cache
+    try{
+      const cached = readJsonCache('rankings', 0);
+      if(cached && cached.fHtml){
+        const fBox = document.getElementById('rankFriends');
+        const gBox = document.getElementById('rankGlobal');
+        if(fBox && cached.fHtml) fBox.innerHTML = cached.fHtml;
+        if(gBox && cached.gHtml) gBox.innerHTML = cached.gHtml;
+      }
+    }catch(e){}
+
     const fBox = document.getElementById('rankFriendsList');
     const gBox = document.getElementById('rankGlobalList');
     if(!cachedFriendIds.length){
@@ -6539,6 +6641,7 @@
         .sort((a,b)=> b.countries - a.countries);
       fBox.innerHTML = rows.length ? rows.map((u,i)=> rankRowHtml(u, i+1, u.countries)).join('')
         : '<div class="placeholder-box" style="margin-top:0;">пусто</div>';
+      try{ cacheJson('rankings', { fHtml: fBox.innerHTML, gHtml: (document.getElementById('rankGlobal')||{}).innerHTML }); }catch(e){}
     }
 
     try{
@@ -6559,6 +6662,10 @@
       gBox.innerHTML = filtered.length
         ? filtered.map((r,i)=> rankRowHtml(r.u, i+1, r.countries)).join('')
         : '<div class="placeholder-box" style="margin-top:0;">пока нет реальных аккаунтов в топе</div>';
+      try{
+        const fBox = document.getElementById('rankFriends');
+        cacheJson('rankings', { fHtml: fBox ? fBox.innerHTML : '', gHtml: gBox.innerHTML });
+      }catch(e){}
     }catch(e){
       gBox.innerHTML = '<div class="placeholder-box" style="margin-top:0;">не удалось загрузить</div>';
     }
