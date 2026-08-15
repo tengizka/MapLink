@@ -1833,6 +1833,35 @@
   .add-toggle{
     display:flex; align-items:center; gap:8px; margin:6px 0 16px; font-size:13px; color:var(--muted);
   }
+  .route-block{ margin-bottom:12px; }
+  .route-label{
+    font-size:12px; font-weight:600; color:var(--muted);
+    margin-bottom:6px;
+  }
+  .transport-chips{
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .tr-chip{
+    width:40px; height:40px; border-radius:12px;
+    border:1.5px solid #EEDDD3; background:var(--cream);
+    font-size:18px; line-height:1;
+    display:flex; align-items:center; justify-content:center;
+    font-family:inherit;
+  }
+  .tr-chip.on{
+    border-color:var(--rose); background:var(--blush);
+    box-shadow:0 0 0 2px rgba(197,123,133,.2);
+  }
+  .trail-mode-marker{
+    width:28px; height:28px; border-radius:50%;
+    background:var(--card);
+    border:2px solid var(--rose);
+    display:flex; align-items:center; justify-content:center;
+    font-size:14px;
+    box-shadow:0 2px 8px rgba(58,46,43,.25);
+    pointer-events:none;
+  }
+
   .date-toggle{
     display:flex; align-items:center; gap:7px; width:100%;
     background:var(--cream); border:1px dashed #D8C2B6; border-radius:14px;
@@ -1957,7 +1986,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.70 alpha</div>
+    <div class="app-version">v0.71 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2051,6 +2080,22 @@
         </div>
       </div>
       <div class="add-step" data-add-step="3">
+        <div class="route-block">
+          <div class="route-label">Как добрались?</div>
+          <div class="transport-chips" id="transportChips">
+            <button type="button" class="tr-chip" data-tr="plane" title="Самолёт">✈️</button>
+            <button type="button" class="tr-chip" data-tr="train" title="Поезд">🚂</button>
+            <button type="button" class="tr-chip" data-tr="car" title="Машина">🚗</button>
+            <button type="button" class="tr-chip" data-tr="bus" title="Автобус">🚌</button>
+            <button type="button" class="tr-chip" data-tr="ship" title="Корабль">🚢</button>
+            <button type="button" class="tr-chip" data-tr="walk" title="Пешком">🚶</button>
+            <button type="button" class="tr-chip on" data-tr="" title="Не указывать">—</button>
+          </div>
+          <div class="route-label" style="margin-top:10px;">Откуда приехали</div>
+          <select class="add-field" id="addFromPlace" style="margin-bottom:10px;">
+            <option value="">— не указывать —</option>
+          </select>
+        </div>
         <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
         <label class="add-photo-label" for="addPhoto">
           <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
@@ -2839,12 +2884,12 @@
       o.type = 'sine';
       o.frequency.value = f;
       const g = ac.createGain();
-      g.gain.value = 0.011 - i*0.0015;
+      g.gain.value = 0.028 - i*0.003;
       o.connect(g); g.connect(filter);
       o.start();
       oscs.push(o);
     });
-    master.gain.linearRampToValueAtTime(0.04, ac.currentTime + 2.2);
+    master.gain.linearRampToValueAtTime(0.14, ac.currentTime + 1.8);
     try{
       filter.frequency.linearRampToValueAtTime(1100, ac.currentTime + 14);
       filter.frequency.linearRampToValueAtTime(750, ac.currentTime + 28);
@@ -4289,7 +4334,18 @@
     }
     renderIgStack();
     document.getElementById('igModalTitle').textContent = p.city ? p.city+', '+p.country : p.country;
-    document.getElementById('igModalMeta').textContent = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
+    let metaLine = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
+    try{
+      const rm = getRouteMeta(p.id);
+      if(rm && rm.transport && TR_ICON[rm.transport]){
+        metaLine = (metaLine ? metaLine+' · ' : '') + TR_ICON[rm.transport];
+        if(rm.fromId){
+          const fp = (allPlacesCache||[]).concat(window.__fvPlacesCache||[]).find(x=>x.id===rm.fromId);
+          if(fp) metaLine += ' из ' + (fp.city || fp.country);
+        }
+      }
+    }catch(e){}
+    document.getElementById('igModalMeta').textContent = metaLine;
     document.getElementById('igModalNote').textContent = p.note || '';
     document.getElementById('igEditBtn').style.display = isOwn ? '' : 'none';
     const flagEl = document.getElementById('igModalFlag');
@@ -4580,6 +4636,48 @@
     });
   });
 
+
+  // ---------- route meta (transport + from) ----------
+  const TR_ICON = { plane:'✈️', train:'🚂', car:'🚗', bus:'🚌', ship:'🚢', walk:'🚶' };
+  let selectedTransport = '';
+  let trailModeMarkers = [];
+
+  function getRouteMeta(placeId){
+    try{ return JSON.parse(localStorage.getItem('ml_route_'+placeId) || 'null'); }catch(e){ return null; }
+  }
+  function setRouteMeta(placeId, meta){
+    try{
+      if(!meta || (!meta.transport && !meta.fromId)){
+        localStorage.removeItem('ml_route_'+placeId);
+      } else {
+        localStorage.setItem('ml_route_'+placeId, JSON.stringify(meta));
+      }
+    }catch(e){}
+  }
+  function fillFromPlaceSelect(){
+    const sel = document.getElementById('addFromPlace');
+    if(!sel) return;
+    const visited = (allPlacesCache||[]).filter(p=>!p.is_wishlist);
+    const cur = sel.value;
+    sel.innerHTML = '<option value="">— не указывать —</option>';
+    visited.forEach(p=>{
+      const label = p.city ? (p.city+', '+p.country) : p.country;
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = label;
+      sel.appendChild(opt);
+    });
+    if(cur) sel.value = cur;
+  }
+  document.querySelectorAll('#transportChips .tr-chip').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('#transportChips .tr-chip').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      selectedTransport = btn.dataset.tr || '';
+      try{ sfx('tap'); }catch(e){}
+    });
+  });
+
   let addStep = 1;
   function setAddStep(n){
     addStep = Math.max(1, Math.min(3, n));
@@ -4614,6 +4712,11 @@
     if(ph){ const s = ph.querySelector('span:last-child'); if(s) s.textContent = 'Фото (до 3)'; }
     selectedCountry = (prefill && prefill.selectedCountry) || null;
     selectedCity = (prefill && prefill.selectedCity) || null;
+    selectedTransport = '';
+    document.querySelectorAll('#transportChips .tr-chip').forEach(b=>{
+      b.classList.toggle('on', (b.dataset.tr || '') === '');
+    });
+    try{ fillFromPlaceSelect(); }catch(e){}
     document.getElementById('countrySuggest').style.display = 'none';
     document.getElementById('citySuggest').style.display = 'none';
     setAddStep(1);
@@ -5048,6 +5151,13 @@
         fireConfetti(r.left + r.width/2, r.top + r.height/2);
       }
       try{ sfx('success'); haptic('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
+      // route meta for trail
+      try{
+        if(newPlace && newPlace.id){
+          const fromId = (document.getElementById('addFromPlace') || {}).value || '';
+          setRouteMeta(newPlace.id, { transport: selectedTransport || '', fromId: fromId || '' });
+        }
+      }catch(e){}
       closeAddModal();
       loadPlaces();
       // after ticket burst finishes — notify tutorial
@@ -5116,22 +5226,67 @@
     if(!map || !map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
     if(trailAnimRaf){ cancelAnimationFrame(trailAnimRaf); trailAnimRaf = null; }
 
+    // clear mode markers
+    try{ trailModeMarkers.forEach(m=>{ try{ m.remove(); }catch(e){} }); }catch(e){}
+    trailModeMarkers = [];
+
     let pts = (places || [])
       .filter(p => !p.is_wishlist && p.lat != null && p.lon != null)
       .slice()
       .sort((a,b) => String(a.visit_date || a.created_at || '').localeCompare(String(b.visit_date || b.created_at || '')));
 
-    // when filtering wishlist only, no trail; when photo/all/visited use filtered visited-like set
-    if(globeFilter === 'wish'){
-      pts = [];
-    } else if(globeFilter === 'photo'){
+    if(globeFilter === 'wish'){ pts = []; }
+    else if(globeFilter === 'photo'){
       const photos = window.__ownPhotosCache || {};
       pts = pts.filter(p => (photos[p.id] || []).length > 0);
     }
 
-    const coords = pts.map(p => [p.lon, p.lat]);
-    const empty = { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:[] } };
-    const full = { type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates: coords.length >= 2 ? coords : [] } };
+    const byId = {};
+    pts.forEach(p=>{ byId[p.id] = p; });
+
+    // segments: only if route meta says from+transport, else sequential fallback only when transport set
+    const lineFeatures = [];
+    const iconPoints = [];
+
+    pts.forEach((p)=>{
+      const meta = getRouteMeta(p.id) || {};
+      let from = meta.fromId ? byId[meta.fromId] : null;
+      // if from not in filtered set, try allPlacesCache
+      if(meta.fromId && !from){
+        from = (allPlacesCache||[]).find(x=>x.id===meta.fromId && x.lat!=null);
+      }
+      const tr = meta.transport || '';
+      if(from && from.lat != null && from.lon != null && (tr || meta.fromId)){
+        const a = [from.lon, from.lat];
+        const b = [p.lon, p.lat];
+        lineFeatures.push({
+          type:'Feature',
+          properties:{ transport: tr },
+          geometry:{ type:'LineString', coordinates:[a,b] }
+        });
+        if(tr && TR_ICON[tr]){
+          iconPoints.push({
+            lon: (a[0]+b[0])/2,
+            lat: (a[1]+b[1])/2,
+            icon: TR_ICON[tr]
+          });
+        }
+      }
+    });
+
+    // if no explicit routes at all — light sequential trail (no icons) so map not empty
+    if(!lineFeatures.length && pts.length >= 2){
+      for(let i=1;i<pts.length;i++){
+        lineFeatures.push({
+          type:'Feature',
+          properties:{ transport:'' },
+          geometry:{ type:'LineString', coordinates:[[pts[i-1].lon,pts[i-1].lat],[pts[i].lon,pts[i].lat]] }
+        });
+      }
+    }
+
+    const fc = { type:'FeatureCollection', features: lineFeatures };
+    const empty = { type:'FeatureCollection', features: [] };
 
     if(!map.getSource('travel-trail')){
       map.addSource('travel-trail', { type:'geojson', data: empty });
@@ -5142,70 +5297,27 @@
         layout: { 'line-cap':'round', 'line-join':'round' },
         paint: {
           'line-color': '#C57B85',
-          'line-width': 2.4,
-          'line-opacity': 0.6,
-          'line-dasharray': [1.2, 2.2]
+          'line-width': 2.2,
+          'line-opacity': 0.75
         }
       });
     }
+    map.getSource('travel-trail').setData(fc);
 
-    if(!animate || coords.length < 2){
-      map.getSource('travel-trail').setData(full);
-      return;
-    }
-
-    const steps = Math.min(56, Math.max(20, coords.length * 10));
-    let step = 0;
-    function lerp(a,b,t){ return a + (b-a)*t; }
-    function pointAlong(t){
-      let total = 0;
-      const segLens = [];
-      for(let i=0;i<coords.length-1;i++){
-        const dx = coords[i+1][0]-coords[i][0], dy = coords[i+1][1]-coords[i][1];
-        const len = Math.sqrt(dx*dx+dy*dy) || 0.0001;
-        segLens.push(len); total += len;
-      }
-      let dist = t * total;
-      for(let i=0;i<segLens.length;i++){
-        if(dist <= segLens[i]){
-          const u = dist / segLens[i];
-          return [lerp(coords[i][0], coords[i+1][0], u), lerp(coords[i][1], coords[i+1][1], u)];
-        }
-        dist -= segLens[i];
-      }
-      return coords[coords.length-1];
-    }
-    function frame(){
-      step++;
-      const t = Math.min(1, step / steps);
-      const n = Math.max(2, Math.ceil(t * 40));
-      const built = [];
-      for(let i=0;i<=n;i++) built.push(pointAlong((i/n) * t));
-      map.getSource('travel-trail').setData({ type:'Feature', properties:{}, geometry:{ type:'LineString', coordinates:built } });
-      if(t < 1) trailAnimRaf = requestAnimationFrame(frame);
-      else map.getSource('travel-trail').setData(full);
-    }
-    map.getSource('travel-trail').setData(empty);
-    trailAnimRaf = requestAnimationFrame(frame);
+    // transport icons at midpoints
+    iconPoints.forEach(pt=>{
+      try{
+        const el = document.createElement('div');
+        el.className = 'trail-mode-marker';
+        el.textContent = pt.icon;
+        const mk = new maplibregl.Marker({ element: el, anchor:'center' })
+          .setLngLat([pt.lon, pt.lat])
+          .addTo(map);
+        trailModeMarkers.push(mk);
+      }catch(e){}
+    });
   }
 
-
-  function cachePlacesLocal(places){
-    try{
-      const slim = (places || []).map(p => ({
-        id: p.id, country: p.country, city: p.city, lat: p.lat, lon: p.lon,
-        is_wishlist: p.is_wishlist, visit_date: p.visit_date, note: p.note
-      }));
-      localStorage.setItem('ml_places_cache', JSON.stringify({ t: Date.now(), places: slim }));
-    }catch(e){}
-  }
-  function readPlacesCache(){
-    try{
-      const raw = JSON.parse(localStorage.getItem('ml_places_cache') || 'null');
-      if(!raw || !raw.places) return null;
-      return raw.places;
-    }catch(e){ return null; }
-  }
 
   async function loadPlaces(){
     if(!myUserId) return;
@@ -6048,7 +6160,7 @@
       const title = p.city || p.country;
       const sub = p.city ? p.country : '';
       const tap = clickable ? `onclick="window.__openPlaceView('${p.id}')"` : '';
-      return `<div class="journal-ticket" data-swipe-id="${p.id}" onclick="window.__editOwnPlace('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s;cursor:pointer;">
+      return `<div class="journal-ticket" data-swipe-id="${p.id}" onclick="window.__openPlaceView('${p.id}')" style="animation-delay:${Math.min(i*0.04,0.35)}s;cursor:pointer;">
         <div class="jt-photo" data-place-id="${p.id}"><svg class="photo-fallback-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg></div>
         <div class="jt-body">
           <div class="jt-eyebrow">MAPLINK · BOARDING PASS</div>
