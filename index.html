@@ -1714,14 +1714,17 @@
   .pin-dot{
     width:26px; height:34px;
     display:flex; align-items:flex-start; justify-content:center;
-    animation:pinDrop .45s cubic-bezier(.34,1.56,.64,1);
-    transform-origin:bottom center;
+    /* IMPORTANT: no transform animation on root — MapLibre positions via transform */
   }
-  .pin-dot svg{ width:26px; height:34px; overflow:visible; }
+  .pin-dot svg{
+    width:26px; height:34px; overflow:visible;
+    transform-origin:bottom center;
+    animation:pinDrop .45s cubic-bezier(.34,1.56,.64,1) both;
+  }
   @keyframes pinDrop{
     0%{ transform:scale(0) translateY(-16px); opacity:0; }
-    60%{ transform:scale(1.2) translateY(0); opacity:1; }
-    100%{ transform:scale(1) translateY(0); }
+    60%{ transform:scale(1.12) translateY(0); opacity:1; }
+    100%{ transform:scale(1) translateY(0); opacity:1; }
   }
 
   .fab{
@@ -1842,25 +1845,30 @@
     display:flex; flex-wrap:wrap; gap:6px;
   }
   .tr-chip{
-    width:40px; height:40px; border-radius:12px;
+    width:42px; height:42px; border-radius:12px;
     border:1.5px solid #EEDDD3; background:var(--cream);
-    font-size:18px; line-height:1;
     display:flex; align-items:center; justify-content:center;
-    font-family:inherit;
+    font-family:inherit; padding:0;
+    color:#8B6B63;
   }
+  .tr-chip svg{ width:20px; height:20px; display:block; }
   .tr-chip.on{
     border-color:var(--rose); background:var(--blush);
     box-shadow:0 0 0 2px rgba(197,123,133,.2);
+    color:var(--rose-deep);
   }
   .trail-mode-marker{
-    width:22px; height:22px; border-radius:50%;
-    background:rgba(255,253,251,.95);
-    border:1.5px solid rgba(197,123,133,.55);
+    width:26px; height:26px; border-radius:50%;
+    background:rgba(255,253,251,.96);
+    border:1.5px solid rgba(197,123,133,.5);
     display:flex; align-items:center; justify-content:center;
-    font-size:12px;
-    box-shadow:0 1px 4px rgba(58,46,43,.18);
+    box-shadow:0 1px 5px rgba(58,46,43,.16);
     pointer-events:none;
-    will-change: transform;
+    color:#C57B85;
+  }
+  .trail-mode-marker svg{ width:14px; height:14px; display:block; }
+  .trail-mode-marker.animating{
+    box-shadow:0 2px 10px rgba(197,123,133,.35);
   }
 
   .date-toggle{
@@ -1953,9 +1961,10 @@
 
   /* ---------------- COUNTRY/CITY TAP BUBBLE ---------------- */
   #countryBubble{
-    position:absolute; z-index:20;
+    position:absolute; z-index:40;
     transform:translate(-50%,-100%);
     display:none;
+    pointer-events:auto;
   }
   #countryBubble.show{ display:block; animation:bubbleIn .35s cubic-bezier(.34,1.56,.64,1); }
   @keyframes bubbleIn{
@@ -1987,7 +1996,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.72 alpha</div>
+    <div class="app-version">v0.77 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2084,13 +2093,13 @@
         <div class="route-block">
           <div class="route-label">Как добрались?</div>
           <div class="transport-chips" id="transportChips">
-            <button type="button" class="tr-chip" data-tr="plane" title="Самолёт">✈️</button>
-            <button type="button" class="tr-chip" data-tr="train" title="Поезд">🚂</button>
-            <button type="button" class="tr-chip" data-tr="car" title="Машина">🚗</button>
-            <button type="button" class="tr-chip" data-tr="bus" title="Автобус">🚌</button>
-            <button type="button" class="tr-chip" data-tr="ship" title="Корабль">🚢</button>
-            <button type="button" class="tr-chip" data-tr="walk" title="Пешком">🚶</button>
-            <button type="button" class="tr-chip on" data-tr="" title="Не указывать">—</button>
+            <button type="button" class="tr-chip" data-tr="plane" title="Самолёт"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></button>
+            <button type="button" class="tr-chip" data-tr="train" title="Поезд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="14" rx="2.5"/><path d="M6 12h12M9 17l-2 3M15 17l2 3M10 7.5h4"/><circle cx="9.5" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="14.5" r="1" fill="currentColor" stroke="none"/></svg></button>
+            <button type="button" class="tr-chip" data-tr="car" title="Машина"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.5-5.5A2 2 0 017.4 7h9.2a2 2 0 011.9 1.5L20 14"/><path d="M4 14h16v3a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-3z"/><circle cx="7.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg></button>
+            <button type="button" class="tr-chip" data-tr="bus" title="Автобус"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2.5"/><path d="M5 10h14M5 14h14M9 18v2M15 18v2"/><circle cx="8.5" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="16" r=".9" fill="currentColor" stroke="none"/></svg></button>
+            <button type="button" class="tr-chip" data-tr="ship" title="Корабль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1.5 1.2 3.5 2 8 2s6.5-.8 8-2M6 16V10l6-5 6 5v6"/><path d="M12 5v5M9 10h6"/></svg></button>
+            <button type="button" class="tr-chip" data-tr="walk" title="Пешком"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="5" r="2"/><path d="M11 22l1.5-6 2-2 2 3 2 3M9.5 12l2 2 1.5-3 2.5-1"/></svg></button>
+            <button type="button" class="tr-chip on" data-tr="" title="Не указывать"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
           </div>
           <div class="route-label" style="margin-top:10px;">Откуда приехали</div>
           <div class="field-wrap" style="margin-bottom:10px;">
@@ -2847,6 +2856,21 @@
   try{ musicMuted = localStorage.getItem('ml_music_muted') === '1'; }catch(e){}
   let musicNodes = null;
 
+  // Stardew-ish pastoral generative music: rotating "tracks"
+  let musicTrackIdx = 0;
+  const MUSIC_TRACKS = [
+    // soft major folk — morning farm
+    { name:'morning', bpm:72, scale:[261.63,293.66,329.63,392.00,440.00,523.25], root:196.00, mood:'bright' },
+    // gentle mixolydian — afternoon walk
+    { name:'walk', bpm:68, scale:[220.00,246.94,261.63,293.66,329.63,392.00], root:146.83, mood:'warm' },
+    // pentatonic calm — evening porch
+    { name:'porch', bpm:60, scale:[246.94,277.18,311.13,369.99,415.30], root:155.56, mood:'soft' },
+    // airy Lydian-ish — summer fields
+    { name:'fields', bpm:76, scale:[293.66,329.63,370.00,440.00,493.88,587.33], root:174.61, mood:'airy' },
+    // rainy day minor pentatonic — cozy
+    { name:'rain', bpm:64, scale:[233.08,277.18,311.13,349.23,415.30], root:174.61, mood:'cozy' }
+  ];
+
   function stopAmbientMusic(){
     if(!musicNodes) return;
     try{
@@ -2855,15 +2879,35 @@
       if(musicNodes.master){
         musicNodes.master.gain.cancelScheduledValues(t);
         musicNodes.master.gain.setValueAtTime(musicNodes.master.gain.value, t);
-        musicNodes.master.gain.linearRampToValueAtTime(0.0001, t+0.5);
+        musicNodes.master.gain.linearRampToValueAtTime(0.0001, t+0.8);
       }
+      if(musicNodes.timers) musicNodes.timers.forEach(id=>clearTimeout(id));
       const nodes = musicNodes;
       setTimeout(()=>{
-        try{ nodes.oscs.forEach(o=>{ try{ o.stop(); }catch(e){} }); }catch(e){}
-      }, 600);
+        try{ (nodes.oscs||[]).forEach(o=>{ try{ o.stop(); }catch(e){} }); }catch(e){}
+      }, 900);
     }catch(e){}
     musicNodes = null;
     clearTimeout(window.__musicLoopTimer);
+  }
+
+  function _pluck(ac, dest, freq, when, dur, vol){
+    try{
+      const o = ac.createOscillator();
+      const o2 = ac.createOscillator();
+      const g = ac.createGain();
+      o.type = 'triangle';
+      o2.type = 'sine';
+      o.frequency.value = freq;
+      o2.frequency.value = freq * 2.002;
+      o.connect(g); o2.connect(g); g.connect(dest);
+      g.gain.setValueAtTime(0.0001, when);
+      g.gain.linearRampToValueAtTime(vol, when + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+      o.start(when); o2.start(when);
+      o.stop(when + dur + 0.05); o2.stop(when + dur + 0.05);
+      if(musicNodes && musicNodes.oscs){ musicNodes.oscs.push(o, o2); }
+    }catch(e){}
   }
 
   function startAmbientMusic(){
@@ -2871,36 +2915,90 @@
     const ac = getAC();
     if(!ac) return;
     try{ if(ac.state === 'suspended') ac.resume(); }catch(e){}
-    const freqs = [174.61, 220.00, 261.63, 329.63];
-    const oscs = [];
+
+    // pick next track (never same as last)
+    let idx = Math.floor(Math.random() * MUSIC_TRACKS.length);
+    if(MUSIC_TRACKS.length > 1 && idx === musicTrackIdx) idx = (idx + 1) % MUSIC_TRACKS.length;
+    musicTrackIdx = idx;
+    const track = MUSIC_TRACKS[idx];
+    const scale = track.scale;
+    const beat = 60 / track.bpm;
+
     const master = ac.createGain();
     master.gain.value = 0.0001;
     const filter = ac.createBiquadFilter();
     filter.type = 'lowpass';
-    filter.frequency.value = 850;
-    filter.Q.value = 0.6;
+    filter.frequency.value = 1400;
+    filter.Q.value = 0.5;
+    const delay = ac.createDelay(1.0);
+    delay.delayTime.value = 0.28;
+    const feedback = ac.createGain();
+    feedback.gain.value = 0.22;
+    const delayGain = ac.createGain();
+    delayGain.gain.value = 0.18;
     filter.connect(master);
     master.connect(ac.destination);
-    freqs.forEach((f,i)=>{
+    filter.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(delayGain);
+    delayGain.connect(master);
+
+    // soft drone / pad root
+    const oscs = [];
+    const timers = [];
+    [track.root, track.root * 1.5, track.root * 2].forEach((f,i)=>{
       const o = ac.createOscillator();
+      const g = ac.createGain();
       o.type = 'sine';
       o.frequency.value = f;
-      const g = ac.createGain();
-      g.gain.value = 0.028 - i*0.003;
+      g.gain.value = 0.018 - i*0.004;
       o.connect(g); g.connect(filter);
       o.start();
       oscs.push(o);
     });
-    master.gain.linearRampToValueAtTime(0.14, ac.currentTime + 1.8);
-    try{
-      filter.frequency.linearRampToValueAtTime(1100, ac.currentTime + 14);
-      filter.frequency.linearRampToValueAtTime(750, ac.currentTime + 28);
-    }catch(e){}
-    musicNodes = { oscs, master, filter };
+
+    master.gain.linearRampToValueAtTime(0.12, ac.currentTime + 1.5);
+    musicNodes = { oscs, master, filter, timers };
+
+    // schedule a gentle melody phrase (~24-32s)
+    const t0 = ac.currentTime + 1.2;
+    const pattern = [];
+    // arpeggio-ish folk pattern
+    const steps = 32;
+    for(let i=0;i<steps;i++){
+      const bar = Math.floor(i/4);
+      let note;
+      if(i % 4 === 0) note = scale[0];
+      else if(i % 8 === 3) note = scale[Math.min(3, scale.length-1)];
+      else if(i % 4 === 2) note = scale[Math.min(2, scale.length-1)];
+      else note = scale[1 + (bar + i) % Math.max(1, scale.length-1)];
+      // occasional rest
+      if(i % 7 === 6) continue;
+      pattern.push({ i, note });
+    }
+    pattern.forEach(({i, note})=>{
+      const when = t0 + i * beat * 0.5;
+      const vol = 0.035 + (i%4===0 ? 0.015 : 0);
+      _pluck(ac, filter, note, when, 0.55 + (i%3)*0.15, vol);
+      // quiet echo octave
+      if(i % 4 === 0) _pluck(ac, filter, note*0.5, when + 0.02, 0.8, vol*0.45);
+    });
+
+    // secondary high twinkle every other bar
+    for(let b=0;b<8;b++){
+      const when = t0 + b * beat * 2 + beat*0.25;
+      const n = scale[(b*2) % scale.length] * 2;
+      _pluck(ac, filter, n, when, 0.35, 0.02);
+    }
+
+    // change track after ~28s with crossfade
     clearTimeout(window.__musicLoopTimer);
     window.__musicLoopTimer = setTimeout(()=>{
-      if(!musicMuted){ stopAmbientMusic(); setTimeout(startAmbientMusic, 100); }
-    }, 30000);
+      if(musicMuted) return;
+      stopAmbientMusic();
+      setTimeout(()=>{ if(!musicMuted) startAmbientMusic(); }, 600);
+    }, 28000);
   }
 
   function applyMusicUI(){
@@ -4640,7 +4738,15 @@
 
 
   // ---------- route meta (transport + from) ----------
-  const TR_ICON = { plane:'✈️', train:'🚂', car:'🚗', bus:'🚌', ship:'🚢', walk:'🚶' };
+  const TR_SVG = {
+    plane: `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
+    train: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="14" rx="2.5"/><path d="M6 12h12M9 17l-2 3M15 17l2 3M10 7.5h4"/><circle cx="9.5" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="14.5" r="1" fill="currentColor" stroke="none"/></svg>`,
+    car: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.5-5.5A2 2 0 017.4 7h9.2a2 2 0 011.9 1.5L20 14"/><path d="M4 14h16v3a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-3z"/><circle cx="7.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg>`,
+    bus: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2.5"/><path d="M5 10h14M5 14h14M9 18v2M15 18v2"/><circle cx="8.5" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="16" r=".9" fill="currentColor" stroke="none"/></svg>`,
+    ship: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1.5 1.2 3.5 2 8 2s6.5-.8 8-2M6 16V10l6-5 6 5v6"/><path d="M12 5v5M9 10h6"/></svg>`,
+    walk: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="5" r="2"/><path d="M11 22l1.5-6 2-2 2 3 2 3M9.5 12l2 2 1.5-3 2.5-1"/></svg>`
+  };
+  const TR_ICON = { plane:'✈', train:'🚂', car:'🚗', bus:'🚌', ship:'🚢', walk:'🚶' }; // text fallback for meta line
   let selectedTransport = '';
   let selectedFrom = null;
   let trailModeMarkers = [];
@@ -4935,66 +5041,85 @@
   // ---------- Plague-Inc style tap bubble on country/city labels ----------
   const bubbleEl = document.getElementById('countryBubble');
   let bubbleFeature = null;
+  let bubbleClickLngLat = null;
 
-  function hideBubble(){ bubbleEl.classList.remove('show'); }
+  function hideBubble(){ if(bubbleEl) bubbleEl.classList.remove('show'); }
   map.on('dragstart', hideBubble);
   map.on('rotatestart', hideBubble);
   map.on('zoomstart', hideBubble);
   map.on('pitchstart', hideBubble);
 
   map.on('click', (e)=>{
-    if(window.__tutLockUI){ bubbleEl.classList.remove('show'); return; }
-    const features = map.queryRenderedFeatures(e.point, { layers: placeLabelLayers });
-    if(!features.length){ bubbleEl.classList.remove('show'); return; }
+    if(window.__tutLockUI){ hideBubble(); return; }
+    bubbleClickLngLat = e.lngLat;
+    let features = [];
+    try{
+      const layers = (placeLabelLayers || []).filter(id => { try{ return !!map.getLayer(id); }catch(err){ return false; } });
+      if(layers.length){
+        features = map.queryRenderedFeatures(e.point, { layers }) || [];
+      }
+    }catch(err){ features = []; }
+    if(!features.length){ hideBubble(); return; }
     const f = features[0];
     bubbleFeature = f;
-    const displayName = (f.properties['name:ru'] || f.properties.name || '');
+    const displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
+    if(!displayName){ hideBubble(); return; }
     document.getElementById('bubbleTitle').textContent = displayName;
     bubbleEl.style.left = e.point.x + 'px';
     bubbleEl.style.top = e.point.y + 'px';
     bubbleEl.classList.remove('show');
-    void bubbleEl.offsetWidth; // restart animation
+    void bubbleEl.offsetWidth;
     bubbleEl.classList.add('show');
   });
 
   document.getElementById('bubbleAddBtn').addEventListener('click', async ()=>{
     if(!bubbleFeature) return;
     const f = bubbleFeature;
-    const displayName = (f.properties['name:ru'] || f.properties.name || '');
-    const isCountry = f.properties.class === 'country';
-    const coords = f.geometry && f.geometry.coordinates ? f.geometry.coordinates : [0,0];
-
-    bubbleEl.classList.remove('show');
+    const displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
+    const isCountry = f.properties && f.properties.class === 'country';
+    // prefer label point; fallback to click position
+    let lon = bubbleClickLngLat ? bubbleClickLngLat.lng : 0;
+    let lat = bubbleClickLngLat ? bubbleClickLngLat.lat : 0;
+    if(f.geometry && f.geometry.type === 'Point' && f.geometry.coordinates){
+      lon = Number(f.geometry.coordinates[0]);
+      lat = Number(f.geometry.coordinates[1]);
+    }
+    hideBubble();
 
     if(isCountry){
       openAddModal({
         country: displayName,
-        selectedCountry: { name: displayName, code: (f.properties.iso_a2||'').toLowerCase(), lat: coords[1], lon: coords[0] }
+        selectedCountry: {
+          name: displayName,
+          code: ((f.properties && f.properties.iso_a2) || '').toLowerCase(),
+          lat: lat,
+          lon: lon
+        }
       });
     } else {
-      // reverse-geocode so country auto-fills when tapping a city label on the map
       let countryPrefill = null;
       try{
-        const rev = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+coords[1]+'&lon='+coords[0]+'&accept-language=ru&addressdetails=1');
+        const rev = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon+'&accept-language=ru&addressdetails=1');
         const data = await rev.json();
         const addr = data.address || {};
         if(addr.country){
           countryPrefill = {
             name: addr.country,
             code: (addr.country_code || '').toLowerCase(),
-            lat: parseFloat(data.lat) || coords[1],
-            lon: parseFloat(data.lon) || coords[0]
+            lat: parseFloat(data.lat) || lat,
+            lon: parseFloat(data.lon) || lon
           };
         }
       }catch(e){}
       openAddModal({
         city: displayName,
         country: countryPrefill ? countryPrefill.name : '',
-        selectedCity: { name: displayName, lat: coords[1], lon: coords[0] },
+        selectedCity: { name: displayName, lat: lat, lon: lon },
         selectedCountry: countryPrefill
       });
     }
   });
+
 
   // ---------- Nominatim autocomplete ----------
   async function nominatimSearch(query, extraParams){
@@ -5137,7 +5262,9 @@
       const wishVal = document.getElementById('addWishlist').checked;
       let latVal = selectedCity ? selectedCity.lat : selectedCountry.lat;
       let lonVal = selectedCity ? selectedCity.lon : selectedCountry.lon;
-      if((latVal == null || lonVal == null) && selectedCountry && selectedCountry.name){
+      latVal = latVal != null ? Number(latVal) : null;
+      lonVal = lonVal != null ? Number(lonVal) : null;
+      if((!isFinite(latVal) || !isFinite(lonVal)) && selectedCountry && selectedCountry.name){
         try{
           const q = selectedCity && selectedCity.name
             ? (selectedCity.name + ', ' + selectedCountry.name)
@@ -5198,6 +5325,7 @@
       }
       try{ sfx('success'); haptic('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
       // route meta for trail
+      let __pendingRouteAnim = null;
       try{
         if(newPlace && newPlace.id){
           setRouteMeta(newPlace.id, {
@@ -5206,10 +5334,33 @@
             fromLat: selectedFrom ? selectedFrom.lat : null,
             fromLon: selectedFrom ? selectedFrom.lon : null
           });
+          if(selectedFrom && selectedFrom.lat != null && selectedTransport){
+            __pendingRouteAnim = {
+              a: [Number(selectedFrom.lon), Number(selectedFrom.lat)],
+              b: [Number(newPlace.lon != null ? newPlace.lon : (selectedCity && selectedCity.lon) || (selectedCountry && selectedCountry.lon)),
+                  Number(newPlace.lat != null ? newPlace.lat : (selectedCity && selectedCity.lat) || (selectedCountry && selectedCountry.lat))],
+              tr: selectedTransport
+            };
+          }
         }
       }catch(e){}
       closeAddModal();
-      loadPlaces();
+      // ensure pin with known coordinates even if list refresh is slow
+      if(newPlace){
+        const pinPlace = {
+          ...newPlace,
+          lat: newPlace.lat != null ? Number(newPlace.lat) : Number(latVal),
+          lon: newPlace.lon != null ? Number(newPlace.lon) : Number(lonVal),
+          is_wishlist: !!wishVal
+        };
+        if(isFinite(pinPlace.lat) && isFinite(pinPlace.lon)){
+          try{ upsertPlaceMarker(pinPlace); }catch(e){}
+        }
+      }
+      await loadPlaces();
+      if(__pendingRouteAnim && isFinite(__pendingRouteAnim.b[0]) && isFinite(__pendingRouteAnim.b[1])){
+        setTimeout(()=>{ try{ playRouteOnce(__pendingRouteAnim); }catch(e){} }, 400);
+      }
       // after ticket burst finishes — notify tutorial
       clearTimeout(window.__tutAfterAddTimer);
       window.__tutAfterAddTimer = setTimeout(()=>{
@@ -5275,47 +5426,48 @@
     }catch(e){}
   }
 
-  function updateTravelTrail(places, animate){
-    if(!map || !map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
-    if(trailAnimRaf){ cancelAnimationFrame(trailAnimRaf); trailAnimRaf = null; }
-    if(trailAnimRaf2){ cancelAnimationFrame(trailAnimRaf2); trailAnimRaf2 = null; }
-
-    // remove ONLY route markers (never touch placeMarkers)
+  function clearTrailMarkers(){
     try{ trailModeMarkers.forEach(m=>{ try{ m.remove(); }catch(e){} }); }catch(e){}
     trailModeMarkers = [];
+    if(trailAnimRaf2){ cancelAnimationFrame(trailAnimRaf2); trailAnimRaf2 = null; }
     if(trailAnimMarker){ try{ trailAnimMarker.remove(); }catch(e){} trailAnimMarker = null; }
+  }
 
-    let pts = (places || [])
-      .filter(p => !p.is_wishlist && p.lat != null && p.lon != null);
+  function transportSvg(tr){
+    return TR_SVG[tr] || TR_SVG.plane;
+  }
 
-    if(globeFilter === 'wish') pts = [];
-    else if(globeFilter === 'photo'){
-      const photos = window.__ownPhotosCache || {};
-      pts = pts.filter(p => (photos[p.id] || []).length > 0);
-    }
-
-    const lineFeatures = [];
-    const animSegs = [];
-
-    pts.forEach((p)=>{
+  function buildRouteSegments(places){
+    const segs = [];
+    (places || []).forEach((p)=>{
+      if(p.is_wishlist || p.lat == null || p.lon == null) return;
+      if(globeFilter === 'wish') return;
+      if(globeFilter === 'photo'){
+        const photos = window.__ownPhotosCache || {};
+        if(!(photos[p.id]||[]).length) return;
+      }
       const meta = getRouteMeta(p.id) || {};
       const tr = meta.transport || '';
-      let a = null;
-      if(meta.fromLat != null && meta.fromLon != null){
-        a = [Number(meta.fromLon), Number(meta.fromLat)];
-      }
-      if(a && p.lat != null && p.lon != null && isFinite(a[0]) && isFinite(a[1])){
-        const b = [Number(p.lon), Number(p.lat)];
-        if(!isFinite(b[0]) || !isFinite(b[1])) return;
-        lineFeatures.push({
-          type:'Feature',
-          properties:{ transport: tr },
-          geometry:{ type:'LineString', coordinates:[a,b] }
-        });
-        if(tr) animSegs.push({ a, b, icon: TR_ICON[tr] || '✈️' });
-      }
+      if(meta.fromLat == null || meta.fromLon == null) return;
+      const a = [Number(meta.fromLon), Number(meta.fromLat)];
+      const b = [Number(p.lon), Number(p.lat)];
+      if(!isFinite(a[0])||!isFinite(a[1])||!isFinite(b[0])||!isFinite(b[1])) return;
+      segs.push({ a, b, tr, placeId: p.id });
     });
+    return segs;
+  }
 
+  function updateTravelTrail(places, animate){
+    if(!map || !map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
+    // never continuous anim here — only lines + static icons by zoom
+    clearTrailMarkers();
+
+    const segs = buildRouteSegments(places || allPlacesCache || []);
+    const lineFeatures = segs.map(s=>({
+      type:'Feature',
+      properties:{ transport: s.tr || '' },
+      geometry:{ type:'LineString', coordinates:[s.a, s.b] }
+    }));
     const fc = { type:'FeatureCollection', features: lineFeatures };
     const empty = { type:'FeatureCollection', features: [] };
 
@@ -5329,74 +5481,123 @@
           layout: { 'line-cap':'round', 'line-join':'round' },
           paint: {
             'line-color': '#C57B85',
-            'line-width': 1.4,
-            'line-opacity': 0.35,
+            'line-width': 1.35,
+            'line-opacity': 0.32,
             'line-dasharray': [1.5, 2.8]
           }
         });
-      } else {
-        try{
-          map.setPaintProperty('travel-trail-line', 'line-opacity', 0.35);
-          map.setPaintProperty('travel-trail-line', 'line-width', 1.4);
-          map.setPaintProperty('travel-trail-line', 'line-dasharray', [1.5, 2.8]);
-        }catch(e){}
       }
       map.getSource('travel-trail').setData(fc);
     }catch(e){}
 
-    // one soft moving icon on the newest segment
-    if(animSegs.length){
-      const seg = animSegs[animSegs.length-1];
-      try{
-        const el = document.createElement('div');
-        el.className = 'trail-mode-marker';
-        el.textContent = seg.icon;
-        trailAnimMarker = new maplibregl.Marker({ element: el, anchor:'center' })
-          .setLngLat(seg.a)
-          .addTo(map);
-        const t0 = performance.now();
-        const dur = 4200;
-        const step = (now)=>{
-          if(!trailAnimMarker) return;
-          const t = ((now - t0) % dur) / dur;
-          // ease in-out
-          const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
-          const lng = seg.a[0] + (seg.b[0]-seg.a[0])*e;
-          const lat = seg.a[1] + (seg.b[1]-seg.a[1])*e;
-          try{ trailAnimMarker.setLngLat([lng, lat]); }catch(err){}
-          trailAnimRaf2 = requestAnimationFrame(step);
-        };
-        trailAnimRaf2 = requestAnimationFrame(step);
-      }catch(e){}
+    // icons only when zoomed in enough
+    const z = map.getZoom ? map.getZoom() : 0;
+    if(z >= 3.2){
+      segs.forEach(s=>{
+        if(!s.tr || !TR_SVG[s.tr]) return;
+        try{
+          const el = document.createElement('div');
+          el.className = 'trail-mode-marker';
+          el.innerHTML = transportSvg(s.tr);
+          el.style.pointerEvents = 'none';
+          const mid = [(s.a[0]+s.b[0])/2, (s.a[1]+s.b[1])/2];
+          const mk = new maplibregl.Marker({ element: el, anchor:'center' })
+            .setLngLat(mid)
+            .addTo(map);
+          trailModeMarkers.push(mk);
+        }catch(e){}
+      });
+    }
+
+    if(animate && segs.length){
+      playRouteOnce(segs[segs.length-1]);
     }
   }
 
-
-
-  function cachePlacesLocal(places){
-    try{ localStorage.setItem('ml_places_cache', JSON.stringify({ t: Date.now(), places: places || [] })); }catch(e){}
-  }
-  function readPlacesCache(){
+  function playRouteOnce(seg){
+    if(!map || !seg) return;
+    clearTrailMarkers();
+    // restore static icons after anim
+    const finish = ()=>{
+      try{ updateTravelTrail(allPlacesCache || [], false); }catch(e){}
+    };
     try{
-      const raw = localStorage.getItem('ml_places_cache');
-      if(!raw) return null;
-      const o = JSON.parse(raw);
-      return (o && o.places) || null;
-    }catch(e){ return null; }
-  }
-  function cacheJson(key, data){
-    try{ localStorage.setItem('ml_cache_'+key, JSON.stringify({ t: Date.now(), data })); }catch(e){}
-  }
-  function readJsonCache(key, maxAgeMs){
-    try{
-      const raw = localStorage.getItem('ml_cache_'+key);
-      if(!raw) return null;
-      const o = JSON.parse(raw);
-      if(maxAgeMs && o.t && (Date.now()-o.t) > maxAgeMs) return o.data; // still return stale
-      return o.data;
-    }catch(e){ return null; }
+      const el = document.createElement('div');
+      el.className = 'trail-mode-marker animating';
+      el.innerHTML = transportSvg(seg.tr || 'plane');
+      trailAnimMarker = new maplibregl.Marker({ element: el, anchor:'center' })
+        .setLngLat(seg.a)
+        .addTo(map);
+      const t0 = performance.now();
+      const dur = 2800;
+      const step = (now)=>{
+        if(!trailAnimMarker) return;
+        let t = (now - t0) / dur;
+        if(t >= 1){
+          try{ trailAnimMarker.setLngLat(seg.b); }catch(e){}
+          setTimeout(()=>{
+            if(trailAnimMarker){ try{ trailAnimMarker.remove(); }catch(e){} trailAnimMarker = null; }
+            finish();
+          }, 200);
+          return;
+        }
+        // ease out
+        const e = 1 - Math.pow(1 - t, 2.4);
+        const lng = seg.a[0] + (seg.b[0]-seg.a[0])*e;
+        const lat = seg.a[1] + (seg.b[1]-seg.a[1])*e;
+        try{ trailAnimMarker.setLngLat([lng, lat]); }catch(err){}
+        trailAnimRaf2 = requestAnimationFrame(step);
+      };
+      trailAnimRaf2 = requestAnimationFrame(step);
+    }catch(e){ finish(); }
   }
 
+  // zoom toggles transport icons visibility
+  if(typeof map !== 'undefined'){
+    // bound later after map ready
+  }
+  function bindTrailZoom(){
+    if(!map || map.__trailZoomBound) return;
+    map.__trailZoomBound = true;
+    map.on('zoomend', ()=>{
+      clearTimeout(window.__trailZoomT);
+      window.__trailZoomT = setTimeout(()=>{
+        try{ updateTravelTrail(allPlacesCache || [], false); }catch(e){}
+      }, 80);
+    });
+  }
+
+
+
+  function upsertPlaceMarker(p){
+    if(!map || !p || p.lat == null || p.lon == null) return;
+    const lon = Number(p.lon), lat = Number(p.lat);
+    if(!isFinite(lon) || !isFinite(lat)) return;
+    try{
+      // remove existing with same id
+      placeMarkers = placeMarkers.filter(m=>{
+        try{
+          const id = m.getElement() && m.getElement().dataset.placeId;
+          if(id === p.id){ m.remove(); return false; }
+        }catch(e){}
+        return true;
+      });
+      const el = document.createElement('div');
+      el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
+      el.dataset.placeId = p.id;
+      el.innerHTML = p.is_wishlist
+        ? `<svg viewBox="0 0 26 34" fill="none"><path d="M13 1.5C6.3 1.5 1.5 6.7 1.5 13c0 8.8 11.5 18.7 11.5 18.7s11.5-9.9 11.5-18.7C24.5 6.7 19.7 1.5 13 1.5z" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3.2 3.2"/><path d="M13 18.2s-4.3-2.7-4.3-5.7c0-1.6 1.3-2.8 2.8-2.8 1 0 2 .6 2.5 1.5.5-.9 1.4-1.5 2.5-1.5 1.5 0 2.8 1.2 2.8 2.8 0 3-4.3 5.7-4.3 5.7z" fill="var(--rose)" opacity=".6"/></svg>`
+        : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
+      const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
+      marker.setLngLat([lon, lat]);
+      marker.addTo(map);
+      placeMarkers.push(marker);
+      // gentle fly to pin
+      try{
+        map.flyTo({ center: [lon, lat], zoom: Math.max(map.getZoom(), 3.2), speed: 0.8, essential: true });
+      }catch(e){}
+    }catch(e){ console.warn('upsertPlaceMarker', e); }
+  }
 
   async function loadPlaces(){
     if(!myUserId) return;
@@ -5438,6 +5639,9 @@
     window.__ownPhotosCache = photosByPlace;
 
     // stable marker update — never mass-remove (that caused edge flash on globe)
+    if(!map){
+      console.warn('loadPlaces: map not ready');
+    }
     const prevById = new Map();
     placeMarkers.forEach(m=>{
       try{
@@ -5470,15 +5674,34 @@
         </div>`;
 
       let marker = prevById.get(p.id);
+      // if marker element was detached from map, recreate
+      if(marker){
+        try{
+          const el0 = marker.getElement();
+          if(!el0 || !el0.isConnected){ try{ marker.remove(); }catch(e){} marker = null; }
+        }catch(e){ marker = null; }
+      }
       if(marker){
         try{
           marker.setLngLat([lon, lat]);
           const el = marker.getElement();
           if(el){
-            el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
-            el.innerHTML = pinHtml(!!p.is_wishlist);
+            el.dataset.placeId = p.id;
+            el.style.display = '';
+            el.style.opacity = '1';
+            el.onclick = ()=>{
+              try{
+                const meta = getRouteMeta(p.id);
+                if(meta && meta.fromLat != null && meta.fromLon != null){
+                  playRouteOnce({
+                    a:[Number(meta.fromLon), Number(meta.fromLat)],
+                    b:[lon, lat],
+                    tr: meta.transport || 'plane'
+                  });
+                }
+              }catch(e){}
+            };
           }
-          marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml));
         }catch(e){}
         nextMarkers.push(marker);
         prevById.delete(p.id);
@@ -5487,11 +5710,22 @@
         el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
         el.dataset.placeId = p.id;
         el.innerHTML = pinHtml(!!p.is_wishlist);
-        // create off-map first, then set coords, then add — reduces first-frame glitch
+        el.onclick = ()=>{
+          try{
+            const meta = getRouteMeta(p.id);
+            if(meta && meta.fromLat != null && meta.fromLon != null){
+              playRouteOnce({
+                a:[Number(meta.fromLon), Number(meta.fromLat)],
+                b:[lon, lat],
+                tr: meta.transport || 'plane'
+              });
+            }
+          }catch(e){}
+        };
         marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
         marker.setLngLat([lon, lat]);
-        marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml));
-        marker.addTo(map);
+        try{ marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml)); }catch(e){}
+        if(map) marker.addTo(map);
         nextMarkers.push(marker);
       }
     });
@@ -5499,9 +5733,8 @@
     prevById.forEach(m=>{ try{ m.remove(); }catch(e){} });
     placeMarkers = nextMarkers;
 
-
-    // travel traces: dashed route between visited places by date
-    try{ updateTravelTrail(places, true); }catch(e){}
+    // trails without auto-animation (anim only on add / pin click)
+    try{ bindTrailZoom(); updateTravelTrail(places, false); }catch(e){}
 
     const visited = places.filter(p=>!p.is_wishlist);
     const wishlist = places.filter(p=>p.is_wishlist);
