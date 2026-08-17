@@ -1996,7 +1996,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.77 alpha</div>
+    <div class="app-version">v0.78 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2219,7 +2219,7 @@
       </div>
     </div>
 
-    <button class="postcard-btn" id="postcardBtn" hidden style="display:none!important" style="display:none;">
+    <button class="postcard-btn" id="postcardBtn" type="button" style="display:none;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 9l9 5 9-5"/></svg>
       Собрать открытку маршрута
     </button>
@@ -2639,6 +2639,7 @@
       if(name === 'feed') loadFriendsFeed();
       if(name === 'rank') loadRankings();
       if(name === 'friends') loadFriends();
+      if(name === 'profile') { try{ loadPlaces(); }catch(e){} }
     });
   });
 
@@ -4701,6 +4702,8 @@
   })();
 
   let placeMarkers = [];
+  let allPlacesCache = [];
+  let editingPlace = null;
   let selectedCountry = null; // {name, code, lat, lon}
   let selectedCity = null;    // {name, lat, lon}
 
@@ -5599,49 +5602,104 @@
     }catch(e){ console.warn('upsertPlaceMarker', e); }
   }
 
+  function isWishPlace(p){
+    return p && (p.is_wishlist === true || p.is_wishlist === 1 || p.is_wishlist === 'true' || p.is_wishlist === 't');
+  }
+
   async function loadPlaces(){
-    if(!myUserId) return;
-    // paint from cache immediately to avoid empty lag
-    if(!allPlacesCache || !allPlacesCache.length){
+    // 1) paint cache immediately so profile never looks empty while loading
+    try{
       const cached0 = readPlacesCache();
       if(cached0 && cached0.length){
-        allPlacesCache = cached0;
-        try{ renderProfilePlaces(
-          cached0.filter(p=>!p.is_wishlist),
-          cached0.filter(p=>p.is_wishlist),
-          window.__ownPhotosCache || {}
-        ); }catch(e){}
+        if(!allPlacesCache || !allPlacesCache.length) allPlacesCache = cached0;
+        const v0 = cached0.filter(p => !isWishPlace(p));
+        const w0 = cached0.filter(p => isWishPlace(p));
+        renderProfilePlaces(v0, w0, window.__ownPhotosCache || {});
       }
+    }catch(e){}
+
+    if(!myUserId){
+      return;
     }
-    let places = [];
+
+    // 2) network fetch
+    let places = null;
     try{
-      const { data, error } = await supabase.from('places').select('*').eq('user_id', myUserId).order('visit_date', {ascending:false});
+      const { data, error } = await supabase
+        .from('places')
+        .select('*')
+        .eq('user_id', myUserId)
+        .order('created_at', { ascending: false });
       if(error) throw error;
       places = data || [];
     }catch(e){
-      const cached = readPlacesCache();
-      if(cached && cached.length){ places = cached; }
-      else { places = allPlacesCache || []; }
+      console.warn('loadPlaces', e);
+      places = null;
     }
+
+    // 3) never wipe good cache with empty/error unless we are sure user has zero places
+    if(places === null){
+      places = readPlacesCache() || allPlacesCache || [];
+    } else if(places.length === 0){
+      const prev = allPlacesCache || readPlacesCache() || [];
+      // keep previous only if very recent fetch might be auth glitch — still accept empty after success
+      // accept empty: user may have deleted all
+    }
+
     allPlacesCache = places;
     try{ cachePlacesLocal(places); }catch(e){}
 
-    // fetch photos for all these places in one batch
-    const ids = places.map(p=>p.id);
-    let photosByPlace = {};
-    if(ids.length){
-      const { data: photoRows } = await supabase.from('photos').select('place_id,url').in('place_id', ids);
-      (photoRows||[]).forEach(ph=>{
-        if(!photosByPlace[ph.place_id]) photosByPlace[ph.place_id] = [];
-        photosByPlace[ph.place_id].push(ph.url);
-      });
-    }
+    // 4) photos
+    let photosByPlace = window.__ownPhotosCache || {};
+    try{
+      const ids = places.map(p => p.id).filter(Boolean);
+      if(ids.length){
+        const { data: photoRows } = await supabase.from('photos').select('place_id,url').in('place_id', ids);
+        const next = {};
+        (photoRows || []).forEach(ph => {
+          if(!next[ph.place_id]) next[ph.place_id] = [];
+          next[ph.place_id].push(ph.url);
+        });
+        photosByPlace = next;
+      }
+    }catch(e){ console.warn('photos', e); }
     window.__ownPhotosCache = photosByPlace;
 
-    // stable marker update — never mass-remove (that caused edge flash on globe)
-    if(!map){
-      console.warn('loadPlaces: map not ready');
+    // 5) markers
+    try{ syncPlaceMarkers(places, photosByPlace); }catch(e){ console.warn('markers', e); }
+
+    // 6) trail
+    try{ bindTrailZoom(); updateTravelTrail(places, false); }catch(e){}
+
+    // 7) profile + stats
+    const visited = places.filter(p => !isWishPlace(p));
+    const wishlist = places.filter(p => isWishPlace(p));
+    try{
+      const countryCount = new Set(visited.map(p => p.country).filter(Boolean)).size;
+      animateNumber(document.getElementById('statCountries'), countryCount);
+      animateNumber(document.getElementById('statCities'), visited.length);
+      animateNumber(document.getElementById('statWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
+    }catch(e){}
+
+    try{
+      renderProfilePlaces(visited, wishlist, photosByPlace);
+    }catch(e){
+      console.warn('renderProfilePlaces fail', e);
+      // last-resort plain list
+      try{
+        const box = document.getElementById('myPlacesList');
+        if(box){
+          box.innerHTML = visited.length
+            ? visited.map(function(p){ return '<div class="journal-ticket" onclick="window.__openPlaceView(\''+p.id+'\')"><div class="jt-body"><div class="jt-city">'+(p.city||p.country||'')+'</div></div></div>'; }).join('')
+            : '<div class="ig-empty">пока пусто — добавь первое место на планете</div>';
+        }
+      }catch(e2){}
     }
+    try{ attachDefaultPhotos(places, photosByPlace); }catch(e){}
+  }
+
+  function syncPlaceMarkers(places, photosByPlace){
+    if(!map) return;
     const prevById = new Map();
     placeMarkers.forEach(m=>{
       try{
@@ -5650,31 +5708,16 @@
       }catch(e){}
     });
     const nextMarkers = [];
-    const seen = new Set();
-
     function pinHtml(isWish){
       return isWish
         ? `<svg viewBox="0 0 26 34" fill="none"><path d="M13 1.5C6.3 1.5 1.5 6.7 1.5 13c0 8.8 11.5 18.7 11.5 18.7s11.5-9.9 11.5-18.7C24.5 6.7 19.7 1.5 13 1.5z" stroke="var(--muted)" stroke-width="2" stroke-dasharray="3.2 3.2"/><path d="M13 18.2s-4.3-2.7-4.3-5.7c0-1.6 1.3-2.8 2.8-2.8 1 0 2 .6 2.5 1.5.5-.9 1.4-1.5 2.5-1.5 1.5 0 2.8 1.2 2.8 2.8 0 3-4.3 5.7-4.3 5.7z" fill="var(--rose)" opacity=".6"/></svg>`
         : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
     }
-
-    places.forEach(p=>{
+    (places||[]).forEach(p=>{
       if(p.lat == null || p.lon == null) return;
       const lon = Number(p.lon), lat = Number(p.lat);
       if(!isFinite(lon) || !isFinite(lat)) return;
-      seen.add(p.id);
-      const photos = photosByPlace[p.id] || [];
-      const photoHtml = photos.length ? `<img src="${photos[0]}" style="width:100%;height:90px;object-fit:cover;border-radius:10px;margin-bottom:8px;">` : '';
-      const popupHtml = `
-        <div class="map-popup">
-          ${photoHtml}
-          <div class="mp-title">${p.city ? p.city+', '+p.country : p.country}</div>
-          <div class="mp-note">${p.note ? p.note : (p.is_wishlist ? 'место мечты' : (p.visit_date || ''))}</div>
-          <button class="mp-btn" onclick="window.__deletePlace('${p.id}')">Удалить</button>
-        </div>`;
-
       let marker = prevById.get(p.id);
-      // if marker element was detached from map, recreate
       if(marker){
         try{
           const el0 = marker.getElement();
@@ -5685,23 +5728,7 @@
         try{
           marker.setLngLat([lon, lat]);
           const el = marker.getElement();
-          if(el){
-            el.dataset.placeId = p.id;
-            el.style.display = '';
-            el.style.opacity = '1';
-            el.onclick = ()=>{
-              try{
-                const meta = getRouteMeta(p.id);
-                if(meta && meta.fromLat != null && meta.fromLon != null){
-                  playRouteOnce({
-                    a:[Number(meta.fromLon), Number(meta.fromLat)],
-                    b:[lon, lat],
-                    tr: meta.transport || 'plane'
-                  });
-                }
-              }catch(e){}
-            };
-          }
+          if(el){ el.dataset.placeId = p.id; el.style.display = ''; el.style.opacity = '1'; }
         }catch(e){}
         nextMarkers.push(marker);
         prevById.delete(p.id);
@@ -5710,42 +5737,16 @@
         el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
         el.dataset.placeId = p.id;
         el.innerHTML = pinHtml(!!p.is_wishlist);
-        el.onclick = ()=>{
-          try{
-            const meta = getRouteMeta(p.id);
-            if(meta && meta.fromLat != null && meta.fromLon != null){
-              playRouteOnce({
-                a:[Number(meta.fromLon), Number(meta.fromLat)],
-                b:[lon, lat],
-                tr: meta.transport || 'plane'
-              });
-            }
-          }catch(e){}
-        };
         marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
         marker.setLngLat([lon, lat]);
-        try{ marker.setPopup(new maplibregl.Popup({offset:14, closeButton:false}).setHTML(popupHtml)); }catch(e){}
-        if(map) marker.addTo(map);
+        marker.addTo(map);
         nextMarkers.push(marker);
       }
     });
-    // remove stale
     prevById.forEach(m=>{ try{ m.remove(); }catch(e){} });
     placeMarkers = nextMarkers;
-
-    // trails without auto-animation (anim only on add / pin click)
-    try{ bindTrailZoom(); updateTravelTrail(places, false); }catch(e){}
-
-    const visited = places.filter(p=>!p.is_wishlist);
-    const wishlist = places.filter(p=>p.is_wishlist);
-    const countryCount = new Set(visited.map(p=>p.country)).size;
-    animateNumber(document.getElementById('statCountries'), countryCount);
-    animateNumber(document.getElementById('statCities'), visited.length);
-    animateNumber(document.getElementById('statWorldPct'), Math.round(countryCount / WORLD_COUNTRIES_TOTAL * 100), '%');
-
-    renderProfilePlaces(visited, wishlist, photosByPlace);
-    attachDefaultPhotos(places, photosByPlace);
   }
+
 
   // ---------- profile sort + grid/list ----------
   let profileViewMode = 'list'; // list | grid
@@ -5787,32 +5788,61 @@
     }).join('') + `</div>`;
   }
   function renderProfilePlaces(visited, wishlist, photosByPlace){
-    const v = sortPlacesList(visited);
-    const w = sortPlacesList(wishlist);
+    photosByPlace = photosByPlace || {};
+    const v = typeof sortPlacesList === 'function' ? sortPlacesList(visited || []) : (visited || []);
+    const w = typeof sortPlacesList === 'function' ? sortPlacesList(wishlist || []) : (wishlist || []);
     const pcBtn = document.getElementById('postcardBtn');
     if(pcBtn) pcBtn.style.display = 'none';
-    if(profileViewMode === 'grid'){
-      document.getElementById('myPlacesList').innerHTML = renderGrid(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
-      document.getElementById('myWishlistList').innerHTML = renderGrid(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
-    } else {
-      document.getElementById('myPlacesList').innerHTML = renderPlaceCards(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
-      document.getElementById('myWishlistList').innerHTML = renderPlaceCards(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
-      try{ bindSwipeRows(document.getElementById('myPlacesList')); }catch(e){}
-      try{ bindSwipeRows(document.getElementById('myWishlistList')); }catch(e){}
+    const box = document.getElementById('myPlacesList');
+    const wbox = document.getElementById('myWishlistList');
+    if(!box){ console.warn('myPlacesList missing'); return; }
+
+    function plainList(list, emptyText){
+      if(!list.length) return '<div class="ig-empty">'+emptyText+'</div>';
+      return list.map(function(p){
+        const title = p.city || p.country || 'Место';
+        const sub = (p.city && p.country) ? ('<div class="jt-country">'+p.country+'</div>') : '';
+        const id = String(p.id || '');
+        return '<div class="journal-ticket" style="cursor:pointer" onclick="window.__openPlaceView(\''+id+'\')">'
+          + '<div class="jt-body"><div class="jt-city">'+title+'</div>'+sub+'</div></div>';
+      }).join('');
+    }
+
+    try{
+      if(profileViewMode === 'grid' && typeof renderGrid === 'function'){
+        box.innerHTML = renderGrid(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
+        if(wbox) wbox.innerHTML = renderGrid(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+      } else if(typeof renderPlaceCards === 'function'){
+        box.innerHTML = renderPlaceCards(v, photosByPlace, 'пока пусто — добавь первое место на планете', true);
+        if(wbox) wbox.innerHTML = renderPlaceCards(w, photosByPlace, 'пока пусто — отметь место мечты на планете', true);
+      } else {
+        box.innerHTML = plainList(v, 'пока пусто — добавь первое место на планете');
+        if(wbox) wbox.innerHTML = plainList(w, 'пока пусто — отметь место мечты на планете');
+      }
+    }catch(e){
+      console.warn('renderProfilePlaces inner', e);
+      box.innerHTML = plainList(v, 'пока пусто — добавь первое место на планете');
+      if(wbox) wbox.innerHTML = plainList(w, 'пока пусто — отметь место мечты на планете');
     }
   }
-  document.getElementById('viewListBtn').addEventListener('click', ()=>{
-    profileViewMode = 'list'; csSet('profile_view', 'list'); syncViewButtons();
-    if(allPlacesCache.length) loadPlaces();
-  });
-  document.getElementById('viewGridBtn').addEventListener('click', ()=>{
-    profileViewMode = 'grid'; csSet('profile_view', 'grid'); syncViewButtons();
-    if(allPlacesCache.length) loadPlaces();
-  });
-  document.getElementById('placeSort').addEventListener('change', (e)=>{
-    profileSort = e.target.value; csSet('profile_sort', profileSort);
-    if(allPlacesCache.length) loadPlaces();
-  });
+
+  (function(){
+    const lb = document.getElementById('viewListBtn');
+    const gb = document.getElementById('viewGridBtn');
+    const ps = document.getElementById('placeSort');
+    if(lb) lb.addEventListener('click', ()=>{
+      profileViewMode = 'list'; csSet('profile_view', 'list'); syncViewButtons();
+      if(allPlacesCache && allPlacesCache.length) loadPlaces();
+    });
+    if(gb) gb.addEventListener('click', ()=>{
+      profileViewMode = 'grid'; csSet('profile_view', 'grid'); syncViewButtons();
+      if(allPlacesCache && allPlacesCache.length) loadPlaces();
+    });
+    if(ps) ps.addEventListener('change', (e)=>{
+      profileSort = e.target.value; csSet('profile_sort', profileSort);
+      if(allPlacesCache && allPlacesCache.length) loadPlaces();
+    });
+  })();
 
   // ---------- fast photo loading: cache + small wiki thumbs + lazy + limited concurrency ----------
   const defaultPhotoCache = {};
@@ -6500,9 +6530,6 @@
   }
 
   // ---------- edit place modal ----------
-  let editingPlace = null;
-  let allPlacesCache = [];
-
   window.__openEditPlace = function(placeId){
     const p = allPlacesCache.find(x=>x.id === placeId);
     if(!p) return;
