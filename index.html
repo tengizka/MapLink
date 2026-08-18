@@ -716,6 +716,63 @@
     padding:16px 10px 10px;
     box-shadow:inset 0 2px 8px rgba(58,46,43,.25);
   }
+
+  /* ---- minimal feed ---- */
+  #friendsFeed{ display:flex; flex-direction:column; gap:14px; padding-bottom:12px; }
+  .feed-post{
+    background:var(--card);
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 6px 18px -10px rgba(58,46,43,.18);
+  }
+  .feed-post .fp-photo{
+    width:100%; aspect-ratio:4/3; background:#EDE4DC center/cover no-repeat;
+    cursor:pointer;
+  }
+  .feed-post .fp-body{ padding:10px 12px 12px; }
+  .feed-post .fp-top{
+    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  }
+  .feed-post .fp-av{
+    width:28px; height:28px; border-radius:50%;
+    background:var(--sage) center/cover no-repeat; flex-shrink:0;
+  }
+  .feed-post .fp-user{
+    font-size:13px; font-weight:600; color:var(--ink); line-height:1.2;
+  }
+  .feed-post .fp-meta{
+    font-size:11px; color:var(--muted);
+  }
+  .feed-post .fp-place{
+    font-family:'Fraunces',serif; font-style:italic; font-size:15px;
+    color:var(--ink); margin:4px 0 2px;
+    display:flex; align-items:center; gap:6px;
+  }
+  .feed-post .fp-note{
+    font-size:12.5px; color:#5a4b45; line-height:1.4; margin-top:4px;
+  }
+  .feed-post .fp-actions{
+    display:flex; align-items:center; gap:4px; margin-top:8px;
+  }
+  .feed-post .fp-actions .react-btn{
+    background:transparent; border:none; padding:4px 6px;
+    color:var(--muted); font-size:12px; display:inline-flex; align-items:center; gap:3px;
+  }
+  .feed-post .fp-actions .react-btn.on{ color:var(--rose-deep); }
+  .feed-post .fp-actions .react-btn svg{ width:16px; height:16px; }
+  .feed-collapse{
+    background:transparent; border:1.5px dashed #E5D5CB;
+    border-radius:14px; padding:10px 12px;
+    display:flex; align-items:center; gap:10px;
+    color:var(--muted); font-size:12.5px;
+  }
+  .feed-collapse .fp-av{
+    width:28px; height:28px; border-radius:50%;
+    background:var(--sage) center/cover no-repeat; flex-shrink:0;
+  }
+  .feed-collapse b{ color:var(--ink); font-weight:600; }
+
+
   .feed-card-compact .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; grid-row:1/3; }
   .fcc-body{ min-width:0; }
   .fcc-line{ font-size:11.5px; color:var(--muted); }
@@ -1986,6 +2043,118 @@
     background:var(--rose); color:#fff; border:none; font-weight:700;
     font-size:12.5px; padding:7px 16px; border-radius:16px; font-family:inherit;
   }
+
+  /* ========== motion system + performance ========== */
+  :root{
+    --ease-out: cubic-bezier(.22,1,.36,1);
+    --ease-spring: cubic-bezier(.34,1.3,.64,1);
+    --dur-fast: .18s;
+    --dur: .28s;
+    --dur-slow: .42s;
+  }
+  @media (prefers-reduced-motion: reduce){
+    *, *::before, *::after{
+      animation-duration: .01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: .01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+  .screen{
+    transition: opacity var(--dur) var(--ease-out), transform var(--dur) var(--ease-out);
+  }
+  .screen.active{
+    animation: screenIn var(--dur-slow) var(--ease-out) both;
+  }
+  .screen.leaving{
+    animation: screenOut .26s ease both;
+  }
+  @keyframes screenIn{
+    from{ opacity:0; transform:translateY(10px) scale(.985); }
+    to{ opacity:1; transform:none; }
+  }
+  @keyframes screenOut{
+    from{ opacity:1; transform:none; }
+    to{ opacity:0; transform:translateY(6px) scale(.99); }
+  }
+  button, .navitem, .fab, .mini-btn, .invite-btn, .bubble-add, .react-btn,
+  .tr-chip, .gfilter, .filter-fab, .wish-save-btn, .add-save, .add-cancel,
+  .journal-ticket, .friend-row, .rank-row, .feed-post, .feed-collapse,
+  .settings-row, .view-btn, .ig-cell{
+    transition:
+      transform var(--dur-fast) var(--ease-spring),
+      opacity var(--dur-fast) ease,
+      background var(--dur) ease,
+      color var(--dur) ease,
+      box-shadow var(--dur) ease,
+      border-color var(--dur) ease;
+  }
+  button:active, .navitem:active, .fab:active, .mini-btn:active,
+  .invite-btn:active, .bubble-add:active, .react-btn:active,
+  .add-save:active, .filter-fab:active{
+    transform: scale(.94);
+  }
+  .journal-ticket:active, .feed-post:active, .friend-row:active, .ig-cell:active{
+    transform: scale(.985);
+  }
+  .fab{
+    transition: transform var(--dur) var(--ease-spring), box-shadow var(--dur) ease, background var(--dur) ease;
+  }
+  .fab:active{ transform:scale(.9); }
+  #addModal, #editModal, #igPlaceModal, #puzzleModal, #letterGate,
+  .add-sheet, .ig-modal-card, .puzzle-wrap{
+    transition: opacity var(--dur) var(--ease-out);
+  }
+  .add-sheet, .ig-modal-card, .puzzle-wrap{
+    animation: sheetUp var(--dur-slow) var(--ease-out) both;
+  }
+  @keyframes sheetUp{
+    from{ opacity:0; transform:translateY(18px) scale(.98); }
+    to{ opacity:1; transform:none; }
+  }
+  #countryBubble.show .bubble-card{
+    animation: bubbleSoft .38s var(--ease-spring) both;
+  }
+  @keyframes bubbleSoft{
+    from{ opacity:0; transform:translateY(8px) scale(.92); }
+    to{ opacity:1; transform:none; }
+  }
+  .feed-post, .feed-collapse{
+    animation: feedRise .4s var(--ease-out) both;
+    content-visibility: auto;
+    contain-intrinsic-size: 280px;
+  }
+  .feed-post:nth-child(1){ animation-delay: .02s; }
+  .feed-post:nth-child(2){ animation-delay: .05s; }
+  .feed-post:nth-child(3){ animation-delay: .08s; }
+  .feed-post:nth-child(4){ animation-delay: .11s; }
+  .feed-post:nth-child(5){ animation-delay: .14s; }
+  @keyframes feedRise{
+    from{ opacity:0; transform:translateY(12px); }
+    to{ opacity:1; transform:none; }
+  }
+  .journal-ticket{
+    animation: cardRise .38s var(--ease-out) both;
+  }
+  .navitem.active svg{
+    transition: transform var(--dur) var(--ease-spring);
+  }
+  .pin-dot svg{
+    animation: pinSoft .4s var(--ease-spring) both;
+  }
+  @keyframes pinSoft{
+    from{ opacity:0; transform:scale(.6) translateY(-8px); }
+    to{ opacity:1; transform:none; }
+  }
+  /* smoother map container */
+  #globeMap, #globeMap .maplibregl-canvas{
+    transition: opacity .35s ease;
+  }
+  /* reduce paint cost */
+  .screen:not(.active){
+    content-visibility: hidden;
+  }
+
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -1996,7 +2165,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.79 alpha</div>
+    <div class="app-version">v0.81 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2571,13 +2740,6 @@
   // ---------- tab switching ----------
   function showScreen(name){
     try{ if(window.__screenReady) sfx('whoosh'); }catch(e){}
-    // GPU: pause map rendering when not looking at the globe
-    try{
-      if(window.__mlMap){
-        if(name==='home') window.__mlMap.triggerRepaint();
-        else if(window.__mlMap.stop) { /* keep alive */ }
-      }
-    }catch(e){}
     const target = document.getElementById('screen-'+name);
     if(!target) return;
     if(target.classList.contains('active') && !target.classList.contains('leaving')) return;
@@ -2597,7 +2759,7 @@
           prev.style.display = 'none';
           prev.style.opacity = '';
         }
-      }, 220);
+      }, 280);
     } else {
       document.querySelectorAll('.screen').forEach(s=>{
         if(s !== target){
@@ -2609,18 +2771,36 @@
 
     target.classList.remove('leaving');
     target.style.display = '';
-    // restart enter animation
     target.classList.remove('active');
     void target.offsetWidth;
     target.classList.add('active');
+
+    // map: only burn GPU on home
+    try{
+      const m = window.__mlMap;
+      if(m){
+        const canvas = m.getCanvas && m.getCanvas();
+        if(name === 'home'){
+          if(canvas) canvas.style.visibility = '';
+          try{ m.resize(); }catch(e){}
+          try{ m.triggerRepaint(); }catch(e){}
+        } else {
+          if(canvas) canvas.style.visibility = 'hidden';
+        }
+      }
+    }catch(e){}
   }
   document.querySelectorAll('.navitem').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       try{sfx('soft')}catch(e){} try{haptic('light')}catch(e){}
       const name = btn.dataset.screen;
       showScreen(name);
-      if(name === 'feed') loadFriendsFeed();
-      if(name === 'rank') loadRankings();
+      clearTimeout(window.__tabLoadT);
+      window.__tabLoadT = setTimeout(()=>{
+        if(name === 'feed') try{ loadFriendsFeed(); }catch(e){}
+        if(name === 'rank') try{ loadRankings(); }catch(e){}
+        if(name === 'profile') try{ loadPlaces(); }catch(e){}
+      }, 60);
       if(name === 'friends') loadFriends();
       if(name === 'profile') { try{ loadPlaces(); }catch(e){} }
     });
@@ -4519,10 +4699,13 @@ document.getElementById('igModalMeta').textContent = metaLine;
     zoom: 1.1,
     attributionControl: false,
     refreshExpiredTiles: false,
-    maxPitch: 60,
-    fadeDuration: 180,
-    maxTileCacheSize: 80,
-    collectResourceTiming: false
+    maxPitch: 55,
+    fadeDuration: 0,
+    maxTileCacheSize: 48,
+    collectResourceTiming: false,
+    renderWorldCopies: false,
+    localIdeographFontFamily: false,
+    crossSourceCollisions: false
   });
 
   // ---------- edge-swipe zoom: drag up/down right at the screen edge to zoom ----------
@@ -4590,10 +4773,8 @@ document.getElementById('igModalMeta').textContent = metaLine;
   let placeLabelLayers = [];
 
   map.on('load', ()=>{
-    // true 3D globe (needs MapLibre GL JS v5+)
-    map.setProjection({ type: 'globe' });
-
-    // keep only layers we need, then paint from MAP_PALETTE (theme-aware)
+    try{ map.setProjection({ type: 'globe' }); }catch(e){}
+    placeLabelLayers = [];
     const keepLayers = ['water','landcover','landuse','boundary','place','water_name'];
     (map.getStyle().layers || []).forEach(l=>{
       const sl = l['source-layer'];
@@ -4603,30 +4784,45 @@ document.getElementById('igModalMeta').textContent = metaLine;
           return;
         }
         if(l.type === 'line' && sl === 'boundary'){
-          map.setLayerZoomRange(l.id, 0, l.maxzoom || 24);
+          try{ map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); }catch(e){}
         }
         if(l.type === 'symbol'){
-          if(sl === 'place'){
-            placeLabelLayers.push(l.id);
-            const id = l.id.toLowerCase();
-            if(id.includes('country') || id.includes('continent')){
-              map.setLayerZoomRange(l.id, 0, l.maxzoom || 24);
-            } else if(id.includes('city') || id.includes('town')){
-              try{ map.setLayerZoomRange(l.id, 3, l.maxzoom || 24); }catch(e){}
-            }
-          }
-          const layout = map.getLayoutProperty(l.id, 'text-field');
-          if(layout){
+          const id = (l.id || '').toLowerCase();
+          const isPlace = sl === 'place' || id.includes('place') || id.includes('country') || id.includes('city') || id.includes('town');
+          if(isPlace) placeLabelLayers.push(l.id);
+
+          // lighter labels = less lag
+          try{
             map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
+          }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-size', [
+            'interpolate', ['linear'], ['zoom'],
+            0, 10,
+            2, 11,
+            4, 12,
+            6, 13,
+            10, 14
+          ]); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-max-width', 7); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-padding', 4); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'symbol-spacing', 350); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-allow-overlap', false); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-ignore-placement', false); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.0); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-opacity', 0.92); }catch(e){}
+
+          if(id.includes('country') || id.includes('continent')){
+            try{ map.setLayerZoomRange(l.id, 0, 24); }catch(e){}
+          } else if(id.includes('city') || id.includes('town') || id.includes('village')){
+            // cities earlier, villages later
+            try{ map.setLayerZoomRange(l.id, id.includes('village') ? 5 : 2.2, 24); }catch(e){}
           }
-          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.15); }catch(e){}
         }
       }catch(e){}
     });
-
-    // apply current theme palette (land / water / sky / labels)
-    applyMapPalette(document.documentElement.classList.contains('theme-dark'));
+    try{ applyMapPalette(document.documentElement.classList.contains('theme-dark')); }catch(e){}
     try{ buildGlobeStars(); }catch(e){}
+    try{ if(typeof loadPlaces === 'function') loadPlaces(); }catch(e){}
   });
 
 
@@ -5032,7 +5228,8 @@ document.getElementById('igModalMeta').textContent = metaLine;
     return null;
   }
 
-  map.on('click', (e)=>{
+  let bubbleRevTimer = null;
+  map.on('click', async (e)=>{
     if(window.__tutLockUI){ hideBubble(); return; }
     bubbleClickLngLat = e.lngLat;
     let features = [];
@@ -5042,19 +5239,57 @@ document.getElementById('igModalMeta').textContent = metaLine;
         features = map.queryRenderedFeatures(e.point, { layers }) || [];
       }
     }catch(err){ features = []; }
-    if(!features.length){ hideBubble(); return; }
-    const f = features[0];
+
+    let displayName = '';
+    let isCountry = false;
+    let f = features[0] || null;
     bubbleFeature = f;
-    const displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
+
+    if(f){
+      displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
+      isCountry = !!(f.properties && f.properties.class === 'country');
+    }
+
+    // if label not under finger — soft reverse geocode (so bubble still works)
+    if(!displayName){
+      const lat = e.lngLat.lat, lon = e.lngLat.lng;
+      document.getElementById('bubbleTitle').textContent = '…';
+      bubbleEl.style.left = e.point.x + 'px';
+      bubbleEl.style.top = e.point.y + 'px';
+      bubbleEl.classList.add('show');
+      try{
+        const rev = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon+'&accept-language=ru&addressdetails=1&zoom=10');
+        const data = await rev.json();
+        const addr = data.address || {};
+        const city = addr.city || addr.town || addr.village || addr.municipality || '';
+        const country = addr.country || '';
+        if(city){ displayName = city; isCountry = false; }
+        else if(country){ displayName = country; isCountry = true; }
+        // stash for add button
+        bubbleFeature = {
+          properties: {
+            name: displayName,
+            'name:ru': displayName,
+            class: isCountry ? 'country' : 'city',
+            iso_a2: (addr.country_code || '').toUpperCase()
+          },
+          geometry: { type: 'Point', coordinates: [lon, lat] },
+          __fromReverse: true,
+          __country: country,
+          __countryCode: (addr.country_code || '').toLowerCase()
+        };
+      }catch(err){
+        hideBubble();
+        return;
+      }
+    }
+
     if(!displayName){ hideBubble(); return; }
-    const isCountry = f.properties && f.properties.class === 'country';
-    // already have this place → open it, do not show "Добавить"
+
     const existing = findExistingPlaceByLabel(displayName, isCountry);
     if(existing){
       hideBubble();
-      try{
-        if(typeof window.__openPlaceView === 'function') window.__openPlaceView(existing.id);
-      }catch(err){}
+      try{ if(typeof window.__openPlaceView === 'function') window.__openPlaceView(existing.id); }catch(err){}
       return;
     }
     document.getElementById('bubbleTitle').textContent = displayName;
@@ -6520,7 +6755,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
       .in('user_id', cachedFriendIds)
       .eq('is_wishlist', false)
       .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(80);
     if(!places || !places.length){
       box.innerHTML = `<div class="feed-empty">
         <div class="fe-title">У друзей пока тихо</div>
@@ -6561,82 +6796,91 @@ document.getElementById('igModalMeta').textContent = metaLine;
       });
     }catch(e){}
 
-    const renderFeedCard = (p,i)=>{
-      const u = userMap[p.user_id] || { username: 'друг' };
+    // prioritize photo posts; collapse no-photo per user to 1 row
+    const withPhoto = [];
+    const noPhotoByUser = {};
+    places.forEach(p => {
       const photos = photosByPlace[p.id] || [];
-      const hasPhoto = photos.length > 0;
-      const title = p.city ? p.city+', '+p.country : p.country;
+      if(photos.length) withPhoto.push(p);
+      else {
+        if(!noPhotoByUser[p.user_id]) noPhotoByUser[p.user_id] = [];
+        noPhotoByUser[p.user_id].push(p);
+      }
+    });
+    // keep newest photo posts, limit total feed weight
+    const photoPosts = withPhoto.slice(0, 24);
+    const collapseRows = Object.keys(noPhotoByUser).map(uid => {
+      const list = noPhotoByUser[uid];
+      return { userId: uid, places: list, sample: list[0], count: list.length };
+    }).filter(r => r.count > 0);
+
+    const iconHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
+    const iconUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 11v9a1 1 0 001 1h5.5a2 2 0 002-1.6l1.3-6.2A1.5 1.5 0 0016.3 11H13V6.5A2.5 2.5 0 0010.5 4h-.2c-.7 0-1.3.4-1.5 1L7 11h1z"/><path d="M4 11h3v10H5a1 1 0 01-1-1v-8a1 1 0 011-1z"/></svg>';
+    const iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>';
+    const iconChat = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6A2.5 2.5 0 0116.5 15H11l-4 3.5V15H7.5A2.5 2.5 0 015 12.5v-6z"/></svg>';
+
+    function reactBarHtml(p){
       const reacts = reactionsByPlace[p.id] || [];
       const myReact = reacts.find(r=>r.user_id === myUserId);
       const counts = {};
       reacts.forEach(r=>{ counts[r.emoji] = (counts[r.emoji]||0)+1; });
-      const iconHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
-      const iconUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 11v9a1 1 0 001 1h5.5a2 2 0 002-1.6l1.3-6.2A1.5 1.5 0 0016.3 11H13V6.5A2.5 2.5 0 0010.5 4h-.2c-.7 0-1.3.4-1.5 1L7 11h1z"/><path d="M4 11h3v10H5a1 1 0 01-1-1v-8a1 1 0 011-1z"/></svg>';
-      const iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>';
-      const iconChat = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6A2.5 2.5 0 0116.5 15H11l-4 3.5V15H7.5A2.5 2.5 0 015 12.5v-6z"/></svg>';
-      const iconWish = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
-      const wishBtn = `<button type="button" class="wish-save-btn" data-pid="${p.id}" onclick="event.stopPropagation();window.__saveToWishlist('${p.id}')">${iconWish} хочу туда</button>`;
-      const iconPin = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-6.5-5.7-6.5-11A6.5 6.5 0 0112 3.5 6.5 6.5 0 0118.5 10c0 5.3-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>';
-      const reactsMeta = [
-        { em:'heart', icon: iconHeart, label:'' },
-        { em:'up', icon: iconUp, label:'' },
-        { em:'star', icon: iconStar, label:'' }
-      ];
-      const reactBar = reactsMeta.map(r=>{
+      const pid = String(p.id);
+      return [
+        {em:'heart', icon:iconHeart},
+        {em:'up', icon:iconUp},
+        {em:'star', icon:iconStar}
+      ].map(r=>{
         const n = counts[r.em]||0;
         const on = myReact && myReact.emoji === r.em ? ' on' : '';
-        return `<button class="react-btn${on}" onclick="window.__toggleReact('${p.id}','${r.em}')">${r.icon}${n? '<span>'+n+'</span>':''}</button>`;
-      }).join('');
-      const safeUname = (u.username||'').replace(/'/g,"\\'");
-      const openUser = `window.__openFriend('${u.id}','${safeUname}','${u.avatar_url||''}')`;
-
-      const rot = ['-1.4deg','1.6deg','-.8deg','1.1deg','-1.9deg'][i % 5];
-      const attach = renderAttachment(i);
-
-      if(!hasPhoto){
-        // no user photo — small compact post, no Wikipedia fallback image at all
-        return `<div class="feed-card-compact" style="transform:rotate(${rot});">
-          ${attach}
-          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
-          <div class="fcc-body">
-            <div class="fcc-line" style="cursor:pointer" onclick="${openUser}"><b>${u.username||'друг'}</b> добавил(а) место</div>
-            <div class="fcc-title">${iconPin}<span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
-            <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
-          </div>
-          <div class="feed-actions" style="margin-top:0;">${reactBar}${wishBtn}
-            <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}${commentCountByPlace[p.id] ? "<span>"+commentCountByPlace[p.id]+"</span>" : ""}</button>
-          </div>
-          <div id="comments-${p.id}" style="display:none;margin-top:8px;grid-column:1/-1;"></div>
-        </div>`;
-      }
-
-      return `<div class="feed-card" style="transform:rotate(${rot});">
-        ${attach}
-        <div class="feed-head">
-          <div class="fav" style="${u.avatar_url?`background-image:url(${u.avatar_url})`:''};cursor:pointer" onclick="${openUser}"></div>
-          <div style="cursor:pointer" onclick="${openUser}">
-            <div class="fname">${u.username||'друг'}</div>
-            <div class="ftime">${p.visit_date || (p.created_at||'').slice(0,10)}</div>
-          </div>
-        </div>
-        <div class="feed-photo" data-place-id="${p.id}" style="cursor:pointer" onclick="window.__openPlaceView('${p.id}')"></div>
-        <div class="feed-title"><span class="flag-badge" data-place-id="${p.id}"></span> ${title}</div>
-        ${p.note ? `<div class="feed-note">${p.note}</div>` : ''}
-        <div class="feed-actions">${reactBar}${wishBtn}
-          <button class="react-btn" onclick="window.__openComments('${p.id}')">${iconChat}${commentCountByPlace[p.id] ? "<span>"+commentCountByPlace[p.id]+"</span>" : ""}</button>
-        </div>
-        <div id="comments-${p.id}" style="display:none;margin-top:8px;"></div>
-      </div>`;
-    };
-    if(feedViewMode === 'calendar'){
-      const { groups, order } = groupFeedByMonth(places);
-      box.innerHTML = order.map(key => {
-        const list = groups[key];
-        return `<div class="feed-cal-month">${key}</div>` + list.map((p,i) => renderFeedCard(p,i)).join('');
-      }).join('');
-    } else {
-      box.innerHTML = places.map((p,i) => renderFeedCard(p,i)).join('');
+        return '<button class="react-btn'+on+'" data-pid="'+pid+'" data-em="'+r.em+'" onclick="event.stopPropagation();window.__toggleReact(this.dataset.pid,this.dataset.em)">'+r.icon+(n?('<span>'+n+'</span>'):'')+'</button>';
+      }).join('') +
+      '<button class="react-btn" data-pid="'+pid+'" onclick="event.stopPropagation();window.__openComments(this.dataset.pid)">'+iconChat+(commentCountByPlace[p.id]?('<span>'+commentCountByPlace[p.id]+'</span>'):'')+'</button>';
     }
+
+    function renderPhotoPost(p){
+      const u = userMap[p.user_id] || { username: 'друг' };
+      const photos = photosByPlace[p.id] || [];
+      const title = p.city ? (p.city+', '+p.country) : p.country;
+      const pid = String(p.id);
+      const uid = String(p.user_id);
+      const av = u.avatar_url ? ('background-image:url('+u.avatar_url+')') : '';
+      return '<div class="feed-post">'
+        + '<div class="fp-photo" data-pid="'+pid+'" style="background-image:url('+photos[0]+')" onclick="window.__openPlaceView(this.dataset.pid)"></div>'
+        + '<div class="fp-body">'
+        + '<div class="fp-top" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'
+        + '<div class="fp-av" style="'+av+'"></div>'
+        + '<div><div class="fp-user">'+(u.username||'друг')+'</div>'
+        + '<div class="fp-meta">'+(p.visit_date || (p.created_at||'').slice(0,10) || '')+'</div></div></div>'
+        + '<div class="fp-place"><span class="flag-badge" data-place-id="'+pid+'"></span> '+title+'</div>'
+        + (p.note ? ('<div class="fp-note">'+p.note+'</div>') : '')
+        + '<div class="fp-actions">'+reactBarHtml(p)+'</div>'
+        + '<div id="comments-'+pid+'" style="display:none;margin-top:8px;"></div>'
+        + '</div></div>';
+    }
+
+    function renderCollapse(row){
+      const u = userMap[row.userId] || { username: 'друг' };
+      const av = u.avatar_url ? ('background-image:url('+u.avatar_url+')') : '';
+      const sample = row.sample;
+      const title = sample.city ? sample.city : sample.country;
+      const more = row.count > 1 ? (' · ещё '+(row.count-1)) : '';
+      const uid = String(row.userId);
+      return '<div class="feed-collapse" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'
+        + '<div class="fp-av" style="'+av+'"></div>'
+        + '<div><b>'+(u.username||'друг')+'</b> · '+title+more
+        + '<div class="fp-meta">без фото</div></div></div>';
+    }
+
+    // interleave: photo posts first, then collapses at bottom
+    let html = photoPosts.map(renderPhotoPost).join('');
+    if(collapseRows.length){
+      html += collapseRows.map(renderCollapse).join('');
+    }
+    if(!html){
+      html = '<div class="feed-empty"><div class="fe-title">Пока тихо</div><div class="fe-sub">Друзья ещё не добавили поездки с фото.</div></div>';
+    }
+    box.innerHTML = html;
+
     // flags resolve for every post; the Wikipedia photo-fetch itself still only
     // triggers for cards that actually have a .feed-photo element (full photo posts)
     attachDefaultPhotos(places, photosByPlace);
