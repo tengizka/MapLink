@@ -1996,7 +1996,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.78 alpha</div>
+    <div class="app-version">v0.79 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2090,23 +2090,6 @@
         </div>
       </div>
       <div class="add-step" data-add-step="3">
-        <div class="route-block">
-          <div class="route-label">Как добрались?</div>
-          <div class="transport-chips" id="transportChips">
-            <button type="button" class="tr-chip" data-tr="plane" title="Самолёт"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 00-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></button>
-            <button type="button" class="tr-chip" data-tr="train" title="Поезд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="14" rx="2.5"/><path d="M6 12h12M9 17l-2 3M15 17l2 3M10 7.5h4"/><circle cx="9.5" cy="14.5" r="1" fill="currentColor" stroke="none"/><circle cx="14.5" cy="14.5" r="1" fill="currentColor" stroke="none"/></svg></button>
-            <button type="button" class="tr-chip" data-tr="car" title="Машина"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14l1.5-5.5A2 2 0 017.4 7h9.2a2 2 0 011.9 1.5L20 14"/><path d="M4 14h16v3a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1H7v1a1 1 0 01-1 1H5a1 1 0 01-1-1v-3z"/><circle cx="7.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.5" cy="15.5" r="1.2" fill="currentColor" stroke="none"/></svg></button>
-            <button type="button" class="tr-chip" data-tr="bus" title="Автобус"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="15" rx="2.5"/><path d="M5 10h14M5 14h14M9 18v2M15 18v2"/><circle cx="8.5" cy="16" r=".9" fill="currentColor" stroke="none"/><circle cx="15.5" cy="16" r=".9" fill="currentColor" stroke="none"/></svg></button>
-            <button type="button" class="tr-chip" data-tr="ship" title="Корабль"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16c1.5 1.2 3.5 2 8 2s6.5-.8 8-2M6 16V10l6-5 6 5v6"/><path d="M12 5v5M9 10h6"/></svg></button>
-            <button type="button" class="tr-chip" data-tr="walk" title="Пешком"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="5" r="2"/><path d="M11 22l1.5-6 2-2 2 3 2 3M9.5 12l2 2 1.5-3 2.5-1"/></svg></button>
-            <button type="button" class="tr-chip on" data-tr="" title="Не указывать"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M6 12h12"/></svg></button>
-          </div>
-          <div class="route-label" style="margin-top:10px;">Откуда приехали</div>
-          <div class="field-wrap" style="margin-bottom:10px;">
-            <input class="add-field" id="addFromPlace" placeholder="Страна или город" autocomplete="off">
-            <div class="suggest-list" id="fromSuggest" style="display:none;"></div>
-          </div>
-        </div>
         <input class="add-field" id="addNote" placeholder="Заметка (необязательно)">
         <label class="add-photo-label" for="addPhoto">
           <span id="addPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
@@ -4436,17 +4419,7 @@
     renderIgStack();
     document.getElementById('igModalTitle').textContent = p.city ? p.city+', '+p.country : p.country;
     let metaLine = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
-    try{
-      const rm = getRouteMeta(p.id);
-      if(rm && rm.transport && TR_ICON[rm.transport]){
-        metaLine = (metaLine ? metaLine+' · ' : '') + TR_ICON[rm.transport];
-        if(rm.fromId){
-          const fp = (allPlacesCache||[]).concat(window.__fvPlacesCache||[]).find(x=>x.id===rm.fromId);
-          if(fp) metaLine += ' из ' + (fp.city || fp.country);
-        }
-      }
-    }catch(e){}
-    document.getElementById('igModalMeta').textContent = metaLine;
+document.getElementById('igModalMeta').textContent = metaLine;
     document.getElementById('igModalNote').textContent = p.note || '';
     document.getElementById('igEditBtn').style.display = isOwn ? '' : 'none';
     const flagEl = document.getElementById('igModalFlag');
@@ -4783,14 +4756,7 @@
     });
     if(cur) sel.value = cur;
   }
-  document.querySelectorAll('#transportChips .tr-chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      document.querySelectorAll('#transportChips .tr-chip').forEach(b=>b.classList.remove('on'));
-      btn.classList.add('on');
-      selectedTransport = btn.dataset.tr || '';
-      try{ sfx('tap'); }catch(e){}
-    });
-  });
+  // transport UI removed
 
   // from-place search (like country/city)
   const fromInput = document.getElementById('addFromPlace');
@@ -4867,11 +4833,7 @@
     selectedCountry = (prefill && prefill.selectedCountry) || null;
     selectedCity = (prefill && prefill.selectedCity) || null;
     selectedTransport = '';
-    document.querySelectorAll('#transportChips .tr-chip').forEach(b=>{
-      b.classList.toggle('on', (b.dataset.tr || '') === '');
-    });
     selectedFrom = null;
-    try{ const fi=document.getElementById('addFromPlace'); if(fi) fi.value=''; const fs=document.getElementById('fromSuggest'); if(fs) fs.style.display='none'; }catch(e){}
     document.getElementById('countrySuggest').style.display = 'none';
     document.getElementById('citySuggest').style.display = 'none';
     setAddStep(1);
@@ -5052,6 +5014,24 @@
   map.on('zoomstart', hideBubble);
   map.on('pitchstart', hideBubble);
 
+  function findExistingPlaceByLabel(displayName, isCountry){
+    const n = String(displayName || '').toLowerCase().trim();
+    if(!n) return null;
+    const list = allPlacesCache || [];
+    // exact city match first
+    let hit = list.find(p => p.city && String(p.city).toLowerCase().trim() === n);
+    if(hit) return hit;
+    // country-only pin (no city) or country name match
+    hit = list.find(p => String(p.country || '').toLowerCase().trim() === n && (!p.city || isCountry));
+    if(hit) return hit;
+    // any place in that country
+    if(isCountry){
+      hit = list.find(p => String(p.country || '').toLowerCase().trim() === n);
+      if(hit) return hit;
+    }
+    return null;
+  }
+
   map.on('click', (e)=>{
     if(window.__tutLockUI){ hideBubble(); return; }
     bubbleClickLngLat = e.lngLat;
@@ -5067,6 +5047,16 @@
     bubbleFeature = f;
     const displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
     if(!displayName){ hideBubble(); return; }
+    const isCountry = f.properties && f.properties.class === 'country';
+    // already have this place → open it, do not show "Добавить"
+    const existing = findExistingPlaceByLabel(displayName, isCountry);
+    if(existing){
+      hideBubble();
+      try{
+        if(typeof window.__openPlaceView === 'function') window.__openPlaceView(existing.id);
+      }catch(err){}
+      return;
+    }
     document.getElementById('bubbleTitle').textContent = displayName;
     bubbleEl.style.left = e.point.x + 'px';
     bubbleEl.style.top = e.point.y + 'px';
@@ -5327,28 +5317,6 @@
         fireConfetti(r.left + r.width/2, r.top + r.height/2);
       }
       try{ sfx('success'); haptic('success'); showTicketBurst(cityName, selectedCountry && selectedCountry.name); }catch(e){}
-      // route meta for trail
-      let __pendingRouteAnim = null;
-      try{
-        if(newPlace && newPlace.id){
-          setRouteMeta(newPlace.id, {
-            transport: selectedTransport || '',
-            fromLabel: selectedFrom ? selectedFrom.label : '',
-            fromLat: selectedFrom ? selectedFrom.lat : null,
-            fromLon: selectedFrom ? selectedFrom.lon : null
-          });
-          if(selectedFrom && selectedFrom.lat != null && selectedTransport){
-            __pendingRouteAnim = {
-              a: [Number(selectedFrom.lon), Number(selectedFrom.lat)],
-              b: [Number(newPlace.lon != null ? newPlace.lon : (selectedCity && selectedCity.lon) || (selectedCountry && selectedCountry.lon)),
-                  Number(newPlace.lat != null ? newPlace.lat : (selectedCity && selectedCity.lat) || (selectedCountry && selectedCountry.lat))],
-              tr: selectedTransport
-            };
-          }
-        }
-      }catch(e){}
-      closeAddModal();
-      // ensure pin with known coordinates even if list refresh is slow
       if(newPlace){
         const pinPlace = {
           ...newPlace,
@@ -5360,11 +5328,8 @@
           try{ upsertPlaceMarker(pinPlace); }catch(e){}
         }
       }
-      await loadPlaces();
-      if(__pendingRouteAnim && isFinite(__pendingRouteAnim.b[0]) && isFinite(__pendingRouteAnim.b[1])){
-        setTimeout(()=>{ try{ playRouteOnce(__pendingRouteAnim); }catch(e){} }, 400);
-      }
-      // after ticket burst finishes — notify tutorial
+      closeAddModal();
+      try{ await loadPlaces(); }catch(e){}
       clearTimeout(window.__tutAfterAddTimer);
       window.__tutAfterAddTimer = setTimeout(()=>{
         try{ if(typeof window.__onTutPlaceSaved === 'function') window.__onTutPlaceSaved(); }catch(e){}
@@ -5460,105 +5425,29 @@
     return segs;
   }
 
-  function updateTravelTrail(places, animate){
-    if(!map || !map.getStyle || !map.isStyleLoaded || !map.isStyleLoaded()) return;
-    // never continuous anim here — only lines + static icons by zoom
+  function clearTrailMarkers(){
+    try{ trailModeMarkers.forEach(m=>{ try{ m.remove(); }catch(e){} }); }catch(e){}
+    trailModeMarkers = [];
+    if(trailAnimRaf2){ cancelAnimationFrame(trailAnimRaf2); trailAnimRaf2 = null; }
+    if(trailAnimMarker){ try{ trailAnimMarker.remove(); }catch(e){} trailAnimMarker = null; }
+  }
+  function updateTravelTrail(){
+    // routes removed
     clearTrailMarkers();
-
-    const segs = buildRouteSegments(places || allPlacesCache || []);
-    const lineFeatures = segs.map(s=>({
-      type:'Feature',
-      properties:{ transport: s.tr || '' },
-      geometry:{ type:'LineString', coordinates:[s.a, s.b] }
-    }));
-    const fc = { type:'FeatureCollection', features: lineFeatures };
-    const empty = { type:'FeatureCollection', features: [] };
-
     try{
-      if(!map.getSource('travel-trail')){
-        map.addSource('travel-trail', { type:'geojson', data: empty });
-        map.addLayer({
-          id: 'travel-trail-line',
-          type: 'line',
-          source: 'travel-trail',
-          layout: { 'line-cap':'round', 'line-join':'round' },
-          paint: {
-            'line-color': '#C57B85',
-            'line-width': 1.35,
-            'line-opacity': 0.32,
-            'line-dasharray': [1.5, 2.8]
-          }
-        });
+      if(map && map.getSource && map.getSource('travel-trail')){
+        map.getSource('travel-trail').setData({ type:'FeatureCollection', features: [] });
       }
-      map.getSource('travel-trail').setData(fc);
+      if(map && map.getLayer && map.getLayer('travel-trail-line')){
+        map.setLayoutProperty('travel-trail-line', 'visibility', 'none');
+      }
     }catch(e){}
-
-    // icons only when zoomed in enough
-    const z = map.getZoom ? map.getZoom() : 0;
-    if(z >= 3.2){
-      segs.forEach(s=>{
-        if(!s.tr || !TR_SVG[s.tr]) return;
-        try{
-          const el = document.createElement('div');
-          el.className = 'trail-mode-marker';
-          el.innerHTML = transportSvg(s.tr);
-          el.style.pointerEvents = 'none';
-          const mid = [(s.a[0]+s.b[0])/2, (s.a[1]+s.b[1])/2];
-          const mk = new maplibregl.Marker({ element: el, anchor:'center' })
-            .setLngLat(mid)
-            .addTo(map);
-          trailModeMarkers.push(mk);
-        }catch(e){}
-      });
-    }
-
-    if(animate && segs.length){
-      playRouteOnce(segs[segs.length-1]);
-    }
   }
+  function playRouteOnce(){}
+  function buildRouteSegments(){ return []; }
+  function bindTrailZoom(){}
 
-  function playRouteOnce(seg){
-    if(!map || !seg) return;
-    clearTrailMarkers();
-    // restore static icons after anim
-    const finish = ()=>{
-      try{ updateTravelTrail(allPlacesCache || [], false); }catch(e){}
-    };
-    try{
-      const el = document.createElement('div');
-      el.className = 'trail-mode-marker animating';
-      el.innerHTML = transportSvg(seg.tr || 'plane');
-      trailAnimMarker = new maplibregl.Marker({ element: el, anchor:'center' })
-        .setLngLat(seg.a)
-        .addTo(map);
-      const t0 = performance.now();
-      const dur = 2800;
-      const step = (now)=>{
-        if(!trailAnimMarker) return;
-        let t = (now - t0) / dur;
-        if(t >= 1){
-          try{ trailAnimMarker.setLngLat(seg.b); }catch(e){}
-          setTimeout(()=>{
-            if(trailAnimMarker){ try{ trailAnimMarker.remove(); }catch(e){} trailAnimMarker = null; }
-            finish();
-          }, 200);
-          return;
-        }
-        // ease out
-        const e = 1 - Math.pow(1 - t, 2.4);
-        const lng = seg.a[0] + (seg.b[0]-seg.a[0])*e;
-        const lat = seg.a[1] + (seg.b[1]-seg.a[1])*e;
-        try{ trailAnimMarker.setLngLat([lng, lat]); }catch(err){}
-        trailAnimRaf2 = requestAnimationFrame(step);
-      };
-      trailAnimRaf2 = requestAnimationFrame(step);
-    }catch(e){ finish(); }
-  }
 
-  // zoom toggles transport icons visibility
-  if(typeof map !== 'undefined'){
-    // bound later after map ready
-  }
   function bindTrailZoom(){
     if(!map || map.__trailZoomBound) return;
     map.__trailZoomBound = true;
