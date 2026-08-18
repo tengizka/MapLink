@@ -708,70 +708,95 @@
     padding:10px 12px; margin-bottom:18px; box-shadow:0 6px 14px -6px rgba(58,46,43,.3);
     position:relative;
   }
-  #friendsFeed{
-    background:
-      radial-gradient(circle, rgba(58,46,43,.07) 1px, transparent 1.6px) 0 0/14px 14px,
-      linear-gradient(160deg, #D9BFA0, #C9A87F);
-    border-radius:18px;
-    padding:16px 10px 10px;
-    box-shadow:inset 0 2px 8px rgba(58,46,43,.25);
-  }
+  #friendsFeed{ background:transparent; box-shadow:none; border-radius:0; padding:0; }
 
-  /* ---- minimal feed ---- */
-  #friendsFeed{ display:flex; flex-direction:column; gap:14px; padding-bottom:12px; }
-  .feed-post{
-    background:var(--card);
-    border-radius:18px;
-    overflow:hidden;
-    box-shadow:0 6px 18px -10px rgba(58,46,43,.18);
+  /* ---- diary / polaroid feed ---- */
+  #friendsFeed{
+    display:flex; flex-direction:column; gap:20px;
+    padding:8px 4px 24px;
+    background:transparent;
+    box-shadow:none;
+    border-radius:0;
   }
-  .feed-post .fp-photo{
-    width:100%; aspect-ratio:4/3; background:#EDE4DC center/cover no-repeat;
+  .diary-entry{
+    background:var(--card);
+    border-radius:4px 4px 12px 12px;
+    padding:12px 12px 14px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.6) inset,
+      0 10px 24px -12px rgba(58,46,43,.22);
+    position:relative;
+    transform:rotate(0deg);
+  }
+  .diary-entry:nth-child(odd){ transform:rotate(-0.4deg); }
+  .diary-entry:nth-child(even){ transform:rotate(0.35deg); }
+  .diary-tape{
+    position:absolute; top:-6px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:56px; height:14px;
+    background:rgba(232,200,168,.55);
+    border-radius:2px;
+    box-shadow:0 1px 2px rgba(58,46,43,.12);
+  }
+  .diary-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    gap:8px; margin-bottom:8px; padding:0 2px;
+  }
+  .diary-who{
+    font-family:'Caveat',cursive; font-size:20px; color:var(--rose-deep);
+    line-height:1.1;
+  }
+  .diary-when{
+    font-size:10.5px; color:var(--muted); letter-spacing:.04em;
+    text-transform:uppercase; white-space:nowrap;
+  }
+  .diary-polaroid{
+    background:#fff;
+    padding:8px 8px 28px;
+    border-radius:2px;
+    box-shadow:0 2px 8px rgba(58,46,43,.1);
     cursor:pointer;
   }
-  .feed-post .fp-body{ padding:10px 12px 12px; }
-  .feed-post .fp-top{
-    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  .diary-polaroid .dp-photo{
+    width:100%; aspect-ratio:1;
+    background:#EDE4DC center/cover no-repeat;
+    border-radius:1px;
   }
-  .feed-post .fp-av{
-    width:28px; height:28px; border-radius:50%;
-    background:var(--sage) center/cover no-repeat; flex-shrink:0;
+  .diary-polaroid .dp-caption{
+    font-family:'Caveat',cursive; font-size:17px; color:#5a4b45;
+    text-align:center; margin-top:8px; line-height:1.2;
   }
-  .feed-post .fp-user{
-    font-size:13px; font-weight:600; color:var(--ink); line-height:1.2;
+  .diary-note{
+    margin-top:10px; padding:8px 10px;
+    background:rgba(251,243,238,.7);
+    border-left:3px solid var(--sage);
+    border-radius:0 8px 8px 0;
+    font-size:13px; line-height:1.45; color:#4a3d38;
+    font-style:italic;
   }
-  .feed-post .fp-meta{
-    font-size:11px; color:var(--muted);
-  }
-  .feed-post .fp-place{
-    font-family:'Fraunces',serif; font-style:italic; font-size:15px;
-    color:var(--ink); margin:4px 0 2px;
+  .diary-place-line{
+    margin-top:8px; font-size:12px; color:var(--muted);
     display:flex; align-items:center; gap:6px;
   }
-  .feed-post .fp-note{
-    font-size:12.5px; color:#5a4b45; line-height:1.4; margin-top:4px;
+  .diary-collapse{
+    background:transparent;
+    border:1.5px dashed #E0D0C4;
+    border-radius:14px;
+    padding:12px 14px;
+    color:var(--muted); font-size:13px;
+    display:flex; gap:10px; align-items:center;
   }
-  .feed-post .fp-actions{
-    display:flex; align-items:center; gap:4px; margin-top:8px;
-  }
-  .feed-post .fp-actions .react-btn{
-    background:transparent; border:none; padding:4px 6px;
-    color:var(--muted); font-size:12px; display:inline-flex; align-items:center; gap:3px;
-  }
-  .feed-post .fp-actions .react-btn.on{ color:var(--rose-deep); }
-  .feed-post .fp-actions .react-btn svg{ width:16px; height:16px; }
-  .feed-collapse{
-    background:transparent; border:1.5px dashed #E5D5CB;
-    border-radius:14px; padding:10px 12px;
-    display:flex; align-items:center; gap:10px;
-    color:var(--muted); font-size:12.5px;
-  }
-  .feed-collapse .fp-av{
-    width:28px; height:28px; border-radius:50%;
+  .diary-collapse .dc-av{
+    width:32px; height:32px; border-radius:50%;
     background:var(--sage) center/cover no-repeat; flex-shrink:0;
   }
-  .feed-collapse b{ color:var(--ink); font-weight:600; }
-
+  .diary-collapse b{ color:var(--ink); font-weight:600; }
+  .diary-empty{
+    text-align:center; padding:28px 16px; color:var(--muted);
+  }
+  .diary-empty .de-title{
+    font-family:'Fraunces',serif; font-style:italic; font-size:18px;
+    color:var(--ink); margin-bottom:6px;
+  }
 
   .feed-card-compact .fav{ width:34px; height:34px; border-radius:50%; background:var(--sage) center/cover no-repeat; grid-row:1/3; }
   .fcc-body{ min-width:0; }
@@ -831,6 +856,35 @@
     background:var(--rose); color:#fff; flex-shrink:0;
   }
   .mini-btn.ghost{ background:var(--blush); color:var(--rose-deep); }
+  
+  .friends-head{
+    display:flex; flex-direction:column; gap:10px;
+    margin:18px 0 12px;
+  }
+  .friends-sort{
+    display:flex; gap:6px; flex-wrap:wrap;
+    background:rgba(255,255,255,.55);
+    padding:4px;
+    border-radius:999px;
+    border:1px solid #F0E4DC;
+    box-shadow:0 4px 12px -8px rgba(58,46,43,.15);
+  }
+  .friends-sort .fsort{
+    border:none; background:transparent;
+    font-family:inherit; font-size:11.5px; font-weight:600;
+    color:var(--muted); padding:7px 12px; border-radius:999px;
+    letter-spacing:.02em;
+  }
+  .friends-sort .fsort.on{
+    background:var(--card);
+    color:var(--rose-deep);
+    box-shadow:0 2px 8px -4px rgba(58,46,43,.2);
+  }
+  .friends-sort .fsort:active{ transform:scale(.96); }
+  #friendsList .friend-row{
+    transition: transform .22s cubic-bezier(.22,1,.36,1), opacity .22s ease, box-shadow .22s ease;
+  }
+
   .section-cap{
     font-size:11px; text-transform:uppercase; letter-spacing:.08em;
     color:var(--muted); margin:18px 0 10px;
@@ -2165,7 +2219,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.81 alpha</div>
+    <div class="app-version">v0.83 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2325,7 +2379,15 @@
       <div class="section-cap">заявки в друзья</div>
       <div id="requestsList"></div>
     </div>
-    <div class="section-cap">мои друзья</div>
+    <div class="friends-head">
+      <div class="section-cap" style="margin:0;">мои друзья</div>
+      <div class="friends-sort" id="friendsSort" role="tablist" aria-label="Сортировка друзей">
+        <button type="button" class="fsort on" data-sort="name">А–Я</button>
+        <button type="button" class="fsort" data-sort="countries">Страны</button>
+        <button type="button" class="fsort" data-sort="cities">Города</button>
+        <button type="button" class="fsort" data-sort="recent">Новые</button>
+      </div>
+    </div>
     <div id="friendsList"><div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div></div>
     <div class="section-cap">пригласить</div>
     <div class="invite-card">
@@ -4185,6 +4247,74 @@
     loadFriends();
   };
 
+  let friendsSortMode = 'name';
+  let friendsCache = [];
+  try{
+    const savedSort = localStorage.getItem('ml_friends_sort');
+    if(savedSort && ['name','countries','cities','recent'].includes(savedSort)) friendsSortMode = savedSort;
+  }catch(e){}
+
+  function sortFriendsList(list){
+    const arr = (list || []).slice();
+    if(friendsSortMode === 'countries'){
+      arr.sort((a,b)=> (b.countries||0) - (a.countries||0) || String(a.username||'').localeCompare(String(b.username||''),'ru'));
+    } else if(friendsSortMode === 'cities'){
+      arr.sort((a,b)=> (b.cities||0) - (a.cities||0) || String(a.username||'').localeCompare(String(b.username||''),'ru'));
+    } else if(friendsSortMode === 'recent'){
+      arr.sort((a,b)=> String(b.friendshipId||'').localeCompare(String(a.friendshipId||'')));
+    } else {
+      arr.sort((a,b)=> String(a.username||'').localeCompare(String(b.username||''),'ru',{sensitivity:'base'}));
+    }
+    return arr;
+  }
+
+  function renderFriendsList(){
+    const list = document.getElementById('friendsList');
+    if(!list) return;
+    const friends = sortFriendsList(friendsCache);
+    try{
+      document.querySelectorAll('#friendsSort .fsort').forEach(b=>{
+        b.classList.toggle('on', b.dataset.sort === friendsSortMode);
+      });
+    }catch(e){}
+    if(!friends.length){
+      list.innerHTML = '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
+      return;
+    }
+    list.innerHTML = friends.map((f,i)=>{
+      const nc = f.countries || 0;
+      const nci = f.cities || 0;
+      const pct = Math.round(nc / 195 * 100);
+      const has = nc > 0 || nci > 0;
+      const statLine = has
+        ? ('<div class="fstat"><b>'+nc+'</b> стран · <b>'+nci+'</b> город. · '+pct+'%</div>')
+        : '<div class="fstat">пока без поездок</div>';
+      const av = f.avatar_url ? ('background-image:url('+f.avatar_url+')') : '';
+      return '<div class="friend-row" style="animation-delay:'+Math.min(i*0.04,0.28)+'s">'
+        + '<div class="fav" data-fid="'+f.id+'" data-fn="'+(f.username||'').replace(/"/g,'&quot;')+'" data-fa="'+(f.avatar_url||'')+'" style="'+av+';cursor:pointer" onclick="window.__openFriend(this.dataset.fid,this.dataset.fn,this.dataset.fa)"></div>'
+        + '<div style="cursor:pointer;flex:1;min-width:0" data-fid="'+f.id+'" data-fn="'+(f.username||'').replace(/"/g,'&quot;')+'" data-fa="'+(f.avatar_url||'')+'" onclick="window.__openFriend(this.dataset.fid,this.dataset.fn,this.dataset.fa)">'
+        + '<div class="fname">'+(f.username||'друг')+'</div>'
+        + statLine
+        + '</div>'
+        + '<button class="mini-btn ghost" style="margin-left:6px;flex-shrink:0" data-fid="'+f.friendshipId+'" onclick="event.stopPropagation();window.__removeFriend(this.dataset.fid)">Удалить</button>'
+        + '</div>';
+    }).join('');
+  }
+
+  (function setupFriendsSort(){
+    const box = document.getElementById('friendsSort');
+    if(!box || box.dataset.bound) return;
+    box.dataset.bound = '1';
+    box.addEventListener('click', (e)=>{
+      const btn = e.target.closest('.fsort');
+      if(!btn) return;
+      friendsSortMode = btn.dataset.sort || 'name';
+      try{ localStorage.setItem('ml_friends_sort', friendsSortMode); }catch(err){}
+      try{ sfx('soft'); }catch(err){}
+      renderFriendsList();
+    });
+  })();
+
   async function loadFriends(){
     if(!myUserId) return;
 
@@ -4236,25 +4366,18 @@
         });
       }catch(e){}
     }
-    list.innerHTML = friends.length ? friends.map((f,i)=>{
-      const safeName = (f.username||'').replace(/'/g,"\\'");
+    friendsCache = friends.map(f=>{
       const st = statsByUser[f.id];
-      const nc = st ? st.countries.size : 0;
-      const nci = st ? st.cities : 0;
-      const pct = Math.round(nc / 195 * 100);
-      const statLine = st
-        ? `<div class="fstat"><b>${nc}</b> стран · <b>${nci}</b> город. · ${pct}%</div>`
-        : `<div class="fstat">пока без поездок</div>`;
-      return `
-      <div class="friend-row" style="animation-delay:${Math.min(i*0.05,0.3)}s">
-        <div class="fav" style="${f.avatar_url ? `background-image:url(${f.avatar_url})` : ''};cursor:pointer" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')"></div>
-        <div style="cursor:pointer;flex:1;min-width:0" onclick="window.__openFriend('${f.id}','${safeName}','${f.avatar_url||''}')">
-          <div class="fname">${f.username}</div>
-          ${statLine}
-        </div>
-        <button class="mini-btn ghost" style="margin-left:6px;flex-shrink:0" onclick="event.stopPropagation();window.__removeFriend('${f.friendshipId}')">Удалить</button>
-      </div>`;
-    }).join('') : '<div class="placeholder-box" style="margin-top:0;">пока никого — найди друга выше или пригласи по ссылке</div>';
+      return {
+        id: f.id,
+        username: f.username,
+        avatar_url: f.avatar_url || '',
+        friendshipId: f.friendshipId,
+        countries: st ? st.countries.size : 0,
+        cities: st ? st.cities : 0
+      };
+    });
+    renderFriendsList();
   }
 
   window.__removeFriend = async function(friendshipId){
@@ -5228,8 +5351,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
     return null;
   }
 
-  let bubbleRevTimer = null;
-  map.on('click', async (e)=>{
+  map.on('click', (e)=>{
     if(window.__tutLockUI){ hideBubble(); return; }
     bubbleClickLngLat = e.lngLat;
     let features = [];
@@ -5240,51 +5362,13 @@ document.getElementById('igModalMeta').textContent = metaLine;
       }
     }catch(err){ features = []; }
 
-    let displayName = '';
-    let isCountry = false;
-    let f = features[0] || null;
+    // only real map labels — no reverse-geocode spam
+    if(!features.length){ hideBubble(); return; }
+    const f = features[0];
     bubbleFeature = f;
-
-    if(f){
-      displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
-      isCountry = !!(f.properties && f.properties.class === 'country');
-    }
-
-    // if label not under finger — soft reverse geocode (so bubble still works)
-    if(!displayName){
-      const lat = e.lngLat.lat, lon = e.lngLat.lng;
-      document.getElementById('bubbleTitle').textContent = '…';
-      bubbleEl.style.left = e.point.x + 'px';
-      bubbleEl.style.top = e.point.y + 'px';
-      bubbleEl.classList.add('show');
-      try{
-        const rev = await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+lat+'&lon='+lon+'&accept-language=ru&addressdetails=1&zoom=10');
-        const data = await rev.json();
-        const addr = data.address || {};
-        const city = addr.city || addr.town || addr.village || addr.municipality || '';
-        const country = addr.country || '';
-        if(city){ displayName = city; isCountry = false; }
-        else if(country){ displayName = country; isCountry = true; }
-        // stash for add button
-        bubbleFeature = {
-          properties: {
-            name: displayName,
-            'name:ru': displayName,
-            class: isCountry ? 'country' : 'city',
-            iso_a2: (addr.country_code || '').toUpperCase()
-          },
-          geometry: { type: 'Point', coordinates: [lon, lat] },
-          __fromReverse: true,
-          __country: country,
-          __countryCode: (addr.country_code || '').toLowerCase()
-        };
-      }catch(err){
-        hideBubble();
-        return;
-      }
-    }
-
+    const displayName = (f.properties && (f.properties['name:ru'] || f.properties.name)) || '';
     if(!displayName){ hideBubble(); return; }
+    const isCountry = !!(f.properties && f.properties.class === 'country');
 
     const existing = findExistingPlaceByLabel(displayName, isCountry);
     if(existing){
@@ -6796,7 +6880,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
       });
     }catch(e){}
 
-    // prioritize photo posts; collapse no-photo per user to 1 row
+    // photo diary entries first; collapse no-photo per friend
     const withPhoto = [];
     const noPhotoByUser = {};
     places.forEach(p => {
@@ -6807,77 +6891,52 @@ document.getElementById('igModalMeta').textContent = metaLine;
         noPhotoByUser[p.user_id].push(p);
       }
     });
-    // keep newest photo posts, limit total feed weight
-    const photoPosts = withPhoto.slice(0, 24);
+    const photoPosts = withPhoto.slice(0, 30);
     const collapseRows = Object.keys(noPhotoByUser).map(uid => {
       const list = noPhotoByUser[uid];
       return { userId: uid, places: list, sample: list[0], count: list.length };
-    }).filter(r => r.count > 0);
+    });
 
-    const iconHeart = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20s-7-4.5-9.3-9C1.2 7.8 2.6 5 5.6 5c1.8 0 3.2 1 4.4 2.6C11.2 6 12.6 5 14.4 5c3 0 4.4 2.8 2.9 6-2.3 4.5-9.3 9-9.3 9z"/></svg>';
-    const iconUp = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 11v9a1 1 0 001 1h5.5a2 2 0 002-1.6l1.3-6.2A1.5 1.5 0 0016.3 11H13V6.5A2.5 2.5 0 0010.5 4h-.2c-.7 0-1.3.4-1.5 1L7 11h1z"/><path d="M4 11h3v10H5a1 1 0 01-1-1v-8a1 1 0 011-1z"/></svg>';
-    const iconStar = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3.5l2.4 5 5.5.7-4 3.9.9 5.4L12 16.6 7.2 18.5l.9-5.4-4-3.9 5.5-.7L12 3.5z"/></svg>';
-    const iconChat = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 6.5A2.5 2.5 0 017.5 4h9A2.5 2.5 0 0119 6.5v6A2.5 2.5 0 0116.5 15H11l-4 3.5V15H7.5A2.5 2.5 0 015 12.5v-6z"/></svg>';
-
-    function reactBarHtml(p){
-      const reacts = reactionsByPlace[p.id] || [];
-      const myReact = reacts.find(r=>r.user_id === myUserId);
-      const counts = {};
-      reacts.forEach(r=>{ counts[r.emoji] = (counts[r.emoji]||0)+1; });
-      const pid = String(p.id);
-      return [
-        {em:'heart', icon:iconHeart},
-        {em:'up', icon:iconUp},
-        {em:'star', icon:iconStar}
-      ].map(r=>{
-        const n = counts[r.em]||0;
-        const on = myReact && myReact.emoji === r.em ? ' on' : '';
-        return '<button class="react-btn'+on+'" data-pid="'+pid+'" data-em="'+r.em+'" onclick="event.stopPropagation();window.__toggleReact(this.dataset.pid,this.dataset.em)">'+r.icon+(n?('<span>'+n+'</span>'):'')+'</button>';
-      }).join('') +
-      '<button class="react-btn" data-pid="'+pid+'" onclick="event.stopPropagation();window.__openComments(this.dataset.pid)">'+iconChat+(commentCountByPlace[p.id]?('<span>'+commentCountByPlace[p.id]+'</span>'):'')+'</button>';
-    }
-
-    function renderPhotoPost(p){
+    function renderDiary(p){
       const u = userMap[p.user_id] || { username: 'друг' };
       const photos = photosByPlace[p.id] || [];
-      const title = p.city ? (p.city+', '+p.country) : p.country;
+      const title = p.city ? (p.city + ', ' + p.country) : (p.country || '');
+      const when = p.visit_date || (p.created_at || '').slice(0,10) || '';
       const pid = String(p.id);
       const uid = String(p.user_id);
-      const av = u.avatar_url ? ('background-image:url('+u.avatar_url+')') : '';
-      return '<div class="feed-post">'
-        + '<div class="fp-photo" data-pid="'+pid+'" style="background-image:url('+photos[0]+')" onclick="window.__openPlaceView(this.dataset.pid)"></div>'
-        + '<div class="fp-body">'
-        + '<div class="fp-top" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'
-        + '<div class="fp-av" style="'+av+'"></div>'
-        + '<div><div class="fp-user">'+(u.username||'друг')+'</div>'
-        + '<div class="fp-meta">'+(p.visit_date || (p.created_at||'').slice(0,10) || '')+'</div></div></div>'
-        + '<div class="fp-place"><span class="flag-badge" data-place-id="'+pid+'"></span> '+title+'</div>'
-        + (p.note ? ('<div class="fp-note">'+p.note+'</div>') : '')
-        + '<div class="fp-actions">'+reactBarHtml(p)+'</div>'
-        + '<div id="comments-'+pid+'" style="display:none;margin-top:8px;"></div>'
-        + '</div></div>';
+      const note = p.note ? ('<div class="diary-note">' + p.note + '</div>') : '';
+      return '<article class="diary-entry">'
+        + '<div class="diary-tape" aria-hidden="true"></div>'
+        + '<div class="diary-head">'
+        + '<div class="diary-who" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'+(u.username||'друг')+'</div>'
+        + '<div class="diary-when">'+when+'</div>'
+        + '</div>'
+        + '<div class="diary-polaroid" data-pid="'+pid+'" onclick="window.__openPlaceView(this.dataset.pid)">'
+        + '<div class="dp-photo" style="background-image:url('+photos[0]+')"></div>'
+        + '<div class="dp-caption">'+title+'</div>'
+        + '</div>'
+        + note
+        + '<div class="diary-place-line"><span class="flag-badge" data-place-id="'+pid+'"></span> страница дневника</div>'
+        + '</article>';
     }
 
     function renderCollapse(row){
       const u = userMap[row.userId] || { username: 'друг' };
       const av = u.avatar_url ? ('background-image:url('+u.avatar_url+')') : '';
       const sample = row.sample;
-      const title = sample.city ? sample.city : sample.country;
-      const more = row.count > 1 ? (' · ещё '+(row.count-1)) : '';
+      const title = sample.city || sample.country || 'место';
+      const more = row.count > 1 ? (' и ещё ' + (row.count - 1)) : '';
       const uid = String(row.userId);
-      return '<div class="feed-collapse" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'
-        + '<div class="fp-av" style="'+av+'"></div>'
-        + '<div><b>'+(u.username||'друг')+'</b> · '+title+more
-        + '<div class="fp-meta">без фото</div></div></div>';
+      return '<div class="diary-collapse" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'
+        + '<div class="dc-av" style="'+av+'"></div>'
+        + '<div><b>'+(u.username||'друг')+'</b> отметил(а) '+title+more
+        + '<div style="font-size:11px;margin-top:2px;opacity:.8">без снимка</div></div></div>';
     }
 
-    // interleave: photo posts first, then collapses at bottom
-    let html = photoPosts.map(renderPhotoPost).join('');
-    if(collapseRows.length){
-      html += collapseRows.map(renderCollapse).join('');
-    }
+    let html = photoPosts.map(renderDiary).join('');
+    if(collapseRows.length) html += collapseRows.map(renderCollapse).join('');
     if(!html){
-      html = '<div class="feed-empty"><div class="fe-title">Пока тихо</div><div class="fe-sub">Друзья ещё не добавили поездки с фото.</div></div>';
+      html = '<div class="diary-empty"><div class="de-title">Страницы ещё пусты</div>Когда друзья добавят поездки с фото — они появятся здесь, как в дневнике.</div>';
     }
     box.innerHTML = html;
 
