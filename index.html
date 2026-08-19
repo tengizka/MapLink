@@ -2219,7 +2219,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.83 alpha</div>
+    <div class="app-version">v0.84 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -4914,31 +4914,36 @@ document.getElementById('igModalMeta').textContent = metaLine;
           const isPlace = sl === 'place' || id.includes('place') || id.includes('country') || id.includes('city') || id.includes('town');
           if(isPlace) placeLabelLayers.push(l.id);
 
-          // lighter labels = less lag
+          // labels: readable + appear earlier
           try{
             map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
           }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-size', [
-            'interpolate', ['linear'], ['zoom'],
-            0, 10,
-            2, 11,
-            4, 12,
-            6, 13,
-            10, 14
-          ]); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-max-width', 7); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-padding', 4); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'symbol-spacing', 350); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-allow-overlap', false); }catch(e){}
+          const isCountry = id.includes('country') || id.includes('continent');
+          const isCity = id.includes('city') || id.includes('town');
+          const isVillage = id.includes('village') || id.includes('hamlet') || id.includes('suburb');
+          try{ map.setLayoutProperty(l.id, 'text-size', isCountry
+            ? ['interpolate', ['linear'], ['zoom'], 0, 12, 2, 14, 4, 16, 6, 17]
+            : ['interpolate', ['linear'], ['zoom'], 1, 11, 3, 12, 5, 13, 8, 15]
+          ); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-max-width', 8); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-padding', isCountry ? 1 : 2); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'symbol-spacing', isCountry ? 180 : 220); }catch(e){}
+          // countries always visible; cities can slightly overlap so they don't "pop late"
+          try{ map.setLayoutProperty(l.id, 'text-allow-overlap', !!isCountry); }catch(e){}
           try{ map.setLayoutProperty(l.id, 'text-ignore-placement', false); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.0); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-opacity', 0.92); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-optional', false); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.4); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-blur', 0.2); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-opacity', 1); }catch(e){}
 
-          if(id.includes('country') || id.includes('continent')){
+          if(isCountry){
             try{ map.setLayerZoomRange(l.id, 0, 24); }catch(e){}
-          } else if(id.includes('city') || id.includes('town') || id.includes('village')){
-            // cities earlier, villages later
-            try{ map.setLayerZoomRange(l.id, id.includes('village') ? 5 : 2.2, 24); }catch(e){}
+          } else if(isCity){
+            try{ map.setLayerZoomRange(l.id, 1.4, 24); }catch(e){}
+          } else if(isVillage){
+            try{ map.setLayerZoomRange(l.id, 4.5, 24); }catch(e){}
+          } else if(sl === 'place'){
+            try{ map.setLayerZoomRange(l.id, 1.6, 24); }catch(e){}
           }
         }
       }catch(e){}
@@ -6916,7 +6921,6 @@ document.getElementById('igModalMeta').textContent = metaLine;
         + '<div class="dp-caption">'+title+'</div>'
         + '</div>'
         + note
-        + '<div class="diary-place-line"><span class="flag-badge" data-place-id="'+pid+'"></span> страница дневника</div>'
         + '</article>';
     }
 
