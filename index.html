@@ -2209,6 +2209,63 @@
     content-visibility: hidden;
   }
 
+
+  .edit-sheet .edit-kicker{
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); margin-bottom:4px;
+  }
+  .edit-sheet h3{
+    font-family:'Fraunces',serif; font-style:italic;
+    font-size:22px; margin:0 0 14px; color:var(--ink);
+  }
+  .edit-date-block{ margin:4px 0 12px; }
+  .edit-date-label{
+    font-size:11px; color:var(--muted); margin-bottom:8px;
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+  .edit-date-picker{ margin-top:8px; }
+  .edit-date-picker.hide{ display:none; }
+  .danger-link{
+    color:#B65B5B !important; font-weight:600;
+    background:transparent !important;
+  }
+  .add-sheet{
+    border:1px solid rgba(255,255,255,.55);
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.7) inset,
+      0 24px 48px -18px rgba(58,46,43,.35);
+  }
+  .add-field{
+    transition: box-shadow .2s ease, border-color .2s ease, background .2s ease;
+  }
+  .add-field:focus{
+    outline:none;
+    border-color:rgba(196,122,122,.45);
+    box-shadow:0 0 0 3px rgba(196,122,122,.12);
+  }
+  .date-chips{ display:flex; flex-wrap:wrap; gap:6px; }
+  .date-chip{
+    border:1.5px solid #EAD9CF; background:rgba(255,255,255,.7);
+    color:var(--muted); font-family:inherit; font-size:12px; font-weight:600;
+    padding:7px 12px; border-radius:999px;
+  }
+  .date-chip.on{
+    background:var(--rose); color:#fff; border-color:transparent;
+    box-shadow:0 4px 12px -4px rgba(176,90,100,.45);
+  }
+  .nav-planet{
+    box-shadow:0 8px 24px -6px rgba(176,90,100,.45), 0 0 0 4px rgba(251,243,238,.9);
+  }
+  .fab{
+    box-shadow:0 10px 28px -8px rgba(176,90,100,.5);
+  }
+  .quoteStrip, #quoteStrip{
+    letter-spacing:.01em;
+  }
+  #quoteStrip{
+    opacity:.85;
+  }
+
 </style>
 </head>
 <body style="background:#FBF3EE;">
@@ -2219,7 +2276,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.84 alpha</div>
+    <div class="app-version">v0.86 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2336,22 +2393,34 @@
 
   <!-- EDIT PLACE MODAL -->
   <div id="editModal" class="hide">
-    <div class="add-sheet">
+    <div class="add-sheet edit-sheet">
+      <div class="edit-kicker">запись в дневнике</div>
       <h3 id="editHeading">Место</h3>
       <input class="add-field" id="editNote" placeholder="Заметка (необязательно)">
-      <input class="add-field" id="editDate" type="date">
+      <div class="edit-date-block">
+        <div class="edit-date-label">Когда были</div>
+        <div class="date-chips" id="editDateChips">
+          <button type="button" class="date-chip" data-edit-date="keep" id="editDateKeep">Оставить</button>
+          <button type="button" class="date-chip" data-edit-date="today" id="editDateToday">Сегодня</button>
+          <button type="button" class="date-chip" data-edit-date="pick" id="editDatePick">Выбрать</button>
+          <button type="button" class="date-chip" data-edit-date="none" id="editDateNone">Без даты</button>
+        </div>
+        <div id="editDatePickerBox" class="edit-date-picker hide">
+          <input class="add-field" id="editDate" type="date">
+        </div>
+      </div>
       <label class="add-toggle">
         <input type="checkbox" id="editWishlist"> Это место мечты (ещё не была)
       </label>
       <label class="add-photo-label" for="editPhoto">
         <span id="editPhotoText" style="display:inline-flex; align-items:center; gap:6px; justify-content:center;">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex-shrink:0;"><path d="M4 8h3l1.5-2h7L17 8h3a1 1 0 011 1v9a1 1 0 01-1 1H4a1 1 0 01-1-1V9a1 1 0 011-1z"/><circle cx="12" cy="13" r="3.4"/></svg>
-          <span>Добавить фото (до 3)</span>
+          <span>Заменить фото</span>
         </span>
       </label>
       <input type="file" accept="image/*" id="editPhoto" multiple style="display:none;">
       <button class="add-save" id="editSaveBtn">Сохранить</button>
-      <button class="add-cancel" id="editDeleteBtn" style="color:#B65B5B;">Удалить место</button>
+      <button class="add-cancel danger-link" id="editDeleteBtn">Удалить место</button>
       <button class="add-cancel" id="editCancelBtn">Отмена</button>
     </div>
   </div>
@@ -4721,7 +4790,7 @@
     }
     renderIgStack();
     document.getElementById('igModalTitle').textContent = p.city ? p.city+', '+p.country : p.country;
-    let metaLine = p.visit_date || (p.is_wishlist ? 'место мечты' : '');
+    let metaLine = p.visit_date ? p.visit_date : (p.is_wishlist ? 'место мечты' : '');
 document.getElementById('igModalMeta').textContent = metaLine;
     document.getElementById('igModalNote').textContent = p.note || '';
     document.getElementById('igEditBtn').style.display = isOwn ? '' : 'none';
@@ -4911,39 +4980,67 @@ document.getElementById('igModalMeta').textContent = metaLine;
         }
         if(l.type === 'symbol'){
           const id = (l.id || '').toLowerCase();
-          const isPlace = sl === 'place' || id.includes('place') || id.includes('country') || id.includes('city') || id.includes('town');
-          if(isPlace) placeLabelLayers.push(l.id);
+          const isPlaceLayer = (sl === 'place') || id.includes('place') || id.includes('country') || id.includes('city') || id.includes('town') || id.includes('state') || id.includes('region');
 
-          // labels: readable + appear earlier
+          // hide regions / oblasts / states / provinces / villages clutter
+          const isRegionName = id.includes('state') || id.includes('province') || id.includes('region') || id.includes('oblast') || id.includes('county') || id.includes('district');
+          if(isRegionName){
+            try{ map.setLayoutProperty(l.id, 'visibility', 'none'); }catch(e){}
+            return;
+          }
+
+          // keep only country + city/town labels in place layers
+          if(sl === 'place' || id.includes('place')){
+            try{
+              map.setFilter(l.id, [
+                'match', ['get', 'class'],
+                ['country', 'continent', 'city', 'town'], true,
+                false
+              ]);
+            }catch(e){
+              try{
+                map.setFilter(l.id, [
+                  'in', ['get', 'class'],
+                  ['literal', ['country', 'continent', 'city', 'town']]
+                ]);
+              }catch(e2){}
+            }
+          }
+
+          const isCountry = id.includes('country') || id.includes('continent');
+          const isCity = id.includes('city') || id.includes('town') || (sl === 'place' && !isCountry);
+
+          if(isCountry || isCity || sl === 'place') placeLabelLayers.push(l.id);
+
           try{
             map.setLayoutProperty(l.id, 'text-field', ['coalesce', ['get','name:ru'], ['get','name']]);
           }catch(e){}
-          const isCountry = id.includes('country') || id.includes('continent');
-          const isCity = id.includes('city') || id.includes('town');
-          const isVillage = id.includes('village') || id.includes('hamlet') || id.includes('suburb');
-          try{ map.setLayoutProperty(l.id, 'text-size', isCountry
-            ? ['interpolate', ['linear'], ['zoom'], 0, 12, 2, 14, 4, 16, 6, 17]
-            : ['interpolate', ['linear'], ['zoom'], 1, 11, 3, 12, 5, 13, 8, 15]
-          ); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-max-width', 8); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-padding', isCountry ? 1 : 2); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'symbol-spacing', isCountry ? 180 : 220); }catch(e){}
-          // countries always visible; cities can slightly overlap so they don't "pop late"
-          try{ map.setLayoutProperty(l.id, 'text-allow-overlap', !!isCountry); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-ignore-placement', false); }catch(e){}
-          try{ map.setLayoutProperty(l.id, 'text-optional', false); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-halo-width', 1.4); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-halo-blur', 0.2); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-opacity', 1); }catch(e){}
 
+          // moderate size — not huge, not tiny
+          try{ map.setLayoutProperty(l.id, 'text-size', isCountry
+            ? ['interpolate', ['linear'], ['zoom'], 0, 11, 3, 13, 5, 14]
+            : ['interpolate', ['linear'], ['zoom'], 3, 11, 5, 12, 8, 13]
+          ); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-max-width', 7); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-padding', 6); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'symbol-spacing', 280); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-allow-overlap', false); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-ignore-placement', false); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'text-optional', true); }catch(e){}
+          // soft halo, not a thick outline
+          try{ map.setPaintProperty(l.id, 'text-halo-width', 0.85); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-blur', 0.4); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-opacity', 0.9); }catch(e){}
+
+          // progressive reveal: countries far out, cities after zoom-in
           if(isCountry){
             try{ map.setLayerZoomRange(l.id, 0, 24); }catch(e){}
-          } else if(isCity){
-            try{ map.setLayerZoomRange(l.id, 1.4, 24); }catch(e){}
-          } else if(isVillage){
-            try{ map.setLayerZoomRange(l.id, 4.5, 24); }catch(e){}
+          } else if(id.includes('city')){
+            try{ map.setLayerZoomRange(l.id, 3.2, 24); }catch(e){}
+          } else if(id.includes('town')){
+            try{ map.setLayerZoomRange(l.id, 4.8, 24); }catch(e){}
           } else if(sl === 'place'){
-            try{ map.setLayerZoomRange(l.id, 1.6, 24); }catch(e){}
+            try{ map.setLayerZoomRange(l.id, 3.5, 24); }catch(e){}
           }
         }
       }catch(e){}
@@ -6743,6 +6840,43 @@ document.getElementById('igModalMeta').textContent = metaLine;
   }
 
   // ---------- edit place modal ----------
+    function setEditDateMode(mode){
+    const keep = document.getElementById('editDateKeep');
+    const today = document.getElementById('editDateToday');
+    const pick = document.getElementById('editDatePick');
+    const none = document.getElementById('editDateNone');
+    const box = document.getElementById('editDatePickerBox');
+    const input = document.getElementById('editDate');
+    [keep,today,pick,none].forEach(b=>{ if(b) b.classList.remove('on'); });
+    if(mode === 'today'){
+      if(today) today.classList.add('on');
+      if(box) box.classList.add('hide');
+      if(input) input.value = new Date().toISOString().slice(0,10);
+    } else if(mode === 'pick'){
+      if(pick) pick.classList.add('on');
+      if(box) box.classList.remove('hide');
+    } else if(mode === 'none'){
+      if(none) none.classList.add('on');
+      if(box) box.classList.add('hide');
+      if(input) input.value = '';
+    } else {
+      if(keep) keep.classList.add('on');
+      if(box) box.classList.add('hide');
+      if(input && editingPlace) input.value = editingPlace.visit_date || '';
+    }
+  }
+  (function setupEditDateChips(){
+    const wrap = document.getElementById('editDateChips');
+    if(!wrap || wrap.dataset.bound) return;
+    wrap.dataset.bound = '1';
+    wrap.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-edit-date]');
+      if(!btn) return;
+      setEditDateMode(btn.getAttribute('data-edit-date'));
+      try{ sfx('soft'); }catch(err){}
+    });
+  })();
+
   window.__openEditPlace = function(placeId){
     const p = allPlacesCache.find(x=>x.id === placeId);
     if(!p) return;
@@ -6752,7 +6886,12 @@ document.getElementById('igModalMeta').textContent = metaLine;
     document.getElementById('editDate').value = p.visit_date || '';
     document.getElementById('editWishlist').checked = !!p.is_wishlist;
     document.getElementById('editPhoto').value = '';
-    document.getElementById('editPhotoText').querySelector('span:last-child').textContent = 'Заменить фото';
+    try{
+      const t = document.getElementById('editPhotoText');
+      if(t){ const s = t.querySelector('span:last-child'); if(s) s.textContent = 'Заменить фото'; }
+    }catch(e){}
+    if(p.visit_date) setEditDateMode('keep');
+    else setEditDateMode('none');
     document.getElementById('editModal').classList.remove('hide');
   };
   document.getElementById('editCancelBtn').addEventListener('click', ()=>{
@@ -6777,7 +6916,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
     try{
       await supabase.from('places').update({
         note: document.getElementById('editNote').value.trim() || null,
-        visit_date: document.getElementById('editDate').value || null,
+        visit_date: (function(){ const el=document.getElementById('editDate'); const v=el && el.value; return v ? v : null; })(),
         is_wishlist: document.getElementById('editWishlist').checked
       }).eq('id', editingPlace.id);
 
@@ -6906,7 +7045,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
       const u = userMap[p.user_id] || { username: 'друг' };
       const photos = photosByPlace[p.id] || [];
       const title = p.city ? (p.city + ', ' + p.country) : (p.country || '');
-      const when = p.visit_date || (p.created_at || '').slice(0,10) || '';
+      const when = p.visit_date ? String(p.visit_date) : '';
       const pid = String(p.id);
       const uid = String(p.user_id);
       const note = p.note ? ('<div class="diary-note">' + p.note + '</div>') : '';
@@ -6914,7 +7053,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
         + '<div class="diary-tape" aria-hidden="true"></div>'
         + '<div class="diary-head">'
         + '<div class="diary-who" data-uid="'+uid+'" onclick="window.__openFriendProfile&&window.__openFriendProfile(this.dataset.uid)">'+(u.username||'друг')+'</div>'
-        + '<div class="diary-when">'+when+'</div>'
+        + (when ? ('<div class="diary-when">'+when+'</div>') : '')
         + '</div>'
         + '<div class="diary-polaroid" data-pid="'+pid+'" onclick="window.__openPlaceView(this.dataset.pid)">'
         + '<div class="dp-photo" style="background-image:url('+photos[0]+')"></div>'
