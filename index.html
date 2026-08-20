@@ -100,12 +100,12 @@
   /* ---------------- SPLASH ---------------- */
   #splash{
     position:fixed; inset:0;
-    background:#FFFFFF;
+    background:#FBF3EE;
     display:flex; flex-direction:column;
     align-items:center; justify-content:center;
     text-align:center;
     z-index:100;
-    transition:opacity .6s ease, visibility .6s ease;
+    transition:opacity .55s ease, visibility .55s ease;
   }
   #splash.hide{ opacity:0; visibility:hidden; pointer-events:none; }
   .eyebrow{
@@ -125,12 +125,15 @@
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
   }
-  /* smooth wave — opacity + gentle lift (user prefers motion over iOS blur tradeoff) */
+  /* letters wait for fonts, then wave in smoothly */
   .wobble-line span{
     display: inline-block;
     opacity: 0;
-    animation: letterWave 1.15s cubic-bezier(.33,.1,.25,1) forwards;
+    transform: translateY(14px);
     will-change: transform, opacity;
+  }
+  .wobble-line.fonts-ready span{
+    animation: letterWave 1.2s cubic-bezier(0.33, 0.1, 0.25, 1) forwards;
   }
   @keyframes letterWave{
     0%{ opacity: 0; transform: translateY(14px); }
@@ -143,7 +146,7 @@
     font-family:'Caveat',cursive;
     font-size:22px; color:var(--muted);
     opacity:0;
-    transition:opacity .8s ease .35s;
+    transition:opacity .7s ease .2s;
     -webkit-font-smoothing: antialiased;
   }
   .sign.fonts-ready{ opacity:1; }
@@ -288,7 +291,10 @@
   }
   .nav-planet:active .planet-ring{ transform:scale(.88); }
   .nav-planet.active .planet-ring{
-    box-shadow:0 8px 22px -6px rgba(197,123,133,.65), 0 0 0 4px var(--card), 0 0 0 6px var(--rose);
+    box-shadow:
+      0 10px 26px -8px rgba(197,123,133,.75),
+      0 0 0 3px var(--card),
+      0 0 0 6px rgba(197,123,133,.55);
   }
   .planet-ring svg{ width:26px; height:26px; }
   .navitem:not(.nav-planet){ padding:10px 0 6px; }
@@ -299,8 +305,10 @@
     color:#C9B8AF; background:none; border:none; font-family:inherit;
   }
   .navitem.active{ color:var(--rose-deep); }
+  .navitem.nav-planet.active{ color:inherit; }
   .navitem svg{ width:22px; height:22px; transition:transform .3s cubic-bezier(.34,1.56,.64,1); }
-  .navitem.active svg{ transform:scale(1.18); }
+  .navitem.active:not(.nav-planet) svg{ transform:scale(1.18); }
+  .navitem.nav-planet svg{ transform:none !important; }
   .navitem .nlabel{ font-size:9.5px; font-weight:600; letter-spacing:.02em; }
 
   /* ---------------- SETTINGS GEAR ---------------- */
@@ -1823,14 +1831,17 @@
   .maplibregl-ctrl-attrib, .maplibregl-ctrl-logo{ display:none !important; }
 
   .pin-dot{
-    width:26px; height:34px;
-    display:flex; align-items:flex-start; justify-content:center;
+    width:44px; height:48px;
+    display:flex; align-items:flex-end; justify-content:center;
+    padding-bottom:0;
+    /* larger hit area for mobile taps */
     /* IMPORTANT: no transform animation on root — MapLibre positions via transform */
   }
   .pin-dot svg{
     width:26px; height:34px; overflow:visible;
     transform-origin:bottom center;
     animation:pinDrop .45s cubic-bezier(.34,1.56,.64,1) both;
+    pointer-events:none;
   }
   @keyframes pinDrop{
     0%{ transform:scale(0) translateY(-16px); opacity:0; }
@@ -2008,7 +2019,12 @@
   }
   .date-chip .dc-ico svg{ width:15px; height:15px; }
   .date-chip .dc-sub{ display:block; font-size:11.5px; font-weight:500; color:var(--muted); margin-top:2px; }
-  .date-chip.on .dc-sub{ color:var(--rose-deep); opacity:.85; }
+  .date-chip.on .dc-sub{ color:var(--rose-deep); opacity:.95; }
+  .date-chip.on{
+    border-color:var(--rose);
+    background:var(--blush);
+    color:var(--rose-deep);
+  }
   #datePickerBox{
     max-height:0; opacity:0; overflow:hidden;
     transition:max-height .28s ease, opacity .22s ease, margin .22s ease;
@@ -2124,12 +2140,12 @@
     animation: screenOut .26s ease both;
   }
   @keyframes screenIn{
-    from{ opacity:0; transform:translateY(10px) scale(.985); }
+    from{ opacity:0; transform:translateY(14px) scale(.98); }
     to{ opacity:1; transform:none; }
   }
   @keyframes screenOut{
     from{ opacity:1; transform:none; }
-    to{ opacity:0; transform:translateY(6px) scale(.99); }
+    to{ opacity:0; transform:translateY(8px) scale(.99); }
   }
   button, .navitem, .fab, .mini-btn, .invite-btn, .bubble-add, .react-btn,
   .tr-chip, .gfilter, .filter-fab, .wish-save-btn, .add-save, .add-cancel,
@@ -2228,7 +2244,14 @@
   .danger-link{
     color:#B65B5B !important; font-weight:600;
     background:transparent !important;
+    border:none !important;
+    width:100%;
+    padding:12px !important;
+    cursor:pointer;
+    position:relative;
+    z-index:5;
   }
+
   .add-sheet{
     border:1px solid rgba(255,255,255,.55);
     box-shadow:
@@ -2243,18 +2266,27 @@
     border-color:rgba(196,122,122,.45);
     box-shadow:0 0 0 3px rgba(196,122,122,.12);
   }
-  .date-chips{ display:flex; flex-wrap:wrap; gap:6px; }
-  .date-chip{
-    border:1.5px solid #EAD9CF; background:rgba(255,255,255,.7);
-    color:var(--muted); font-family:inherit; font-size:12px; font-weight:600;
+  /* edit modal: compact chips */
+  #editDateChips.date-chips, .edit-date-block .date-chips{
+    display:flex; flex-direction:row; flex-wrap:wrap; gap:6px;
+  }
+  #editDateChips .date-chip, .edit-date-block .date-chip{
+    width:auto; border:1.5px solid #EAD9CF; background:rgba(255,255,255,.85);
+    color:var(--muted); font-size:12px; font-weight:600;
     padding:7px 12px; border-radius:999px;
   }
-  .date-chip.on{
+  #editDateChips .date-chip.on, .edit-date-block .date-chip.on{
     background:var(--rose); color:#fff; border-color:transparent;
     box-shadow:0 4px 12px -4px rgba(176,90,100,.45);
   }
   .nav-planet{
-    box-shadow:0 8px 24px -6px rgba(176,90,100,.45), 0 0 0 4px rgba(251,243,238,.9);
+    background:transparent !important;
+    box-shadow:none !important;
+    border-radius:50%;
+    overflow:visible;
+  }
+  .nav-planet.active{
+    background:transparent !important;
   }
   .fab{
     box-shadow:0 10px 28px -8px rgba(176,90,100,.5);
@@ -2264,6 +2296,552 @@
   }
   #quoteStrip{
     opacity:.85;
+  }
+
+
+  #pinTip{
+    position:absolute; z-index:45; display:none;
+    left:0; top:0;
+    transform:translate(-50%, calc(-100% - 14px));
+    pointer-events:auto;
+    will-change: left, top;
+  }
+  #pinTip.show{ display:block; }
+  .pin-tip-card{
+    background:var(--card);
+    border-radius:16px;
+    padding:8px 10px 10px;
+    min-width:132px; max-width:210px;
+    text-align:center;
+    box-shadow:0 12px 28px -10px rgba(58,46,43,.35);
+    position:relative;
+    animation:pinTipIn .28s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes pinTipIn{
+    from{ opacity:0; transform:translateY(6px) scale(.94); }
+    to{ opacity:1; transform:none; }
+  }
+  .pin-tip-card::after{
+    content:''; position:absolute; left:50%; bottom:-6px;
+    transform:translateX(-50%) rotate(45deg);
+    width:12px; height:12px; background:var(--card);
+  }
+  .pin-tip-photo{
+    width:100%; height:88px; border-radius:12px;
+    background:#EDE4DC center/cover no-repeat;
+    margin-bottom:8px;
+  }
+  .pin-tip-photo.hide{ display:none; }
+  .pin-tip-title{
+    font-family:'Fraunces',serif; font-style:italic;
+    font-size:14.5px; color:var(--ink); margin-bottom:4px;
+    line-height:1.2;
+  }
+  .pin-tip-sub{ font-size:11px; color:var(--muted); margin-bottom:8px; }
+  .pin-tip-btn{
+    border:none; background:var(--rose); color:#fff;
+    font-family:inherit; font-size:12px; font-weight:700;
+    padding:6px 14px; border-radius:14px;
+  }
+
+
+  /* ===== Duolingo-ish tutorial ===== */
+  #tutorial{
+    position:fixed; inset:0; z-index:200;
+    pointer-events:none;
+  }
+  #tutorial.hide{ display:none !important; }
+  #tutorial.tut-enter{ animation: tutFadeIn .45s cubic-bezier(.22,1,.36,1) both; }
+  @keyframes tutFadeIn{ from{ opacity:0; } to{ opacity:1; } }
+
+  #tutorial.tut-welcome{
+    pointer-events:auto;
+    background:linear-gradient(165deg, #FBF3EE 0%, #F3E4DC 55%, #E8D2C8 100%);
+    display:flex; align-items:center; justify-content:center;
+    padding:24px 18px max(24px, env(safe-area-inset-bottom));
+  }
+  #tutorial.tut-welcome .tut-card{
+    width:min(360px, 100%);
+    background:var(--card);
+    border-radius:28px;
+    padding:28px 22px 20px;
+    box-shadow:0 24px 50px -20px rgba(58,46,43,.28);
+    text-align:center;
+    animation:tutCardPop .5s cubic-bezier(.34,1.2,.64,1) both;
+  }
+  @keyframes tutCardPop{
+    from{ opacity:0; transform:translateY(18px) scale(.96); }
+    to{ opacity:1; transform:none; }
+  }
+
+  /* interactive steps: tiny coach at top — map free */
+  #tutorial.tut-live{
+    background:transparent;
+    pointer-events:none;
+  }
+  #tutorial.tut-live::before{ display:none !important; }
+  #tutorial.tut-live .tut-card{
+    position:absolute;
+    left:12px; right:12px; top:max(12px, env(safe-area-inset-top));
+    width:auto; max-width:none;
+    margin:0;
+    padding:12px 14px;
+    border-radius:18px;
+    background:rgba(255,255,255,.94);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+    box-shadow:0 10px 28px -12px rgba(58,46,43,.25);
+    text-align:left;
+    pointer-events:auto;
+    animation:tutTipIn .4s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes tutTipIn{
+    from{ opacity:0; transform:translateY(-10px); }
+    to{ opacity:1; transform:none; }
+  }
+  #tutorial.tut-live .tut-logo{ display:none !important; }
+  #tutorial.tut-live .tut-title{ font-size:15px; margin:0 0 2px; text-align:left; }
+  #tutorial.tut-live .tut-text{ font-size:12.5px; margin:0 0 6px; text-align:left; line-height:1.35; }
+  #tutorial.tut-live .tut-hint{ margin:0 0 8px; font-size:12px; }
+  #tutorial.tut-live .tut-progress{ height:3px; margin-bottom:8px; }
+  #tutorial.tut-live .tut-actions{ gap:8px; }
+  #tutorial.tut-live .tut-btn{ padding:9px 12px; font-size:13px; border-radius:12px; flex:1; }
+  #tutorial.tut-live .tut-skip{ padding:9px 8px; font-size:12px; }
+
+  .tut-card{
+    pointer-events:auto;
+  }
+  .tut-progress{
+    height:6px; border-radius:99px; background:#F0E4DC;
+    overflow:hidden; margin-bottom:14px;
+  }
+  .tut-progress > i{
+    display:block; height:100%; width:0%;
+    background:linear-gradient(90deg, var(--rose), var(--rose-deep));
+    border-radius:99px;
+    transition:width .45s cubic-bezier(.22,1,.36,1);
+  }
+  .tut-logo{
+    font-family:'Caveat',cursive; font-size:28px; color:var(--rose-deep);
+    margin-bottom:8px;
+  }
+  .tut-title{
+    font-family:'Fraunces',serif; font-style:italic;
+    font-size:22px; color:var(--ink); margin-bottom:8px; line-height:1.2;
+  }
+  .tut-text{
+    font-size:14px; color:#5a4b45; line-height:1.45; margin-bottom:10px;
+  }
+  .tut-hint{
+    font-size:13px; color:var(--sage); font-weight:600; margin-bottom:12px;
+    min-height:0;
+  }
+  .tut-hint:empty{ display:none; }
+  .tut-actions{ display:flex; align-items:center; gap:10px; }
+  .tut-btn{
+    flex:1; border:none; background:var(--rose); color:#fff;
+    font-family:inherit; font-weight:700; font-size:15px;
+    padding:14px 16px; border-radius:16px;
+    transition:transform .18s cubic-bezier(.34,1.3,.64,1), box-shadow .2s ease;
+    box-shadow:0 8px 18px -8px rgba(176,90,100,.5);
+  }
+  .tut-btn:active{ transform:scale(.97); }
+  .tut-btn:disabled{ opacity:.4; box-shadow:none; }
+  .tut-skip{
+    border:none; background:transparent; color:var(--muted);
+    font-family:inherit; font-size:13px; font-weight:600; padding:10px 8px;
+  }
+  .tut-icon-row{
+    display:flex; justify-content:center; gap:10px; margin:12px 0 16px;
+  }
+  .tut-icon-pill{
+    width:44px; height:44px; border-radius:14px;
+    background:var(--blush); color:var(--rose-deep);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .tut-icon-pill svg{ width:22px; height:22px; }
+
+
+
+  /* global delightful motion */
+  .screen.active{ animation: screenIn .55s cubic-bezier(.22,1,.36,1) both; }
+  .friend-row, .rank-row, .journal-ticket, .diary-entry, .diary-collapse{
+    animation: riseSoft .4s cubic-bezier(.22,1,.36,1) both;
+  }
+  @keyframes riseSoft{
+    from{ opacity:0; transform:translateY(10px); }
+    to{ opacity:1; transform:none; }
+  }
+  .add-sheet, .edit-sheet, .ig-modal-card{
+    animation: sheetUp .42s cubic-bezier(.22,1,.36,1) both;
+  }
+  #countryBubble.show .bubble-card,
+  #pinTip.show .pin-tip-card{
+    animation: tipPop .32s cubic-bezier(.34,1.3,.64,1) both;
+  }
+  @keyframes tipPop{
+    from{ opacity:0; transform:translateY(8px) scale(.92); }
+    to{ opacity:1; transform:none; }
+  }
+  .fab, .filter-fab, .gear-btn, .mini-btn, .invite-btn, .add-save, .tut-btn, .bubble-add, .pin-tip-btn{
+    transition: transform .18s cubic-bezier(.34,1.3,.64,1), box-shadow .2s ease, background .2s ease, opacity .2s ease;
+  }
+  .fab:active, .filter-fab:active, .mini-btn:active, .invite-btn:active, .add-save:active, .bubble-add:active, .pin-tip-btn:active{
+    transform:scale(.93);
+  }
+  .navitem{
+    transition: color .25s ease, transform .2s cubic-bezier(.34,1.3,.64,1);
+  }
+  .gfilter, .fsort, .date-chip, .view-btn{
+    transition: transform .18s ease, background .2s ease, color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  }
+  .gfilter:active, .fsort:active, .date-chip:active, .view-btn:active{ transform:scale(.96); }
+  .pin-dot svg{
+    transition: transform .25s cubic-bezier(.34,1.3,.64,1);
+  }
+  .pin-dot:active svg{ transform:scale(1.12); }
+
+
+  #tutorial.tut-welcome{
+    pointer-events:auto !important;
+    background: linear-gradient(165deg, #3F322E 0%, #4A3B36 45%, #5C4A42 100%) !important;
+    display:flex !important;
+    align-items:center;
+    justify-content:center;
+    padding:28px 20px max(28px, env(safe-area-inset-bottom));
+  }
+  #tutorial.tut-welcome .tut-card{
+    width:min(360px, 100%);
+    background: rgba(251,243,238,.97) !important;
+    border-radius:28px !important;
+    padding:28px 22px 22px !important;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.35) !important;
+    text-align:center !important;
+  }
+  #tutorial.tut-welcome .tut-logo{
+    color: var(--rose-deep) !important;
+    font-size:32px !important;
+    display:block !important;
+  }
+  #tutorial.tut-welcome .tut-title{
+    color:#3A2E2A !important;
+    font-size:24px !important;
+    text-align:center !important;
+  }
+  #tutorial.tut-welcome .tut-text{
+    color:#5a4b45 !important;
+    text-align:center !important;
+    font-size:14.5px !important;
+  }
+  #tutorial.tut-welcome .tut-progress{
+    background: rgba(58,46,43,.1) !important;
+  }
+  /* interactive: map fully visible, tip only on top */
+  #tutorial.tut-live{
+    background: transparent !important;
+    pointer-events: none !important;
+  }
+  #tutorial.tut-live::before,
+  #tutorial.tut-live.tut-nodim::before{
+    display:none !important;
+    content:none !important;
+  }
+  #tutorial.tut-live .tut-card{
+    position:absolute !important;
+    left:12px !important; right:12px !important;
+    top: max(10px, env(safe-area-inset-top)) !important;
+    bottom:auto !important;
+    width:auto !important;
+    max-height:none !important;
+    margin:0 !important;
+    padding:12px 14px !important;
+    border-radius:16px !important;
+    background: rgba(255,255,255,.95) !important;
+    box-shadow: 0 12px 28px -10px rgba(58,46,43,.28) !important;
+    pointer-events:auto !important;
+  }
+  #tutorial.tut-spin .tut-text{ display:block !important; }
+
+
+  #tutorial.tut-live .tut-card{
+    max-width: 280px !important; width: auto !important;
+    left: auto !important; right: auto !important;
+    padding: 10px 12px !important; border-radius: 14px !important;
+  }
+  #tutorial.tut-live.pos-tl .tut-card{ top: max(10px, env(safe-area-inset-top)) !important; left: 12px !important; right: auto !important; }
+  #tutorial.tut-live.pos-tr .tut-card{ top: max(10px, env(safe-area-inset-top)) !important; right: 12px !important; left: auto !important; }
+  #tutorial.tut-live.pos-bl .tut-card{ top: auto !important; bottom: 100px !important; left: 12px !important; right: auto !important; }
+  #tutorial.tut-live.pos-br .tut-card{ top: auto !important; bottom: 100px !important; right: 12px !important; left: auto !important; }
+  #tutorial.tut-live.pos-tm .tut-card{ top: max(10px, env(safe-area-inset-top)) !important; left: 50% !important; right: auto !important; transform: translateX(-50%); max-width: min(300px, calc(100% - 24px)) !important; }
+  #tutorial.tut-live .tut-title{ font-size: 14px !important; margin-bottom: 2px !important; }
+  #tutorial.tut-live .tut-text{ font-size: 12px !important; margin-bottom: 4px !important; }
+  #tutorial.tut-live .tut-btn{ display: none !important; }
+  #tutorial.tut-live .tut-skip{ font-size: 11px !important; padding: 6px 4px !important; }
+  #tutorial.tut-live.tut-need-manual .tut-btn{ display: block !important; flex: 1; }
+  .tut-card{
+        transition: opacity .45s cubic-bezier(.22,1,.36,1), transform .45s cubic-bezier(.22,1,.36,1), visibility .45s;
+      }
+      .tut-card.tut-away{
+        opacity:0 !important; pointer-events:none !important;
+        transform: translateY(-6px);
+        visibility: hidden;
+      }
+
+
+
+
+  /* ===== Tutorial modern handwritten design ===== */
+  #tutorial.tut-welcome{
+    pointer-events: auto !important;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(197,123,133,.18), transparent 50%),
+      radial-gradient(ellipse at 80% 80%, rgba(168,148,120,.15), transparent 45%),
+      linear-gradient(165deg, #3A2E2A 0%, #4A3B36 50%, #5C4A42 100%) !important;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px max(32px, env(safe-area-inset-bottom));
+  }
+  #tutorial.tut-welcome .tut-card{
+    width: min(340px, 100%);
+    background: #FBF3EE !important;
+    border-radius: 32px !important;
+    padding: 36px 26px 22px !important;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.65) inset,
+      0 28px 56px -18px rgba(0,0,0,.4) !important;
+    text-align: center !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 0;
+    position: relative;
+    overflow: visible !important;
+  }
+  #tutorial.tut-welcome .tut-progress{
+    width: 100%;
+    height: 4px !important;
+    margin: 8px 0 20px !important;
+    background: rgba(58,46,43,.08) !important;
+    border-radius: 99px;
+    align-self: stretch;
+    order: 2;
+  }
+  
+  #tutorial.tut-welcome .tut-logo{
+    display: none !important;
+  }
+  #tutorial.tut-welcome .tut-title{
+    order: 3;
+    font-family: 'Caveat', cursive !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    font-size: 42px !important;
+    line-height: 1.05 !important;
+    color: #3A2E2A !important;
+    margin: 4px 0 10px !important;
+    letter-spacing: -0.01em;
+  }
+  #tutorial.tut-welcome .tut-text{
+    order: 4;
+    font-family: 'Quicksand', system-ui, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 14.5px !important;
+    line-height: 1.5 !important;
+    color: #5a4b45 !important;
+    margin: 0 0 24px !important;
+    max-width: 18.5em;
+    text-wrap: balance;
+  }
+  #tutorial.tut-welcome .tut-hint{
+    display: none !important;
+  }
+  #tutorial.tut-welcome .tut-actions{
+    order: 5;
+    width: 100%;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 14px !important;
+    margin: 0 !important;
+  }
+  #tutorial.tut-welcome .tut-btn{
+    width: 100%;
+    border-radius: 18px !important;
+    padding: 15px 18px !important;
+    font-family: 'Quicksand', sans-serif !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    letter-spacing: .02em;
+    box-shadow: 0 10px 24px -10px rgba(176,90,100,.55);
+  }
+  #tutorial.tut-welcome .tut-skip{
+    font-family: 'Quicksand', system-ui, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #9A857A !important;
+    padding: 4px 8px !important;
+    order: 2;
+  }
+  
+
+  /* live tips — handwritten, airy */
+  #tutorial.tut-live .tut-card{
+    background: rgba(255,251,247,.96) !important;
+    border: 1px solid rgba(255,255,255,.8);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  #tutorial.tut-live .tut-title{
+    font-family: 'Caveat', cursive !important;
+    font-weight: 700 !important;
+    font-style: normal !important;
+    font-size: 19px !important;
+    color: #3A2E2A !important;
+  }
+  #tutorial.tut-live .tut-text{
+    font-family: 'Quicksand', system-ui, sans-serif !important;
+    font-weight: 500 !important;
+    font-size: 12.5px !important;
+    line-height: 1.4 !important;
+    color: #5a4b45 !important;
+  }
+  #tutorial.tut-live .tut-hint{
+    font-family: 'Quicksand', system-ui, sans-serif !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+  #tutorial.tut-live .tut-skip{
+    font-family: 'Quicksand', system-ui, sans-serif !important;
+    font-size: 12px !important;
+  }
+
+
+  /* ===== HYPER MOTION ===== */
+  @media (prefers-reduced-motion: no-preference){
+    #tutorial.tut-welcome .tut-card{
+      animation: cardRise .7s cubic-bezier(.22,1.15,.36,1) both;
+    }
+    @keyframes cardRise{
+      0%{ opacity:0; transform: translateY(28px) scale(.94); filter: blur(4px); }
+      100%{ opacity:1; transform: none; filter: none; }
+    }
+    #tutorial.tut-welcome .tut-title{
+      animation: titlePop .7s cubic-bezier(.34,1.4,.64,1) .15s both;
+    }
+    @keyframes titlePop{
+      0%{ opacity:0; transform: translateY(12px) scale(.9); }
+      100%{ opacity:1; transform: none; }
+    }
+    #tutorial.tut-welcome .tut-text{
+      animation: fadeUp .65s cubic-bezier(.22,1,.36,1) .28s both;
+    }
+    #tutorial.tut-welcome .tut-btn{
+      animation: fadeUp .6s cubic-bezier(.22,1,.36,1) .4s both;
+    }
+    #tutorial.tut-welcome .tut-skip{
+      animation: fadeUp .55s ease .5s both;
+    }
+    #tutorial.tut-welcome .tut-progress{
+      animation: fadeUp .5s ease .1s both;
+    }
+    @keyframes fadeUp{
+      from{ opacity:0; transform: translateY(10px); }
+      to{ opacity:1; transform: none; }
+    }
+
+    #tutorial.tut-live .tut-card{
+      animation: tipSlide .5s cubic-bezier(.22,1.2,.36,1) both !important;
+    }
+    @keyframes tipSlide{
+      from{ opacity:0; transform: translateY(-12px) scale(.96); }
+      to{ opacity:1; transform: none; }
+    }
+
+    .screen.active{
+      animation: screenIn .6s cubic-bezier(.22,1,.36,1) both !important;
+    }
+    @keyframes screenIn{
+      from{ opacity:0; transform: translateY(16px) scale(.985); filter: blur(2px); }
+      to{ opacity:1; transform: none; filter: none; }
+    }
+
+    .friend-row, .rank-row, .journal-ticket, .diary-entry, .diary-collapse, .place-card{
+      animation: riseSoft .5s cubic-bezier(.22,1.15,.36,1) both;
+    }
+    .friend-row:nth-child(1), .diary-entry:nth-child(1){ animation-delay:.02s; }
+    .friend-row:nth-child(2), .diary-entry:nth-child(2){ animation-delay:.06s; }
+    .friend-row:nth-child(3), .diary-entry:nth-child(3){ animation-delay:.1s; }
+    .friend-row:nth-child(4), .diary-entry:nth-child(4){ animation-delay:.14s; }
+    .friend-row:nth-child(5), .diary-entry:nth-child(5){ animation-delay:.18s; }
+
+    .fab{
+      transition: transform .25s cubic-bezier(.34,1.5,.64,1), box-shadow .25s ease !important;
+    }
+    .fab:active{ transform: scale(.88) !important; }
+    .planet-ring{
+      transition: transform .3s cubic-bezier(.34,1.5,.64,1), box-shadow .3s ease !important;
+    }
+    .nav-planet.active .planet-ring{
+      animation: planetGlow 2.4s ease-in-out infinite;
+    }
+    @keyframes planetGlow{
+      0%,100%{ box-shadow: 0 10px 26px -8px rgba(197,123,133,.75), 0 0 0 3px var(--card), 0 0 0 6px rgba(197,123,133,.45); }
+      50%{ box-shadow: 0 12px 30px -6px rgba(197,123,133,.9), 0 0 0 3px var(--card), 0 0 0 8px rgba(197,123,133,.35); }
+    }
+
+    .add-sheet, .edit-sheet, .ig-modal-card, .puzzle-wrap{
+      animation: sheetPop .5s cubic-bezier(.22,1.2,.36,1) both !important;
+    }
+    @keyframes sheetPop{
+      from{ opacity:0; transform: translateY(24px) scale(.96); }
+      to{ opacity:1; transform: none; }
+    }
+
+    #countryBubble.show .bubble-card,
+    #pinTip.show .pin-tip-card{
+      animation: bubblePop .4s cubic-bezier(.34,1.45,.64,1) both !important;
+    }
+    @keyframes bubblePop{
+      0%{ opacity:0; transform: translateY(10px) scale(.88); }
+      70%{ transform: translateY(-2px) scale(1.03); }
+      100%{ opacity:1; transform: none; }
+    }
+
+    .mini-btn, .invite-btn, .add-save, .bubble-add, .pin-tip-btn, .tut-btn, .date-chip, .fsort, .gfilter, .view-btn{
+      transition: transform .2s cubic-bezier(.34,1.4,.64,1), box-shadow .2s ease, background .2s ease, color .2s ease, border-color .2s ease !important;
+    }
+    .mini-btn:active, .invite-btn:active, .add-save:active, .bubble-add:active, .pin-tip-btn:active, .tut-btn:active{
+      transform: scale(.94) !important;
+    }
+
+    .pin-dot svg{
+      animation: pinDrop .55s cubic-bezier(.34,1.5,.64,1) both;
+    }
+
+  }
+
+
+  
+
+
+  #tutorial.tut-welcome .tut-brand{
+    position: absolute !important;
+    top: 0 !important;
+    left: 50% !important;
+    transform: translate(-50%, -55%) !important;
+    margin: 0 !important;
+    padding: 8px 22px !important;
+    font-family: 'Caveat', cursive !important;
+    font-weight: 700 !important;
+    font-size: 32px !important;
+    line-height: 1 !important;
+    color: #A85D6B !important;
+    background: #FBF3EE !important;
+    border-radius: 999px !important;
+    box-shadow: 0 6px 20px -6px rgba(0,0,0,.3) !important;
+    z-index: 5 !important;
+    display: block !important;
   }
 
 </style>
@@ -2276,7 +2854,7 @@
   <div id="splash">
     <div class="wobble-line" id="wobbleText"></div>
     <div class="sign">— Tengizka</div>
-    <div class="app-version">v0.86 alpha</div>
+    <div class="app-version">v1.01 alpha</div>
   </div>
 
   <!-- TOP BAR -->
@@ -2309,6 +2887,14 @@
           <button type="button" class="gfilter" data-filter="visited">Поездки</button>
           <button type="button" class="gfilter" data-filter="wish">Мечты</button>
           <button type="button" class="gfilter" data-filter="photo">С фото</button>
+        </div>
+      </div>
+      <div id="pinTip">
+        <div class="pin-tip-card">
+          <div class="pin-tip-photo hide" id="pinTipPhoto"></div>
+          <div class="pin-tip-title" id="pinTipTitle">—</div>
+          <div class="pin-tip-sub" id="pinTipSub"></div>
+          <button type="button" class="pin-tip-btn" id="pinTipOpen">Открыть</button>
         </div>
       </div>
       <div id="countryBubble">
@@ -2400,7 +2986,6 @@
       <div class="edit-date-block">
         <div class="edit-date-label">Когда были</div>
         <div class="date-chips" id="editDateChips">
-          <button type="button" class="date-chip" data-edit-date="keep" id="editDateKeep">Оставить</button>
           <button type="button" class="date-chip" data-edit-date="today" id="editDateToday">Сегодня</button>
           <button type="button" class="date-chip" data-edit-date="pick" id="editDatePick">Выбрать</button>
           <button type="button" class="date-chip" data-edit-date="none" id="editDateNone">Без даты</button>
@@ -2420,7 +3005,7 @@
       </label>
       <input type="file" accept="image/*" id="editPhoto" multiple style="display:none;">
       <button class="add-save" id="editSaveBtn">Сохранить</button>
-      <button class="add-cancel danger-link" id="editDeleteBtn">Удалить место</button>
+      <button type="button" class="add-cancel danger-link" id="editDeleteBtn" onclick="window.__onEditDelete && window.__onEditDelete(event)">Удалить место</button>
       <button class="add-cancel" id="editCancelBtn">Отмена</button>
     </div>
   </div>
@@ -2746,6 +3331,7 @@
         <button type="button" class="tut-btn" id="tutNext">Продолжить</button>
         <button type="button" class="tut-skip" id="tutSkip">Пропустить</button>
       </div>
+      <div class="tut-brand" id="tutBrand" style="display:none;">MapLink</div>
     </div>
   </div>
 
@@ -2786,7 +3372,7 @@
     if(ch === '\n'){ wobbleEl.appendChild(document.createElement('br')); delay += 2; return; }
     const span = document.createElement('span');
     span.textContent = ch === ' ' ? '\u00A0' : ch;
-    span.style.animationDelay = (0.15 + delay * 0.065) + 's';
+    span.style.animationDelay = (0.12 + delay * 0.05) + 's';
     wobbleEl.appendChild(span);
     delay++;
   });
@@ -2806,7 +3392,7 @@
       document.fonts.load('600 22px Caveat'),
       document.fonts.ready
     ]).then(revealSplashFonts).catch(revealSplashFonts);
-    setTimeout(revealSplashFonts, 1200);
+    setTimeout(revealSplashFonts, 400);
   } else {
     revealSplashFonts();
   }
@@ -2890,7 +3476,7 @@
           prev.style.display = 'none';
           prev.style.opacity = '';
         }
-      }, 280);
+      }, 400);
     } else {
       document.querySelectorAll('.screen').forEach(s=>{
         if(s !== target){
@@ -3910,20 +4496,20 @@
     {
       id: 'welcome',
       mode: 'welcome',
-      logo: true,
-      title: 'Добро пожаловать',
-      text: 'MapLink — карта ваших путешествий. Сейчас коротко покажем главное.',
-      btn: 'Продолжить'
+      logo: false,
+      title: 'Привет!',
+      text: 'Собирай места, где был, на одной карте. Смотри, как растёт мир.',
+      btn: 'Начать'
     },
     {
       id: 'spin',
       mode: 'live',
       nodim: true,
       logo: false,
-      title: 'Планета',
-      text: 'Покрутите глобус пальцем. Можно приблизить щипком.',
-      hint: 'Проведите по карте',
-      btn: 'Далее',
+      title: 'Крути глобус',
+      text: 'Свайп — вращение, щипок — зум.',
+      hint: 'Проведи по карте',
+      btn: 'Дальше',
       need: 'spin',
       screen: 'home'
     },
@@ -3932,50 +4518,54 @@
       mode: 'live',
       nodim: true,
       logo: false,
-      title: 'Добавьте место',
-      text: 'Нажмите на название страны или города — появится пузырёк. Нажмите «Добавить» и сохраните.',
-      hint: 'Пузырёк → Добавить → Сохранить',
-      btn: 'Далее',
+      title: 'Добавь место',
+      text: 'Тап по названию → Добавить → Сохранить.',
+      hint: 'Сохрани хотя бы одно',
+      btn: 'Дальше',
       need: 'place',
       screen: 'home'
     },
     {
       id: 'feed',
       mode: 'live',
+      nodim: true,
       logo: false,
       title: 'Лента',
-      text: 'Поездки друзей, фото и реакции.',
-      btn: 'Далее',
+      text: 'Поездки друзей — в одном месте.',
+      btn: 'Дальше',
       screen: 'feed',
       nav: 'feed'
     },
     {
       id: 'friends',
       mode: 'live',
+      nodim: true,
       logo: false,
       title: 'Друзья',
-      text: 'Поиск по имени и приглашение по ссылке.',
-      btn: 'Далее',
+      text: 'Найди друзей и делитесь картами.',
+      btn: 'Дальше',
       screen: 'friends',
       nav: 'friends'
     },
     {
       id: 'rank',
       mode: 'live',
+      nodim: true,
       logo: false,
       title: 'Рейтинг',
-      text: 'Кто сколько мира открыл — среди друзей и общий список.',
-      btn: 'Далее',
+      text: 'Кто открыл больше мира.',
+      btn: 'Дальше',
       screen: 'rank',
       nav: 'rank'
     },
     {
       id: 'profile',
       mode: 'live',
+      nodim: true,
       logo: false,
       title: 'Профиль',
-      text: 'Ваши места, мечты и статистика. Имя можно сменить в профиле.',
-      btn: 'Далее',
+      text: 'Твои места и мечты.',
+      btn: 'Дальше',
       screen: 'profile',
       nav: 'profile'
     },
@@ -3983,8 +4573,8 @@
       id: 'done',
       mode: 'welcome',
       logo: true,
-      title: 'Хороших дорог',
-      text: 'Пусть впереди будет больше мест, которые хочется запомнить. Добро пожаловать в MapLink.',
+      title: 'Отлично!',
+      text: 'Добавляй места — карта растёт с тобой.',
       btn: 'К планете'
     }
   ];
@@ -4025,6 +4615,31 @@
     card.classList.toggle('tut-away', !!open);
   }
 
+  function tutAutoNext(delayMs){
+    clearTimeout(window.__tutAutoT);
+    const wait = delayMs == null ? 1100 : delayMs;
+    // soft fade tip out first
+    try{
+      const card = document.getElementById('tutCard');
+      if(card) card.classList.add('tut-away');
+    }catch(e){}
+    window.__tutAutoT = setTimeout(()=>{
+      try{
+        if(tutIndex >= tutSteps.length - 1){ closeTutorial(); return; }
+        tutIndex++;
+        tutShow(tutIndex);
+        try{ sfx('soft'); }catch(e){}
+      }catch(e){}
+    }, wait);
+  }
+  const tutPosCycle = ['pos-tm','pos-tr','pos-br','pos-bl','pos-tl'];
+  function tutApplyPos(i){
+    const root = document.getElementById('tutorial');
+    if(!root) return;
+    tutPosCycle.forEach(p=> root.classList.remove(p));
+    const s = tutSteps[i];
+    if(s && s.mode === 'live') root.classList.add(tutPosCycle[i % tutPosCycle.length]);
+  }
   function tutShow(i){
     const s = tutSteps[i];
     if(!s) return;
@@ -4039,17 +4654,50 @@
       root.classList.add('tut-live');
       if(s.nodim) root.classList.add('tut-nodim');
       if(s.need === 'spin') root.classList.add('tut-spin');
+      if(!s.need) root.classList.add('tut-need-manual');
+      else root.classList.remove('tut-need-manual');
+    }
+    try{ tutApplyPos(i); }catch(e){}
+
+    // gentle screen switch — never snap
+    const goScreen = (name)=>{
+      try{ showScreen(name); }catch(e){}
+      try{
+        if(window.__mlMap){
+          const canvas = window.__mlMap.getCanvas && window.__mlMap.getCanvas();
+          if(name === 'home' && canvas) canvas.style.visibility = '';
+          if(name === 'home'){ window.__mlMap.resize(); window.__mlMap.triggerRepaint(); }
+        }
+      }catch(e){}
+    };
+    const targetScreen = s.screen || (s.mode === 'live' ? 'home' : null);
+    if(targetScreen){
+      // small pause so tip can settle / previous tip fade finishes
+      setTimeout(()=> goScreen(targetScreen), s.mode === 'welcome' ? 0 : 280);
     }
 
-    if(s.screen) showScreen(s.screen);
-    window.__tutLockUI = true;
+    // bring tip back in after screen settles
+    try{
+      const card = document.getElementById('tutCard');
+      if(card){
+        card.classList.add('tut-away');
+        setTimeout(()=>{
+          card.classList.remove('tut-away');
+          void card.offsetWidth;
+        }, s.mode === 'welcome' ? 40 : 420);
+      }
+    }catch(e){}
+    window.__tutLockUI = (s.need === 'spin'); // only lock bubbles during spin; place needs taps
+    if(s.need === 'place') window.__tutLockUI = false;
     try{ document.getElementById('countryBubble').classList.remove('show'); }catch(e){}
 
     const bar = document.getElementById('duoBar');
     if(bar) bar.style.width = Math.round(((i+1)/tutSteps.length)*100) + '%';
 
     const logo = document.getElementById('duoLogo');
-    if(logo) logo.style.display = s.logo ? '' : 'none';
+    if(logo) logo.style.display = 'none';
+    const brand = document.getElementById('tutBrand');
+    if(brand) brand.style.display = (s.id === 'welcome' || s.id === 'done') ? '' : 'none';
 
     document.getElementById('duoTitle').textContent = s.title;
     let text = s.text;
@@ -4071,28 +4719,34 @@
     }
 
     if(s.need === 'spin'){
+      // allow rotating the real globe under the tip
       window.__tutLockUI = true;
       const arm = ()=>{
         const map = window.__mlMap;
-        if(!map){ setTimeout(arm, 120); return; }
-        let done=false, hold=false;
-        const cnv = map.getCanvas();
-        const dn=()=>{ hold=true; };
-        const up=()=>{ setTimeout(()=>{ hold=false; }, 50); };
-        cnv.addEventListener('touchstart', dn, {passive:true});
-        cnv.addEventListener('mousedown', dn);
-        cnv.addEventListener('touchend', up);
-        cnv.addEventListener('mouseup', up);
+        if(!map){ setTimeout(arm, 100); return; }
+        try{ map.resize(); map.triggerRepaint(); }catch(e){}
+        let done = false;
+        let moves = 0;
         tutMoveH = ()=>{
-          if(done || !hold) return;
-          done = true; tutReady = true;
-          tutHint('Хорошо');
-          if(next) next.disabled = false;
+          if(done) return;
+          moves++;
+          // a couple of move events = user actually dragged
+          if(moves < 3) return;
+          done = true;
+          tutReady = true;
+          tutHint('Отлично');
           try{ sfx('select'); haptic('light'); }catch(e){}
           try{ map.off('move', tutMoveH); }catch(e){}
           tutMoveH = null;
+          tutAutoNext(1300);
         };
         map.on('move', tutMoveH);
+        setTimeout(()=>{
+          if(done) return;
+          done = true; tutReady = true;
+          tutHint('Идём дальше');
+          tutAutoNext(1200);
+        }, 10000);
       };
       arm();
     }
@@ -4109,11 +4763,11 @@
         if(last) tutPlaceName = last.city ? (last.city+', '+last.country) : last.country;
         tutReady = true;
         tutHint(tutPlaceName ? ('Добавлено: ' + tutPlaceName) : 'Место сохранено');
-        if(next) next.disabled = false;
         if(fab) fab.classList.remove('tut-pulse');
         if(tutPlaceT){ clearInterval(tutPlaceT); tutPlaceT = null; }
         window.__onTutPlaceSaved = null;
         tutSyncCardWithModal(true);
+        tutAutoNext(1500);
       };
       window.__onTutPlaceSaved = finishPlace;
       tutPlaceT = setInterval(()=>{ tutSyncCardWithModal(); }, 400);
@@ -4892,7 +5546,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
     attributionControl: false,
     refreshExpiredTiles: false,
     maxPitch: 55,
-    fadeDuration: 0,
+    fadeDuration: 320,
     maxTileCacheSize: 48,
     collectResourceTiming: false,
     renderWorldCopies: false,
@@ -4978,7 +5632,18 @@ document.getElementById('igModalMeta').textContent = metaLine;
         if(l.type === 'line' && sl === 'boundary'){
           try{ map.setLayerZoomRange(l.id, 0, l.maxzoom || 24); }catch(e){}
         }
+        // hide ALL circle layers (city dots)
+        if(l.type === 'circle'){
+          try{ map.setLayoutProperty(l.id, 'visibility', 'none'); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'circle-opacity', 0); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'circle-stroke-opacity', 0); }catch(e){}
+          return;
+        }
         if(l.type === 'symbol'){
+          try{ map.setLayoutProperty(l.id, 'icon-image', ''); }catch(e){}
+          try{ map.setLayoutProperty(l.id, 'icon-size', 0); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'icon-opacity', 0); }catch(e){}
+
           const id = (l.id || '').toLowerCase();
           const isPlaceLayer = (sl === 'place') || id.includes('place') || id.includes('country') || id.includes('city') || id.includes('town') || id.includes('state') || id.includes('region');
 
@@ -5030,7 +5695,11 @@ document.getElementById('igModalMeta').textContent = metaLine;
           // soft halo, not a thick outline
           try{ map.setPaintProperty(l.id, 'text-halo-width', 0.85); }catch(e){}
           try{ map.setPaintProperty(l.id, 'text-halo-blur', 0.4); }catch(e){}
-          try{ map.setPaintProperty(l.id, 'text-opacity', 0.9); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-opacity', [
+            'interpolate', ['linear'], ['zoom'],
+            0, 0.0, 0.8, 0.35, 1.6, 0.7, 2.5, 0.85, 4, 0.92, 7, 0.96
+          ]); }catch(e){}
+          try{ map.setPaintProperty(l.id, 'text-halo-blur', 0.6); }catch(e){}
 
           // progressive reveal: countries far out, cities after zoom-in
           if(isCountry){
@@ -5429,7 +6098,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
   let bubbleFeature = null;
   let bubbleClickLngLat = null;
 
-  function hideBubble(){ if(bubbleEl) bubbleEl.classList.remove('show'); }
+  function hideBubble(){ if(bubbleEl) bubbleEl.classList.remove('show'); try{ hidePinTip(); }catch(e){} }
   map.on('dragstart', hideBubble);
   map.on('rotatestart', hideBubble);
   map.on('zoomstart', hideBubble);
@@ -5903,6 +6572,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
         : `<svg viewBox="0 0 26 34" fill="none"><path d="M13 0C5.8 0 0 5.8 0 13c0 9.5 13 21 13 21s13-11.5 13-21C26 5.8 20.2 0 13 0z" fill="var(--rose)"/><circle cx="13" cy="13" r="5" fill="#fff"/></svg>`;
       const marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
       marker.setLngLat([lon, lat]);
+      bindPinClick(el, p);
       marker.addTo(map);
       placeMarkers.push(marker);
       // gentle fly to pin
@@ -6008,6 +6678,90 @@ document.getElementById('igModalMeta').textContent = metaLine;
     try{ attachDefaultPhotos(places, photosByPlace); }catch(e){}
   }
 
+
+  let pinTipPlaceId = null;
+  function hidePinTip(){
+    const el = document.getElementById('pinTip');
+    if(el) el.classList.remove('show');
+    pinTipPlaceId = null;
+  }
+  function showPinTip(place, point){
+    const el = document.getElementById('pinTip');
+    if(!el || !place) return;
+    pinTipPlaceId = place.id;
+    const title = place.city || place.country || 'Место';
+    const sub = place.city && place.country ? place.country : (place.visit_date || (place.is_wishlist ? 'мечта' : ''));
+    const t = document.getElementById('pinTipTitle');
+    const s = document.getElementById('pinTipSub');
+    const ph = document.getElementById('pinTipPhoto');
+    if(t) t.textContent = title;
+    if(s){ s.textContent = sub || ''; s.style.display = sub ? '' : 'none'; }
+    // photo from cache
+    let photoUrl = '';
+    try{
+      const photos = (window.__ownPhotosCache && window.__ownPhotosCache[place.id]) || [];
+      if(photos[0]) photoUrl = photos[0];
+    }catch(e){}
+    if(ph){
+      if(photoUrl){
+        ph.style.backgroundImage = 'url('+photoUrl+')';
+        ph.classList.remove('hide');
+      } else {
+        ph.style.backgroundImage = '';
+        ph.classList.add('hide');
+      }
+    }
+    // anchor at geographic point (marker tip), bubble sits ABOVE via CSS transform
+    let x = 0, y = 0;
+    if(point && point.x != null){ x = point.x; y = point.y; }
+    else if(place.lon != null && place.lat != null && map){
+      try{ const p = map.project([Number(place.lon), Number(place.lat)]); x = p.x; y = p.y; }catch(e){}
+    }
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.classList.remove('show');
+    void el.offsetWidth;
+    el.classList.add('show');
+  }
+  (function setupPinTip(){
+    const open = document.getElementById('pinTipOpen');
+    if(open && !open.dataset.bound){
+      open.dataset.bound = '1';
+      open.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const id = pinTipPlaceId;
+        hidePinTip();
+        if(id && typeof window.__openPlaceView === 'function') window.__openPlaceView(id);
+      });
+    }
+    try{
+      if(map){
+        map.on('dragstart', hidePinTip);
+        map.on('zoomstart', hidePinTip);
+        map.on('click', ()=>{ /* label bubble handles own; tip stays until map move */ });
+      }
+    }catch(e){}
+  })();
+
+  function bindPinClick(el, place){
+    if(!el || !place) return;
+    el.style.cursor = 'pointer';
+    el.style.pointerEvents = 'auto';
+    el.onclick = (ev)=>{
+      try{ if(ev){ ev.stopPropagation(); ev.preventDefault(); } }catch(e){}
+      try{ sfx('soft'); }catch(e){}
+      // project marker position for tip
+      let point = null;
+      try{
+        if(map && place.lon != null && place.lat != null){
+          point = map.project([Number(place.lon), Number(place.lat)]);
+        }
+      }catch(e){}
+      showPinTip(place, point);
+    };
+  }
+
+
   function syncPlaceMarkers(places, photosByPlace){
     if(!map) return;
     const prevById = new Map();
@@ -6038,7 +6792,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
         try{
           marker.setLngLat([lon, lat]);
           const el = marker.getElement();
-          if(el){ el.dataset.placeId = p.id; el.style.display = ''; el.style.opacity = '1'; }
+          if(el){ el.dataset.placeId = p.id; el.style.display = ''; el.style.opacity = '1'; bindPinClick(el, p); }
         }catch(e){}
         nextMarkers.push(marker);
         prevById.delete(p.id);
@@ -6047,6 +6801,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
         el.className = 'pin-dot' + (p.is_wishlist ? ' wishlist' : '');
         el.dataset.placeId = p.id;
         el.innerHTML = pinHtml(!!p.is_wishlist);
+        bindPinClick(el, p);
         marker = new maplibregl.Marker({ element: el, anchor: 'bottom' });
         marker.setLngLat([lon, lat]);
         marker.addTo(map);
@@ -6170,28 +6925,42 @@ document.getElementById('igModalMeta').textContent = metaLine;
   }
   async function fetchWikiThumb(lang, name){
     if(!name) return null;
+    const clean = String(name).replace(/\s*\([^)]*\)\s*/g, ' ').replace(/\s+/g, ' ').trim();
+    const variants = Array.from(new Set([clean, name].filter(Boolean)));
+    const langs = lang === 'ru' ? ['ru','en'] : [lang,'en','ru'];
     const ctrl = new AbortController();
-    const timer = setTimeout(()=> ctrl.abort(), 4500);
+    const timer = setTimeout(()=> ctrl.abort(), 6500);
+    function pickImg(data){
+      if(!data) return null;
+      if(data.originalimage && data.originalimage.source) return data.originalimage.source;
+      if(data.thumbnail && data.thumbnail.source) return data.thumbnail.source;
+      return null;
+    }
     try{
-      // 1) direct summary
-      let res = await fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(name), { signal: ctrl.signal });
-      if(res.ok){
-        const data = await res.json();
-        if(data.thumbnail && data.thumbnail.source){ clearTimeout(timer); return data.thumbnail.source; }
-      }
-      // 2) search → first hit summary (helps when exact title missing)
-      const qs = 'https://'+lang+'.wikipedia.org/w/api.php?action=query&list=search&srsearch='
-        + encodeURIComponent(name) + '&srlimit=1&format=json&origin=*';
-      res = await fetch(qs, { signal: ctrl.signal });
-      if(res.ok){
-        const data = await res.json();
-        const title = data && data.query && data.query.search && data.query.search[0] && data.query.search[0].title;
-        if(title){
-          const res2 = await fetch('https://'+lang+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(title), { signal: ctrl.signal });
-          if(res2.ok){
-            const d2 = await res2.json();
-            if(d2.thumbnail && d2.thumbnail.source){ clearTimeout(timer); return d2.thumbnail.source; }
-          }
+      for(const L of langs){
+        for(const q of variants){
+          try{
+            const res = await fetch('https://'+L+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(q), { signal: ctrl.signal });
+            if(res.ok){
+              const img = pickImg(await res.json());
+              if(img){ clearTimeout(timer); return img; }
+            }
+          }catch(e){}
+          try{
+            const qs = 'https://'+L+'.wikipedia.org/w/api.php?action=query&list=search&srsearch='
+              + encodeURIComponent(q) + '&srlimit=3&format=json&origin=*';
+            const res = await fetch(qs, { signal: ctrl.signal });
+            if(!res.ok) continue;
+            const data = await res.json();
+            const hits = (data && data.query && data.query.search) || [];
+            for(const h of hits){
+              if(!h || !h.title) continue;
+              const res2 = await fetch('https://'+L+'.wikipedia.org/api/rest_v1/page/summary/'+encodeURIComponent(h.title), { signal: ctrl.signal });
+              if(!res2.ok) continue;
+              const img = pickImg(await res2.json());
+              if(img){ clearTimeout(timer); return img; }
+            }
+          }catch(e){}
         }
       }
       clearTimeout(timer);
@@ -6575,7 +7344,7 @@ document.getElementById('igModalMeta').textContent = metaLine;
       }
     });
     // max 4 wikipedia requests at once — avoids queue + rate limit
-    runPool(tasks, 3);
+    runPool(tasks, 5);
     runPool(flagTasks, 3);
   }
 
@@ -6841,13 +7610,12 @@ document.getElementById('igModalMeta').textContent = metaLine;
 
   // ---------- edit place modal ----------
     function setEditDateMode(mode){
-    const keep = document.getElementById('editDateKeep');
     const today = document.getElementById('editDateToday');
     const pick = document.getElementById('editDatePick');
     const none = document.getElementById('editDateNone');
     const box = document.getElementById('editDatePickerBox');
     const input = document.getElementById('editDate');
-    [keep,today,pick,none].forEach(b=>{ if(b) b.classList.remove('on'); });
+    [today,pick,none].forEach(b=>{ if(b) b.classList.remove('on'); });
     if(mode === 'today'){
       if(today) today.classList.add('on');
       if(box) box.classList.add('hide');
@@ -6855,14 +7623,14 @@ document.getElementById('igModalMeta').textContent = metaLine;
     } else if(mode === 'pick'){
       if(pick) pick.classList.add('on');
       if(box) box.classList.remove('hide');
-    } else if(mode === 'none'){
+      if(input && !input.value && editingPlace && editingPlace.visit_date){
+        input.value = editingPlace.visit_date;
+      }
+    } else {
+      // none
       if(none) none.classList.add('on');
       if(box) box.classList.add('hide');
       if(input) input.value = '';
-    } else {
-      if(keep) keep.classList.add('on');
-      if(box) box.classList.add('hide');
-      if(input && editingPlace) input.value = editingPlace.visit_date || '';
     }
   }
   (function setupEditDateChips(){
@@ -6890,8 +7658,13 @@ document.getElementById('igModalMeta').textContent = metaLine;
       const t = document.getElementById('editPhotoText');
       if(t){ const s = t.querySelector('span:last-child'); if(s) s.textContent = 'Заменить фото'; }
     }catch(e){}
-    if(p.visit_date) setEditDateMode('keep');
-    else setEditDateMode('none');
+    if(p.visit_date){
+      const input = document.getElementById('editDate');
+      if(input) input.value = p.visit_date;
+      setEditDateMode('pick');
+    } else {
+      setEditDateMode('none');
+    }
     document.getElementById('editModal').classList.remove('hide');
   };
   document.getElementById('editCancelBtn').addEventListener('click', ()=>{
@@ -6901,12 +7674,27 @@ document.getElementById('igModalMeta').textContent = metaLine;
     const f = e.target.files[0];
     document.getElementById('editPhotoText').querySelector('span:last-child').textContent = f ? f.name : 'Заменить фото';
   });
-  document.getElementById('editDeleteBtn').addEventListener('click', async ()=>{
-    if(!editingPlace) return;
+  document.getElementById('editDeleteBtn').addEventListener('click', async (ev)=>{
+    try{ if(ev){ ev.preventDefault(); ev.stopPropagation(); } }catch(e){}
+    const p = editingPlace;
+    if(!p || !p.id){ alert('Место не выбрано'); return; }
     if(!confirm('Удалить это место?')) return;
-    await supabase.from('places').delete().eq('id', editingPlace.id);
-    document.getElementById('editModal').classList.add('hide');
-    loadPlaces();
+    const btn = document.getElementById('editDeleteBtn');
+    if(btn){ btn.disabled = true; btn.textContent = 'Удаляю…'; }
+    try{
+      try{ await supabase.from('photos').delete().eq('place_id', p.id); }catch(e){}
+      const { error } = await supabase.from('places').delete().eq('id', p.id);
+      if(error){ alert('Не удалось удалить: ' + (error.message || 'ошибка')); return; }
+      editingPlace = null;
+      try{ document.getElementById('editModal').classList.add('hide'); }catch(e){}
+      try{ sfx('soft'); haptic('light'); }catch(e){}
+      await loadPlaces();
+    }catch(e){
+      alert('Ошибка удаления');
+      console.warn(e);
+    }finally{
+      if(btn){ btn.disabled = false; btn.textContent = 'Удалить место'; }
+    }
   });
   document.getElementById('editSaveBtn').addEventListener('click', async ()=>{
     if(!editingPlace) return;
